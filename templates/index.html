@@ -1,0 +1,1251 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>
+        {% if screen == 'dashboard' %}
+            StreetLens · Pavement Condition
+        {% else %}
+            StreetLens · Pavement Crack Detection
+        {% endif %}
+    </title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    <style>
+        /* Authentication */
+
+        .auth-message {
+            margin: 0 0 18px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.4;
+            border: 1px solid rgba(255,255,255,.08);
+        }
+
+        .auth-message.error {
+            background: rgba(220, 70, 70, .12);
+            border-color: rgba(220, 70, 70, .3);
+            color: #ffaaa0;
+        }
+
+        .auth-message.success {
+            background: rgba(70, 180, 100, .12);
+            border-color: rgba(70, 180, 100, .3);
+            color: #9be0aa;
+        }
+
+        .auth-message.info {
+            background: rgba(70, 130, 220, .12);
+            border-color: rgba(70, 130, 220, .3);
+            color: #a8c8ff;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-wrapper input {
+            width: 100%;
+            padding-right: 48px;
+            box-sizing: border-box;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #777;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-toggle:hover {
+            color: #ddd;
+        }
+
+        .register-view .password-toggle {
+            padding: 0;
+        }
+
+        .password-toggle svg {
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+        }
+
+        .password-toggle .eye-off {
+            display: none;
+        }
+
+        .password-toggle.revealed .eye {
+            display: none;
+        }
+
+        .password-toggle.revealed .eye-off {
+            display: block;
+        }
+
+        .auth-form label {
+            display: block;
+        }
+
+        .auth-form input[type="text"],
+        .auth-form input[type="email"],
+        .auth-form input[type="password"] {
+            margin-top: 7px;
+        }
+
+        .login-card input[type="email"] {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: #ffffff0f;
+            border: 1px solid #ffffff1a;
+            color: #f1f5f9;
+            outline: 0;
+        }
+
+        .register-view h3 {
+            margin-bottom: 8px;
+        }
+
+        .register-view p {
+            line-height: 1.5;
+        }
+
+        .auth-form small {
+            display: block;
+            margin-top: 18px;
+        }
+
+        .signout-form {
+            display: inline;
+            margin: 0;
+            padding: 0;
+        }
+
+        .signout {
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            font: inherit;
+        }
+    </style>
+</head>
+
+<body>
+
+{% if screen == 'login' %}
+
+<div id="loginScreen" class="login-page">
+
+    <div class="login-topbar">
+        <div class="brand-mark">⌁</div>
+        <span class="apcd">StreetLens</span>
+        <span class="divider"></span>
+        <span class="top-note">
+            Pavement Crack Detection & Road Condition Analysis
+        </span>
+    </div>
+
+    <main class="login-main">
+
+        <div class="login-grid">
+
+            <section class="login-intro">
+
+                <h1>
+                    Automated<br>
+                    Pavement<br>
+                    <span>Condition</span><br>
+                    Detector
+                </h1>
+
+                <p>
+                    Real-time crack detection and distress classification
+                    for highway infrastructure. Powered by computer vision
+                    and deep learning.
+                </p>
+
+                <ul>
+                    <li>AI-powered crack detection</li>
+                    <li>Distress severity scoring</li>
+                    <li>GPS-tagged inspection logs</li>
+                </ul>
+
+                <div class="login-road">
+                    <img
+                        src="https://images.unsplash.com/photo-1519817914152-22d216bb9170?w=1200&h=300&fit=crop&auto=format"
+                        alt="Road inspection view"
+                    >
+
+                    <div>
+                        Collingswood, NJ · Haddon Ave · SouthBound
+                    </div>
+                </div>
+
+            </section>
+
+
+            <section class="login-card" id="loginCard">
+
+                <!-- Flash messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="flash-container">
+                            {% for category, message in messages %}
+                                <div class="auth-message {{ category }}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+
+                <!-- LOGIN -->
+                <div id="loginFormView">
+
+                    <h2>Sign in</h2>
+
+                    <p>
+                        Access the pavement inspection dashboard
+                    </p>
+
+                    <form
+                        action="{{ url_for('login_submit') }}"
+                        method="POST"
+                        class="auth-form"
+                    >
+
+                        <label for="loginUsername">
+                            Username or Email
+
+                            <input
+                                id="loginUsername"
+                                name="username"
+                                type="text"
+                                autocomplete="username"
+                                required
+                            >
+                        </label>
+
+
+                        <label for="loginPassword">
+                            Password
+
+                            <div class="password-wrapper">
+
+                                <input
+                                    id="loginPassword"
+                                    name="password"
+                                    type="password"
+                                    autocomplete="current-password"
+                                    required
+                                >
+
+                                <button
+                                    type="button"
+                                    class="password-toggle"
+                                    onclick="togglePassword('loginPassword', this)"
+                                    aria-label="Show password"
+                                    title="Show password"
+                                >
+
+                                    <svg
+                                        class="eye"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"></path>
+                                        <circle cx="12" cy="12" r="2.5"></circle>
+                                    </svg>
+
+                                    <svg
+                                        class="eye-off"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path d="M3 3l18 18"></path>
+                                        <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path>
+                                        <path d="M9.9 4.3A10.8 10.8 0 0 1 12 4c6.5 0 10 6 10 6a18.3 18.3 0 0 1-3.1 3.8"></path>
+                                        <path d="M6.1 6.1C3.5 8 2 10 2 10s3.5 6 10 6a9.9 9.9 0 0 0 3.3-.6"></path>
+                                    </svg>
+
+                                </button>
+
+                            </div>
+                        </label>
+
+
+                        <div class="login-options">
+
+                            <label class="remember">
+                                <input
+                                    type="checkbox"
+                                    name="remember"
+                                >
+                                Remember me
+                            </label>
+
+                            <button
+                                type="button"
+                                class="link-button"
+                                onclick="forgotPassword()"
+                            >
+                                Forgot password?
+                            </button>
+
+                        </div>
+
+
+                        <button
+                            class="login-btn"
+                            type="submit"
+                        >
+                            Login
+                        </button>
+
+
+                        <button
+                            class="register-btn"
+                            type="button"
+                            onclick="showRegister()"
+                        >
+                            Register
+                        </button>
+
+                    </form>
+
+
+                    <small>
+                        DOT Infrastructure Division · Secure Access Portal
+                    </small>
+
+                </div>
+
+
+                <!-- REGISTER -->
+                <div id="registerView" class="register-view hidden">
+
+                    <div class="register-icon">✓</div>
+
+                    <h3>Create an account</h3>
+
+                    <p>
+                        Register for access to the StreetLens pavement
+                        inspection dashboard.
+                    </p>
+
+
+                    <form
+                        action="{{ url_for('register') }}"
+                        method="POST"
+                        class="auth-form"
+                    >
+
+                        <label for="registerUsername">
+                            Username
+
+                            <input
+                                id="registerUsername"
+                                name="username"
+                                type="text"
+                                autocomplete="username"
+                                minlength="3"
+                                maxlength="32"
+                                required
+                            >
+                        </label>
+
+
+                        <label for="registerEmail">
+                            Email
+
+                            <input
+                                id="registerEmail"
+                                name="email"
+                                type="email"
+                                autocomplete="email"
+                                required
+                            >
+                        </label>
+
+
+                        <label for="registerPassword">
+                            Password
+
+                            <div class="password-wrapper">
+
+                                <input
+                                    id="registerPassword"
+                                    name="password"
+                                    type="password"
+                                    autocomplete="new-password"
+                                    required
+                                >
+
+                                <button
+                                    type="button"
+                                    class="password-toggle"
+                                    onclick="togglePassword('registerPassword', this)"
+                                    aria-label="Show password"
+                                    title="Show password"
+                                >
+
+                                    <svg
+                                        class="eye"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"></path>
+                                        <circle cx="12" cy="12" r="2.5"></circle>
+                                    </svg>
+
+                                    <svg
+                                        class="eye-off"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path d="M3 3l18 18"></path>
+                                        <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path>
+                                        <path d="M9.9 4.3A10.8 10.8 0 0 1 12 4c6.5 0 10 6 10 6a18.3 18.3 0 0 1-3.1 3.8"></path>
+                                        <path d="M6.1 6.1C3.5 8 2 10 2 10s3.5 6 10 6a9.9 9.9 0 0 0 3.3-.6"></path>
+                                    </svg>
+
+                                </button>
+
+                            </div>
+                        </label>
+
+
+                        <label for="confirmPassword">
+                            Confirm Password
+
+                            <div class="password-wrapper">
+
+                                <input
+                                    id="confirmPassword"
+                                    name="confirm_password"
+                                    type="password"
+                                    autocomplete="new-password"
+                                    required
+                                >
+
+                                <button
+                                    type="button"
+                                    class="password-toggle"
+                                    onclick="togglePassword('confirmPassword', this)"
+                                    aria-label="Show password"
+                                    title="Show password"
+                                >
+
+                                    <svg
+                                        class="eye"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"></path>
+                                        <circle cx="12" cy="12" r="2.5"></circle>
+                                    </svg>
+
+                                    <svg
+                                        class="eye-off"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path d="M3 3l18 18"></path>
+                                        <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path>
+                                        <path d="M9.9 4.3A10.8 10.8 0 0 1 12 4c6.5 0 10 6 10 6a18.3 18.3 0 0 1-3.1 3.8"></path>
+                                        <path d="M6.1 6.1C3.5 8 2 10 2 10s3.5 6 10 6a9.9 9.9 0 0 0 3.3-.6"></path>
+                                    </svg>
+
+                                </button>
+
+                            </div>
+                        </label>
+
+
+                        <button
+                            class="login-btn"
+                            type="submit"
+                        >
+                            Create Account
+                        </button>
+
+
+                        <button
+                            class="register-btn"
+                            type="button"
+                            onclick="showLogin()"
+                        >
+                            Back to Login
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+    <footer>
+        © 2026 StreetLens Platform · v2.4.1
+    </footer>
+
+</div>
+
+
+{% else %}
+
+
+<!-- DASHBOARD -->
+
+<div class="dashboard">
+
+    <header class="header">
+
+        <div class="header-brand">
+            <strong>StreetLens</strong>
+            <span>·</span>
+            <span>Pavement Condition</span>
+        </div>
+
+
+        <nav class="tabs">
+            <button class="tab active" data-tab="A">
+                A · Route Command
+            </button>
+
+            <button class="tab" data-tab="B">
+                B · Inspection Report
+            </button>
+
+            <button class="tab" data-tab="C">
+                C · Network Overview
+            </button>
+        </nav>
+
+
+        <div class="header-controls">
+
+            <span class="field-label">
+                ROUTE
+            </span>
+
+            <button class="select-box">
+                US-1 · Trenton Corridor
+                <span>⌄</span>
+            </button>
+
+            <span class="field-label">
+                MILE POST
+            </span>
+
+            <span class="mile-box">
+                52.1
+            </span>
+
+
+            <!-- Logout must be POST because Flask route is POST-only -->
+            <form
+                action="{{ url_for('logout') }}"
+                method="POST"
+                class="signout-form"
+            >
+                <button
+                    type="submit"
+                    class="signout"
+                >
+                    Sign out
+                </button>
+            </form>
+
+        </div>
+
+    </header>
+
+
+    <main class="dashboard-body">
+
+        <aside class="left-column">
+
+            <!-- Route overview -->
+
+            <section class="route-section">
+
+                <div class="section-title-row">
+
+                    <h2>
+                        Route overview
+                    </h2>
+
+                    <div class="legend">
+                        <span>
+                            <i class="good"></i>
+                            Good
+                        </span>
+
+                        <span>
+                            <i class="fair"></i>
+                            Fair
+                        </span>
+
+                        <span>
+                            <i class="poor"></i>
+                            Poor
+                        </span>
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="map-card"
+                    onclick="openMap()"
+                >
+
+                    <svg
+                        viewBox="0 0 300 220"
+                        aria-label="Route overview map"
+                    >
+
+                        <rect
+                            width="300"
+                            height="220"
+                            fill="#121212"
+                        />
+
+                        <g opacity=".35">
+
+                            {% for i in range(7) %}
+                            <line
+                                x1="{{ i * 50 }}"
+                                y1="0"
+                                x2="{{ i * 50 }}"
+                                y2="220"
+                                stroke="#222"
+                            />
+                            {% endfor %}
+
+                            {% for i in range(5) %}
+                            <line
+                                x1="0"
+                                y1="{{ i * 55 }}"
+                                x2="300"
+                                y2="{{ i * 55 }}"
+                                stroke="#222"
+                            />
+                            {% endfor %}
+
+                        </g>
+
+
+                        <path
+                            d="M85 195 C105 155 104 125 88 95 C69 61 98 39 143 34 C191 29 233 45 245 76 C258 109 238 130 240 157 C243 180 258 191 275 201"
+                            fill="none"
+                            stroke="#353535"
+                            stroke-width="15"
+                            stroke-linecap="round"
+                        />
+
+                        <path
+                            d="M85 195 C105 155 104 125 88 95 C69 61 98 39 143 34"
+                            fill="none"
+                            stroke="#57a45d"
+                            stroke-width="10"
+                            stroke-linecap="round"
+                        />
+
+                        <path
+                            d="M143 34 C191 29 233 45 245 76"
+                            fill="none"
+                            stroke="#d4a62f"
+                            stroke-width="10"
+                            stroke-linecap="round"
+                        />
+
+                        <path
+                            d="M245 76 C258 109 238 130 240 157 C243 180 258 191 275 201"
+                            fill="none"
+                            stroke="#cf573f"
+                            stroke-width="10"
+                            stroke-linecap="round"
+                        />
+
+                        <circle
+                            cx="240"
+                            cy="157"
+                            r="7"
+                            fill="#f0ead5"
+                            stroke="#222"
+                            stroke-width="2"
+                        />
+
+                        <text
+                            x="34"
+                            y="35"
+                            fill="#444"
+                            font-size="9"
+                            font-family="monospace"
+                        >
+                            MP 50.0
+                        </text>
+
+                        <text
+                            x="105"
+                            y="115"
+                            fill="#333"
+                            font-size="9"
+                            font-family="monospace"
+                        >
+                            MP 51.5
+                        </text>
+
+                        <text
+                            x="162"
+                            y="180"
+                            fill="#555"
+                            font-size="9"
+                            font-family="monospace"
+                        >
+                            52.1 ◀
+                        </text>
+
+                        <text
+                            x="160"
+                            y="215"
+                            fill="#333"
+                            font-size="9"
+                            font-family="monospace"
+                        >
+                            MP 53.0
+                        </text>
+
+                    </svg>
+
+                </div>
+
+            </section>
+
+
+            <!-- ML crack images -->
+
+            <section class="ml-card">
+
+                <div class="ml-head">
+
+                    <h2>
+                        ML-detected cracks · sample frames
+                    </h2>
+
+                    <span>
+                        MP 51.8–52.3 · 5 lanes scanned
+                    </span>
+
+                </div>
+
+
+                <div class="sample-list">
+
+                    <div class="sample">
+
+                        <img
+                            src="{{ url_for('static', filename='images/crack-1.png') }}"
+                            alt="Transverse crack"
+                        >
+
+                        <p>
+                            Transverse crack · side joint
+                        </p>
+
+                    </div>
+
+
+                    <div class="sample">
+
+                        <img
+                            src="{{ url_for('static', filename='images/crack-2.png') }}"
+                            alt="Alligator cracking"
+                        >
+
+                        <p>
+                            Alligator cracking
+                        </p>
+
+                    </div>
+
+
+                    <div class="sample">
+
+                        <img
+                            src="{{ url_for('static', filename='images/crack-3.png') }}"
+                            alt="Longitudinal crack"
+                        >
+
+                        <p>
+                            Longitudinal crack
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="sample-legend">
+
+                    <span>
+                        <i style="background:#3b82f6"></i>
+                        Alligator crack
+                    </span>
+
+                    <span>
+                        <i style="background:#f97316"></i>
+                        Longitudinal crack
+                    </span>
+
+                    <span>
+                        <i style="background:#eab308"></i>
+                        Transverse crack
+                    </span>
+
+                    <span>
+                        <i style="background:#a855f7"></i>
+                        Pothole
+                    </span>
+
+                </div>
+
+            </section>
+
+        </aside>
+
+
+        <!-- RIGHT COLUMN -->
+
+        <section class="right-column">
+
+            <div class="road-viewer">
+
+                <img
+                    src="https://images.unsplash.com/photo-1519817914152-22d216bb9170?w=1200&h=500&fit=crop&auto=format"
+                    alt="Forward-facing road inspection photograph"
+                >
+
+                <div class="distress-badge">
+                    <strong>71</strong>
+                    <span>DISTRESS INDEX</span>
+                </div>
+
+            </div>
+
+
+            <!-- Route details -->
+
+            <section class="route-details">
+
+                <div class="details-header">
+
+                    <strong>
+                        Route details
+                    </strong>
+
+                    <label>
+                        Show route details
+
+                        <button
+                            id="detailsToggle"
+                            class="toggle"
+                            type="button"
+                            onclick="toggleDetails()"
+                            aria-label="Toggle route details"
+                        >
+                            <span></span>
+                        </button>
+
+                    </label>
+
+                </div>
+
+
+                <div
+                    id="detailsContent"
+                    class="details-content hidden"
+                >
+
+                    {% for l, v in [
+                        ('Route', 'US-1'),
+                        ('Mile post', '52.1'),
+                        ('Direction', 'Northbound'),
+                        ('Captured', '09/12/25'),
+                        ('Coordinate', '40.2143°, -74.759°')
+                    ] %}
+
+                    <div>
+                        <small>{{ l }}</small>
+                        <strong>{{ v }}</strong>
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </section>
+
+
+            <!-- Analytics -->
+
+            <section class="analytics">
+
+                <!-- Distress breakdown -->
+
+                <div class="analytics-card breakdown">
+
+                    <h2>
+                        Distress breakdown
+                    </h2>
+
+
+                    {% for d in distress %}
+
+                    <div class="distress-row">
+
+                        <div class="distress-line">
+
+                            <span>
+                                <i class="swatch" data-color="{{ d.color }}"></i>
+                                {{ d.label }}
+                            </span>
+
+                            <b>
+                                {{ d.pct }}%
+                            </b>
+
+                        </div>
+
+
+                        <div class="bar">
+                            <span
+                                class="bar-fill"
+                                data-pct="{{ d.pct }}"
+                                data-color="{{ d.color }}"
+                            ></span>
+                        </div>
+
+
+                        <p>
+                            {{ d.sub }}
+                        </p>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <!-- Overall score -->
+
+                <div class="analytics-card score">
+
+                    <h2>
+                        Overall distress score
+                    </h2>
+
+
+                    <div class="gauge">
+
+                        <svg viewBox="0 0 220 130">
+
+                            <path
+                                d="M35 105 A75 75 0 0 1 185 105"
+                                fill="none"
+                                stroke="#2a2a2a"
+                                stroke-width="14"
+                                stroke-linecap="round"
+                            />
+
+                            <path
+                                d="M35 105 A75 75 0 0 1 185 105"
+                                fill="none"
+                                stroke="#f97316"
+                                stroke-width="14"
+                                stroke-linecap="round"
+                                stroke-dasharray="136 236"
+                            />
+
+                            <text
+                                x="110"
+                                y="95"
+                                text-anchor="middle"
+                                fill="#f1f1f1"
+                                font-size="36"
+                                font-weight="700"
+                                font-family="Outfit"
+                            >
+                                29
+                            </text>
+
+                            <text
+                                x="110"
+                                y="113"
+                                text-anchor="middle"
+                                fill="#777"
+                                font-size="9"
+                                font-family="Inter"
+                            >
+                                scale: 100 = best condition
+                            </text>
+
+                        </svg>
+
+                    </div>
+
+
+                    <div class="condition">
+                        CONDITION: POOR
+                    </div>
+
+
+                    <div class="pills">
+
+                        {% for p in pills %}
+
+                        <div>
+                            <span>{{ p.label }}</span>
+                            <b>{{ p.score }}</b>
+                        </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- Map modal -->
+
+<div
+    id="mapModal"
+    class="modal hidden"
+    onclick="closeMap(event)"
+>
+
+    <div
+        class="modal-card"
+        onclick="event.stopPropagation()"
+    >
+
+        <div class="modal-head">
+
+            <strong>
+                ● Inspection Location — US-1 NorthBound
+            </strong>
+
+            <button onclick="closeMap()">
+                ×
+            </button>
+
+        </div>
+
+
+        <div class="modal-map">
+
+            <svg viewBox="0 0 640 380">
+
+                <rect
+                    width="640"
+                    height="380"
+                    fill="#1a2744"
+                />
+
+                <rect
+                    x="302"
+                    width="36"
+                    height="380"
+                    fill="#2d4a6e"
+                />
+
+                <rect
+                    x="318"
+                    width="4"
+                    height="380"
+                    fill="#f1f5f9"
+                    opacity=".15"
+                />
+
+                <rect
+                    y="172"
+                    width="640"
+                    height="30"
+                    fill="#253d5a"
+                />
+
+                <circle
+                    cx="320"
+                    cy="190"
+                    r="9"
+                    fill="#84cc16"
+                />
+
+            </svg>
+
+        </div>
+
+
+        <div class="modal-foot">
+
+            ● Inspection Point
+
+            <span>
+                Coords: 176.98°N, 169.99°W
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+
+<script>
+
+    function showRegister() {
+        document
+            .getElementById("loginFormView")
+            .classList.add("hidden");
+
+        document
+            .getElementById("registerView")
+            .classList.remove("hidden");
+
+        window.location.hash = "register";
+    }
+
+
+    function showLogin() {
+        document
+            .getElementById("registerView")
+            .classList.add("hidden");
+
+        document
+            .getElementById("loginFormView")
+            .classList.remove("hidden");
+
+        history.replaceState(
+            null,
+            "",
+            window.location.pathname + window.location.search
+        );
+    }
+
+
+    function togglePassword(inputId, button) {
+
+        const input = document.getElementById(inputId);
+
+        const reveal = input.type === "password";
+
+        input.type = reveal ? "text" : "password";
+
+        button.classList.toggle("revealed", reveal);
+
+        button.setAttribute(
+            "aria-label",
+            reveal ? "Hide password" : "Show password"
+        );
+
+        button.setAttribute(
+            "title",
+            reveal ? "Hide password" : "Show password"
+        );
+    }
+
+
+    function forgotPassword() {
+        alert(
+            "Password recovery is not configured yet. Please contact the StreetLens administrator."
+        );
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        if (window.location.hash === "#register") {
+            showRegister();
+        }
+
+    });
+
+</script>
+
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+</body>
+</html>
