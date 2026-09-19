@@ -242,6 +242,37 @@
         .streetlens-map-popup strong { display:block; font-size:12px; margin-bottom:5px; }
         .streetlens-map-popup div { font-size:10px; line-height:1.55; }
         .streetlens-map-popup .demo-note { color:#777; margin-top:4px; font-size:9px; }
+        .streetlens-map-popup .pci-popup-row {
+            padding: 6px 0;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 5px;
+        }
+        .streetlens-map-popup .pci-pill {
+            display:inline-block;
+            margin-left:6px;
+            padding:2px 6px;
+            border-radius:999px;
+            font-size:9px;
+            font-weight:700;
+            letter-spacing:.04em;
+        }
+        .streetlens-map-popup .pci-pill.good { background:#ecfccb; color:#3f6212; }
+        .streetlens-map-popup .pci-pill.fair { background:#fef9c3; color:#854d0e; }
+        .streetlens-map-popup .pci-pill.poor { background:#fee2e2; color:#991b1b; }
+        .streetlens-pci-count {
+            position:absolute;
+            left:10px;
+            top:10px;
+            z-index:4;
+            padding:5px 8px;
+            border-radius:6px;
+            background:rgba(17,24,39,.88);
+            color:#fff;
+            font-size:9px;
+            letter-spacing:.03em;
+            pointer-events:none;
+        }
+
         .maplibregl-popup-content { border-radius:7px; padding:10px 12px; }
         .maplibregl-ctrl-group { border-radius:5px !important; overflow:hidden; }
         .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin-bottom:7px; margin-right:7px; }
@@ -656,9 +687,16 @@
 
         <nav class="tabs">
             <button class="tab active" data-tab="A">
-                 Route Command
+                A · Route Command
             </button>
 
+            <button class="tab" data-tab="B">
+                B · Inspection Report
+            </button>
+
+            <button class="tab" data-tab="C">
+                C · Network Overview
+            </button>
         </nav>
 
 
@@ -744,9 +782,9 @@
                     </div>
 
                     <div class="streetlens-map-mini-legend">
-                        <span><i class="good"></i> Good</span>
-                        <span><i class="fair"></i> Fair</span>
-                        <span><i class="poor"></i> Poor</span>
+                        <span><i class="good"></i> PCI 90–100</span>
+                        <span><i class="fair"></i> PCI 80–89</span>
+                        <span><i class="poor"></i> PCI 65–79</span>
                     </div>
 
                     <div class="streetlens-map-mini-tools">
@@ -754,6 +792,7 @@
                         <button id="streetLensDashboardReset" type="button">↺</button>
                         <button id="streetLensDashboardExpand" type="button">⛶</button>
                     </div>
+                    <div id="streetLensPCICount" class="streetlens-pci-count">109 evaluated roads</div>
 
                 </div>
 
@@ -1103,9 +1142,9 @@
 
         <div class="modal-foot">
 
-            ● Inspection Corridor · Collingswood, NJ
+            ● PCI Inspection Map · Collingswood, NJ
 
-            <span id="streetLensMapCoords">Demo inspection data</span>
+            <span id="streetLensMapCoords">Collingswood PCI data</span>
 
         </div>
 
@@ -1194,111 +1233,161 @@
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
 (function () {
-    const SEGMENTS = [
-        { id:'haddon-51-8', route:'Haddon Avenue', mp:'51.8', condition:'Good', score:18, color:'#84cc16', coords:[[-75.0819,39.9208],[-75.0787,39.9199],[-75.0755,39.9189]] },
-        { id:'haddon-52-0', route:'Haddon Avenue', mp:'52.0', condition:'Fair', score:46, color:'#eab308', coords:[[-75.0755,39.9189],[-75.0721,39.9180],[-75.0688,39.9171]] },
-        { id:'haddon-52-2', route:'Haddon Avenue', mp:'52.2', condition:'Poor', score:79, color:'#ef4444', coords:[[-75.0688,39.9171],[-75.0660,39.9163],[-75.0633,39.9155]] },
-        { id:'haddon-52-4', route:'Haddon Avenue', mp:'52.4', condition:'Good', score:24, color:'#84cc16', coords:[[-75.0633,39.9155],[-75.0610,39.9148],[-75.0592,39.9139]] },
-        { id:'collings-10-1', route:'Collings Avenue', mp:'10.1', condition:'Good', score:22, color:'#84cc16', coords:[[-75.0804,39.9150],[-75.0774,39.9141],[-75.0745,39.9133]] },
-        { id:'collings-10-3', route:'Collings Avenue', mp:'10.3', condition:'Fair', score:51, color:'#eab308', coords:[[-75.0745,39.9133],[-75.0715,39.9124],[-75.0686,39.9116]] },
-        { id:'collings-10-5', route:'Collings Avenue', mp:'10.5', condition:'Poor', score:73, color:'#ef4444', coords:[[-75.0686,39.9116],[-75.0660,39.9108],[-75.0634,39.9101]] },
-        { id:'cuthbert-4-6', route:'Cuthbert Boulevard', mp:'4.6', condition:'Poor', score:71, color:'#ef4444', coords:[[-75.0870,39.9098],[-75.0840,39.9120],[-75.0811,39.9142]] },
-        { id:'cuthbert-4-8', route:'Cuthbert Boulevard', mp:'4.8', condition:'Fair', score:48, color:'#eab308', coords:[[-75.0811,39.9142],[-75.0782,39.9164],[-75.0754,39.9185]] },
-        { id:'cuthbert-5-0', route:'Cuthbert Boulevard', mp:'5.0', condition:'Good', score:19, color:'#84cc16', coords:[[-75.0754,39.9185],[-75.0730,39.9204],[-75.0710,39.9223]] }
-    ];
+    const PCI_RECORDS = [{"no":1,"road":"Autumn Ave","pci":65,"condition":"Poor","treatment":"Microsurfacing","match":["Autumn Ave"]},{"no":2,"road":"Bellevue Ct","pci":70,"condition":"Poor","treatment":"Patching and crack sealing","match":["Bellevue Ct"]},{"no":3,"road":"W Summerfield Ave","pci":70,"condition":"Poor","treatment":"Patching and crack sealing","match":["W Summerfield Ave"]},{"no":4,"road":"Allen Ln","pci":70,"condition":"Poor","treatment":"Patching and crack sealing","match":["Allen Ln"]},{"no":5,"road":"Franklin Ave (E)","pci":71,"condition":"Poor","treatment":"Patching and crack sealing","match":["Franklin Ave (E)","Franklin Ave","E Franklin Ave"]},{"no":6,"road":"Oriental Ave","pci":74,"condition":"Poor","treatment":"Patching and crack sealing","match":["Oriental Ave"]},{"no":7,"road":"Magil Ave","pci":75,"condition":"Poor","treatment":"Patching and crack sealing","match":["Magil Ave"]},{"no":8,"road":"W Linden Ave","pci":75,"condition":"Poor","treatment":"Patching and crack sealing","match":["W Linden Ave"]},{"no":9,"road":"Edison Ave","pci":79,"condition":"Poor","treatment":"Patching and crack sealing","match":["Edison Ave"]},{"no":10,"road":"Spring Ave","pci":80,"condition":"Fair","treatment":"Patching and crack sealing","match":["Spring Ave"]},{"no":11,"road":"Cattell Ave","pci":80,"condition":"Fair","treatment":"Patching and crack sealing","match":["Cattell Ave"]},{"no":12,"road":"Hillcrest Ave","pci":80,"condition":"Fair","treatment":"Patching and crack sealing","match":["Hillcrest Ave"]},{"no":13,"road":"Tatum Ave","pci":80,"condition":"Fair","treatment":"Patching and crack sealing","match":["Tatum Ave"]},{"no":14,"road":"Maple Ln","pci":80,"condition":"Fair","treatment":"Patching and crack sealing","match":["Maple Ln"]},{"no":15,"road":"Colford Ave","pci":81,"condition":"Fair","treatment":"Patching and crack sealing","match":["Colford Ave"]},{"no":16,"road":"Conrad Ave","pci":81,"condition":"Fair","treatment":"Patching and crack sealing","match":["Conrad Ave"]},{"no":17,"road":"Harding Terrace","pci":81,"condition":"Fair","treatment":"Patching and crack sealing","match":["Harding Terrace"]},{"no":18,"road":"Sunset Ln","pci":81,"condition":"Fair","treatment":"Patching and crack sealing","match":["Sunset Ln"]},{"no":19,"road":"Garfield Ave","pci":83,"condition":"Fair","treatment":"Patching and crack sealing","match":["Garfield Ave"]},{"no":20,"road":"S Atlantic Ave","pci":84,"condition":"Fair","treatment":"Patching and crack sealing","match":["S Atlantic Ave"]},{"no":21,"road":"Lees Ave","pci":84,"condition":"Fair","treatment":"Patching and crack sealing","match":["Lees Ave"]},{"no":22,"road":"W Coulter Ave","pci":84,"condition":"Fair","treatment":"Patching and crack sealing","match":["W Coulter Ave"]},{"no":23,"road":"Dill Ave","pci":85,"condition":"Fair","treatment":"Patching and crack sealing","match":["Dill Ave"]},{"no":24,"road":"Virginia Ave","pci":85,"condition":"Fair","treatment":"Patching and crack sealing","match":["Virginia Ave"]},{"no":26,"road":"Comly Ln","pci":85,"condition":"Fair","treatment":"Patching and crack sealing","match":["Comly Ln"]},{"no":27,"road":"Linwood Ave","pci":85,"condition":"Fair","treatment":"Patching and crack sealing","match":["Linwood Ave"]},{"no":25,"road":"W Narberth Terrace","pci":85,"condition":"Fair","treatment":"Patching and crack sealing","match":["W Narberth Terrace"]},{"no":28,"road":"Park Ave (W Zane Ave \u2013 Collings Ave)","pci":86,"condition":"Fair","treatment":"Patching and crack sealing","match":["Park Ave (W Zane Ave \u2013 Collings Ave)","Park Ave"]},{"no":29,"road":"Merrik Ave [Merrick]","pci":87,"condition":"Fair","treatment":"Crack sealing","match":["Merrik Ave [Merrick]","Merrik Ave","Merrick Ave"]},{"no":30,"road":"New Jersey Ave","pci":87,"condition":"Fair","treatment":"Crack sealing","match":["New Jersey Ave"]},{"no":31,"road":"Cedar Ave","pci":87,"condition":"Fair","treatment":"Crack sealing","match":["Cedar Ave"]},{"no":32,"road":"Lees Lane","pci":87,"condition":"Fair","treatment":"Crack sealing","match":["Lees Lane"]},{"no":33,"road":"Bellmont Ave","pci":87,"condition":"Fair","treatment":"No maintenance needed","match":["Bellmont Ave","Belmont Ave"]},{"no":34,"road":"W Franklin Ave","pci":87,"condition":"Fair","treatment":"Crack sealing","match":["W Franklin Ave"]},{"no":35,"road":"Laurel Ave","pci":87,"condition":"Fair","treatment":"Crack sealing","match":["Laurel Ave"]},{"no":36,"road":"W Franklin Ave","pci":88,"condition":"Fair","treatment":"No maintenance needed","match":["W Franklin Ave"]},{"no":37,"road":"Park Ave (Collings Ave \u2013 Lees Ave)","pci":88,"condition":"Fair","treatment":"Crack sealing","match":["Park Ave (Collings Ave \u2013 Lees Ave)","Park Ave"]},{"no":38,"road":"Linden Ave","pci":88,"condition":"Fair","treatment":"Crack sealing","match":["Linden Ave"]},{"no":39,"road":"Ventnor Ave","pci":89,"condition":"Fair","treatment":"Crack sealing","match":["Ventnor Ave"]},{"no":40,"road":"Stokes Ave","pci":89,"condition":"Fair","treatment":"No maintenance needed","match":["Stokes Ave"]},{"no":41,"road":"Comly Ave","pci":90,"condition":"Good","treatment":"No maintenance needed","match":["Comly Ave"]},{"no":42,"road":"Eldridge Ave","pci":90,"condition":"Good","treatment":"Crack sealing","match":["Eldridge Ave"]},{"no":43,"road":"Mansion Ave","pci":91,"condition":"Good","treatment":"Crack sealing","match":["Mansion Ave"]},{"no":44,"road":"Lakeview Dr","pci":91,"condition":"Good","treatment":"Crack sealing","match":["Lakeview Dr"]},{"no":45,"road":"Sloan Ave","pci":91,"condition":"Good","treatment":"Crack sealing","match":["Sloan Ave"]},{"no":46,"road":"Billson Ave","pci":91,"condition":"Good","treatment":"Crack sealing","match":["Billson Ave"]},{"no":47,"road":"Woodlawn Ave","pci":91,"condition":"Good","treatment":"Crack sealing","match":["Woodlawn Ave"]},{"no":48,"road":"Woodlawn Terrace","pci":91,"condition":"Good","treatment":"Crack sealing","match":["Woodlawn Terrace"]},{"no":49,"road":"S Vineyard Blvd","pci":91,"condition":"Good","treatment":"Crack sealing","match":["S Vineyard Blvd"]},{"no":50,"road":"Jessamine Ave","pci":91,"condition":"Good","treatment":"Crack sealing","match":["Jessamine Ave"]},{"no":51,"road":"W Madison Ave","pci":91,"condition":"Good","treatment":"Crack sealing","match":["W Madison Ave"]},{"no":53,"road":"Pacific Ave","pci":92,"condition":"Good","treatment":"Crack sealing","match":["Pacific Ave"]},{"no":54,"road":"W Knight Ave","pci":92,"condition":"Good","treatment":"Crack sealing","match":["W Knight Ave"]},{"no":52,"road":"Park Ave (Arlington Ave)","pci":92,"condition":"Good","treatment":"Crack sealing","match":["Park Ave (Arlington Ave)","Park Ave"]},{"no":55,"road":"Ogden Ave","pci":92,"condition":"Good","treatment":"No maintenance needed","match":["Ogden Ave"]},{"no":56,"road":"E Summerfield Ave","pci":92,"condition":"Good","treatment":"No maintenance needed","match":["E Summerfield Ave"]},{"no":57,"road":"W Stiles Ave","pci":92,"condition":"Good","treatment":"Crack sealing","match":["W Stiles Ave"]},{"no":58,"road":"King Ave","pci":92,"condition":"Good","treatment":"Crack sealing","match":["King Ave"]},{"no":59,"road":"E Madison Ave","pci":92,"condition":"Good","treatment":"No maintenance needed","match":["E Madison Ave"]},{"no":60,"road":"E Coulter Ave","pci":92,"condition":"Good","treatment":"No maintenance needed","match":["E Coulter Ave"]},{"no":61,"road":"Lakeshore Drive","pci":93,"condition":"Good","treatment":"No maintenance needed","match":["Lakeshore Drive"]},{"no":62,"road":"N Vineyard Blvd","pci":93,"condition":"Good","treatment":"Crack sealing","match":["N Vineyard Blvd"]},{"no":63,"road":"Crestmont Terrace","pci":93,"condition":"Good","treatment":"Crack sealing","match":["Crestmont Terrace"]},{"no":64,"road":"Harrison Ave","pci":93,"condition":"Good","treatment":"No maintenance needed","match":["Harrison Ave"]},{"no":66,"road":"Byrant Ave [Bryant]","pci":93,"condition":"Good","treatment":"Crack sealing","match":["Byrant Ave [Bryant]","Byrant Ave","Bryant Ave"]},{"no":65,"road":"Newton Ave (by Bettlewood Ave)","pci":93,"condition":"Good","treatment":"No maintenance needed","match":["Newton Ave (by Bettlewood Ave)","Newton Ave"]},{"no":67,"road":"E Knight Ave","pci":93,"condition":"Good","treatment":"No maintenance needed","match":["E Knight Ave"]},{"no":68,"road":"Washington Ave","pci":93,"condition":"Good","treatment":"No maintenance needed","match":["Washington Ave"]},{"no":69,"road":"Newton Ave (by Pewter Village)","pci":94,"condition":"Good","treatment":"Crack sealing","match":["Newton Ave (by Pewter Village)","Newton Ave"]},{"no":70,"road":"Penn Ave (Partial)","pci":94,"condition":"Good","treatment":"No maintenance needed","match":["Penn Ave (Partial)","Penn Ave"]},{"no":72,"road":"Harvard Ave","pci":94,"condition":"Good","treatment":"No maintenance needed","match":["Harvard Ave"]},{"no":73,"road":"N Atlantic Ave (Irvin Ave \u2013 Powell Ln)","pci":94,"condition":"Good","treatment":"No maintenance needed","match":["N Atlantic Ave (Irvin Ave \u2013 Powell Ln)","N Atlantic Ave"]},{"no":71,"road":"W Homestead Ave","pci":94,"condition":"Good","treatment":"Crack sealing","match":["W Homestead Ave"]},{"no":74,"road":"Woodlynne Ave","pci":94,"condition":"Good","treatment":"No maintenance needed","match":["Woodlynne Ave"]},{"no":76,"road":"Dwight Ave","pci":94,"condition":"Good","treatment":"No maintenance needed","match":["Dwight Ave"]},{"no":78,"road":"Cambridge Ave","pci":95,"condition":"Good","treatment":"No maintenance needed","match":["Cambridge Ave"]},{"no":82,"road":"Atlantic Ave (Merion Terrace \u2013 Browning Rd)","pci":95,"condition":"Good","treatment":"No maintenance needed","match":["Atlantic Ave (Merion Terrace \u2013 Browning Rd)","Atlantic Ave"]},{"no":79,"road":"Frazer Ave","pci":95,"condition":"Good","treatment":"No maintenance needed","match":["Frazer Ave"]},{"no":81,"road":"Lincoln Ave","pci":95,"condition":"Good","treatment":"No maintenance needed","match":["Lincoln Ave"]},{"no":80,"road":"Merion Terrace","pci":95,"condition":"Good","treatment":"No maintenance needed","match":["Merion Terrace"]},{"no":77,"road":"Park Ave (Lees Ave \u2013 W Cuthbert Blvd)","pci":95,"condition":"Good","treatment":"No maintenance needed","match":["Park Ave (Lees Ave \u2013 W Cuthbert Blvd)","Park Ave"]},{"no":83,"road":"Chelsea Ave","pci":95,"condition":"Good","treatment":"No maintenance needed","match":["Chelsea Ave"]},{"no":84,"road":"Arlington Ave","pci":95,"condition":"Good","treatment":"No maintenance needed","match":["Arlington Ave"]},{"no":85,"road":"Maple Ave North","pci":95,"condition":"Good","treatment":"No maintenance needed","match":["Maple Ave North"]},{"no":86,"road":"Wallace Ave","pci":95,"condition":"Good","treatment":"No maintenance needed","match":["Wallace Ave"]},{"no":88,"road":"E Zane Ave","pci":96,"condition":"Good","treatment":"No maintenance needed","match":["E Zane Ave"]},{"no":89,"road":"Champion Ave","pci":96,"condition":"Good","treatment":"No maintenance needed","match":["Champion Ave"]},{"no":90,"road":"Conger Ave","pci":96,"condition":"Good","treatment":"No maintenance needed","match":["Conger Ave"]},{"no":91,"road":"Grant Ave","pci":96,"condition":"Good","treatment":"No maintenance needed","match":["Grant Ave"]},{"no":87,"road":"Atlantic Ave (Collings Ave \u2013 W Cuthbert Blvd)","pci":96,"condition":"Good","treatment":"No maintenance needed","match":["Atlantic Ave (Collings Ave \u2013 W Cuthbert Blvd)","Atlantic Ave"]},{"no":93,"road":"N Atlantic Ave (W Homestead Ave \u2013 W Cuthbert Blvd)","pci":96,"condition":"Good","treatment":"No maintenance needed","match":["N Atlantic Ave (W Homestead Ave \u2013 W Cuthbert Blvd)","N Atlantic Ave"]},{"no":92,"road":"Taylor Ave","pci":96,"condition":"Good","treatment":"No maintenance needed","match":["Taylor Ave"]},{"no":94,"road":"Maple Terrace","pci":96,"condition":"Good","treatment":"No maintenance needed","match":["Maple Terrace"]},{"no":95,"road":"Center Street","pci":96,"condition":"Good","treatment":"No maintenance needed","match":["Center Street"]},{"no":97,"road":"Ardmore Terrace","pci":97,"condition":"Good","treatment":"No maintenance needed","match":["Ardmore Terrace"]},{"no":98,"road":"Dayton Ave","pci":97,"condition":"Good","treatment":"No maintenance needed","match":["Dayton Ave"]},{"no":99,"road":"Irwin Ave","pci":97,"condition":"Good","treatment":"No maintenance needed","match":["Irwin Ave"]},{"no":96,"road":"N Atlantic Ave (Billson Ave \u2013 W Homestead Ave)","pci":97,"condition":"Good","treatment":"No maintenance needed","match":["N Atlantic Ave (Billson Ave \u2013 W Homestead Ave)","N Atlantic Ave"]},{"no":100,"road":"Highland Ave","pci":98,"condition":"Good","treatment":"No maintenance needed","match":["Highland Ave"]},{"no":101,"road":"Lawnside Ave","pci":98,"condition":"Good","treatment":"No maintenance needed","match":["Lawnside Ave"]},{"no":102,"road":"W Gorman Ave","pci":98,"condition":"Good","treatment":"No maintenance needed","match":["W Gorman Ave"]},{"no":103,"road":"Everett Ave","pci":98,"condition":"Good","treatment":"No maintenance needed","match":["Everett Ave"]},{"no":104,"road":"E Homestead Ave","pci":99,"condition":"Good","treatment":"No maintenance needed","match":["E Homestead Ave"]},{"no":105,"road":"E Palmer Ave","pci":99,"condition":"Good","treatment":"No maintenance needed","match":["E Palmer Ave"]},{"no":106,"road":"E Stiles Ave","pci":99,"condition":"Good","treatment":"No maintenance needed","match":["E Stiles Ave"]},{"no":107,"road":"Crestmont Ln","pci":99,"condition":"Good","treatment":"No maintenance needed","match":["Crestmont Ln"]},{"no":75,"road":"W Wayne Terrace","pci":99,"condition":"Good","treatment":"No maintenance needed","match":["W Wayne Terrace"]},{"no":108,"road":"W Wayne Terrace (E)","pci":99,"condition":"Good","treatment":"No maintenance needed","match":["W Wayne Terrace (E)","W Wayne Terrace"]},{"no":109,"road":"Powell Ln","pci":99,"condition":"Good","treatment":"No maintenance needed","match":["Powell Ln"]}];
 
-    const BOUNDS = [[-75.091,39.908],[-75.058,39.924]];
+    /*
+     * PCI source:
+     * Collingswood Collection List.xlsx — Table 2 - Prioritization.
+     *
+     * The spreadsheet contains road-level PCI values, while the basemap
+     * contains OSM/OpenMapTiles road geometry. We match the computed PCI
+     * records to the basemap's road name property so the actual mapped
+     * road geometry is colored instead of using hand-drawn demo lines.
+     *
+     * Display buckets:
+     *   90–100 = Good
+     *   80–89  = Fair
+     *   65–79  = Poor
+     *
+     * Where the spreadsheet contains multiple section records for the same
+     * OSM road name, the map uses the lowest PCI for the visible road line
+     * and the popup lists all matching records/sections.
+     */
+
+    const PCI_POOR_NAMES = ["Allen Ln","Autumn Ave","Bellevue Ct","E Franklin Ave","Edison Ave","Franklin Ave","Franklin Ave (E)","Magil Ave","Oriental Ave","W Linden Ave","W Summerfield Ave"];
+    const PCI_FAIR_NAMES = ["Bellmont Ave","Belmont Ave","Cattell Ave","Cedar Ave","Colford Ave","Comly Ln","Conrad Ave","Dill Ave","Garfield Ave","Harding Terrace","Hillcrest Ave","Laurel Ave","Lees Ave","Lees Lane","Linden Ave","Linwood Ave","Maple Ln","Merrick Ave","Merrik Ave","Merrik Ave [Merrick]","New Jersey Ave","Park Ave","Park Ave (Collings Ave \u2013 Lees Ave)","Park Ave (W Zane Ave \u2013 Collings Ave)","S Atlantic Ave","Spring Ave","Stokes Ave","Sunset Ln","Tatum Ave","Ventnor Ave","Virginia Ave","W Coulter Ave","W Franklin Ave","W Narberth Terrace"];
+    const PCI_GOOD_NAMES = ["Ardmore Terrace","Arlington Ave","Atlantic Ave","Atlantic Ave (Collings Ave \u2013 W Cuthbert Blvd)","Atlantic Ave (Merion Terrace \u2013 Browning Rd)","Billson Ave","Bryant Ave","Byrant Ave","Byrant Ave [Bryant]","Cambridge Ave","Center Street","Champion Ave","Chelsea Ave","Comly Ave","Conger Ave","Crestmont Ln","Crestmont Terrace","Dayton Ave","Dwight Ave","E Coulter Ave","E Homestead Ave","E Knight Ave","E Madison Ave","E Palmer Ave","E Stiles Ave","E Summerfield Ave","E Zane Ave","Eldridge Ave","Everett Ave","Frazer Ave","Grant Ave","Harrison Ave","Harvard Ave","Highland Ave","Irwin Ave","Jessamine Ave","King Ave","Lakeshore Drive","Lakeview Dr","Lawnside Ave","Lincoln Ave","Mansion Ave","Maple Ave North","Maple Terrace","Merion Terrace","N Atlantic Ave","N Atlantic Ave (Billson Ave \u2013 W Homestead Ave)","N Atlantic Ave (Irvin Ave \u2013 Powell Ln)","N Atlantic Ave (W Homestead Ave \u2013 W Cuthbert Blvd)","N Vineyard Blvd","Newton Ave","Newton Ave (by Bettlewood Ave)","Newton Ave (by Pewter Village)","Ogden Ave","Pacific Ave","Park Ave","Park Ave (Arlington Ave)","Park Ave (Lees Ave \u2013 W Cuthbert Blvd)","Penn Ave","Penn Ave (Partial)","Powell Ln","S Vineyard Blvd","Sloan Ave","Taylor Ave","W Gorman Ave","W Homestead Ave","W Knight Ave","W Madison Ave","W Stiles Ave","W Wayne Terrace","W Wayne Terrace (E)","Wallace Ave","Washington Ave","Woodlawn Ave","Woodlawn Terrace","Woodlynne Ave"];
+
+    const BOUNDS = [[-75.095,39.904],[-75.055,39.929]];
     const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
     const SATELLITE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
     const maps = {};
 
-    function geojsonByCondition(condition) {
-        return {
-            type:'FeatureCollection',
-            features: SEGMENTS.filter(s => s.condition === condition).map(s => ({
-                type:'Feature',
-                properties:{id:s.id,route:s.route,mp:s.mp,condition:s.condition,score:s.score,color:s.color},
-                geometry:{type:'LineString',coordinates:s.coords}
-            }))
-        };
+    function recordsForName(name) {
+        return PCI_RECORDS.filter(r => r.match.some(n => n.toLowerCase() === String(name || '').toLowerCase()));
     }
 
-    function pointsGeoJSON() {
-        return {
-            type:'FeatureCollection',
-            features: SEGMENTS.map(s => ({
-                type:'Feature',
-                properties:{id:s.id,route:s.route,mp:s.mp,condition:s.condition,score:s.score,color:s.color},
-                geometry:{type:'Point',coordinates:s.coords[0]}
-            }))
-        };
+    function conditionForPCI(pci) {
+        if (pci >= 90) return 'Good';
+        if (pci >= 80) return 'Fair';
+        return 'Poor';
     }
 
-    function popupHTML(p) {
-        return `<div class="streetlens-map-popup"><strong>${p.route}</strong><div><b>Mile Post:</b> MP ${p.mp}</div><div><b>Condition:</b> ${p.condition}</div><div><b>Distress Score:</b> ${p.score}/100</div><div class="demo-note">Demo inspection data</div></div>`;
+    function popupHTML(properties) {
+        const road = properties.name || 'Road';
+        const matches = recordsForName(road);
+        if (!matches.length) {
+            return `<div class="streetlens-map-popup"><strong>${road}</strong><div>No PCI record matched.</div></div>`;
+        }
+
+        const rows = matches.map(r =>
+            `<div class="pci-popup-row">
+                <b>PCI:</b> ${r.pci}
+                <span class="pci-pill ${r.condition.toLowerCase()}">${r.condition}</span>
+                <br><b>Maintenance:</b> ${r.treatment}
+                ${r.road !== road ? `<br><b>Section:</b> ${r.road}` : ''}
+            </div>`
+        ).join('');
+
+        return `<div class="streetlens-map-popup">
+            <strong>${road}</strong>
+            ${rows}
+            <div class="demo-note">Source: Collingswood PCI prioritization list</div>
+        </div>`;
     }
 
-    function firstSymbolLayer(map) {
-        const layers = map.getStyle().layers || [];
-        const symbol = layers.find(l => l.type === 'symbol');
-        return symbol ? symbol.id : undefined;
-    }
+    function addPCIMapLayers(map) {
+        const firstSymbol = (map.getStyle().layers || []).find(l => l.type === 'symbol');
+        const beforeId = firstSymbol ? firstSymbol.id : undefined;
 
-    function addStreetLensLayers(map) {
-        const beforeId = firstSymbolLayer(map);
-
-        map.addSource('streetlens-good', {type:'geojson',data:geojsonByCondition('Good')});
-        map.addSource('streetlens-fair', {type:'geojson',data:geojsonByCondition('Fair')});
-        map.addSource('streetlens-poor', {type:'geojson',data:geojsonByCondition('Poor')});
-        map.addSource('streetlens-points', {type:'geojson',data:pointsGeoJSON()});
-        map.addSource('streetlens-satellite-source', {type:'raster',tiles:[SATELLITE_URL],tileSize:256,attribution:'Tiles © Esri'});
-
-        map.addLayer({id:'streetlens-satellite',type:'raster',source:'streetlens-satellite-source',layout:{visibility:'none'}}, beforeId);
-
-        // Thin casing first, then the condition color on top. This keeps the color visible.
-        ['good','fair','poor'].forEach(condition => {
-            const source = `streetlens-${condition}`;
-            map.addLayer({id:`streetlens-${condition}-casing`,type:'line',source,layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#111827','line-width':9,'line-opacity':0.9}}, beforeId);
-            map.addLayer({id:`streetlens-${condition}`,type:'line',source,layout:{'line-cap':'round','line-join':'round'},paint:{'line-color': condition==='good'?'#84cc16':condition==='fair'?'#eab308':'#ef4444','line-width':5.5,'line-opacity':0.98}}, beforeId);
+        map.addSource('streetlens-pci-roads', {
+            type: 'vector',
+            url: 'https://tiles.openfreemap.org/planet'
         });
 
-        // Mile-post markers are deliberately above the basemap labels.
-        map.addLayer({id:'streetlens-mileposts',type:'circle',source:'streetlens-points',paint:{'circle-radius':5,'circle-color':['get','color'],'circle-stroke-color':'#fff','circle-stroke-width':1.5}}, undefined);
-        map.addLayer({id:'streetlens-milepost-labels',type:'symbol',source:'streetlens-points',layout:{'text-field':['concat','MP ',['get','mp']],'text-size':10,'text-offset':[0,1.4],'text-anchor':'top'},paint:{'text-color':'#fff','text-halo-color':'#111','text-halo-width':1.2}}, undefined);
+        const layerDefs = [
+            {id:'streetlens-pci-poor', names:PCI_POOR_NAMES, color:'#ef4444'},
+            {id:'streetlens-pci-fair', names:PCI_FAIR_NAMES, color:'#eab308'},
+            {id:'streetlens-pci-good', names:PCI_GOOD_NAMES, color:'#84cc16'}
+        ];
 
-        ['good','fair','poor'].forEach(condition => {
-            const id=`streetlens-${condition}`;
-            map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
-            map.on('mouseleave',id,()=>map.getCanvas().style.cursor='');
-            map.on('click',id,e=>{
-                const p=e.features[0].properties;
-                new maplibregl.Popup({offset:10}).setLngLat(e.lngLat).setHTML(popupHTML(p)).addTo(map);
+        layerDefs.forEach(def => {
+            map.addLayer({
+                id:def.id,
+                type:'line',
+                source:'streetlens-pci-roads',
+                'source-layer':'transportation',
+                filter:['match',['get','name'],def.names,true,false],
+                layout:{'line-cap':'round','line-join':'round'},
+                paint:{
+                    'line-color':def.color,
+                    'line-width':['interpolate',['linear'],['zoom'],11,2.5,13,4.5,14,6.5,16,9],
+                    'line-opacity':0.92
+                }
+            }, beforeId);
+        });
+
+        layerDefs.forEach(def => {
+            map.on('mouseenter',def.id,()=>map.getCanvas().style.cursor='pointer');
+            map.on('mouseleave',def.id,()=>map.getCanvas().style.cursor='');
+            map.on('click',def.id,e => {
+                const f=e.features && e.features[0];
+                if (!f) return;
+                new maplibregl.Popup({offset:10,maxWidth:'320px'})
+                    .setLngLat(e.lngLat)
+                    .setHTML(popupHTML(f.properties))
+                    .addTo(map);
             });
         });
+
+        // Expose a small count/status badge for the dashboard map.
+        const countEl=document.getElementById('streetLensPCICount');
+        if(countEl) countEl.textContent=`${PCI_RECORDS.length} evaluated roads`;
     }
 
-
     function createMap(containerId, loadingId, mini) {
-        const map = new maplibregl.Map({container:containerId,style:STYLE_URL,center:[-75.075,39.916],zoom:13.5,attributionControl:true});
+        const map = new maplibregl.Map({
+            container:containerId,
+            style:STYLE_URL,
+            center:[-75.075,39.916],
+            zoom:13.7,
+            attributionControl:true
+        });
         map.addControl(new maplibregl.NavigationControl({showCompass:true}), 'top-left');
         map.addControl(new maplibregl.ScaleControl({unit:'imperial'}),'bottom-right');
+
         map.on('load',()=>{
-            addStreetLensLayers(map);
-            map.fitBounds(BOUNDS,{padding:mini?18:45,duration:0,maxZoom:14});
+            addPCIMapLayers(map);
+            map.fitBounds(BOUNDS,{padding:mini?14:35,duration:0,maxZoom:15});
             const loading=document.getElementById(loadingId);
             if(loading) loading.classList.add('hidden-map-loading');
         });
-        map.on('error',e=>console.warn('StreetLens map:',e.error||e));
+        map.on('error',e=>console.warn('StreetLens PCI map:',e.error||e));
         return map;
     }
 
-    function setSatellite(map, active) {
-        if (!map || !map.getLayer('streetlens-satellite')) return;
+    function setSatellite(map,active) {
+        if(!map)return;
+        if(!map.getSource('streetlens-satellite-source')) {
+            map.addSource('streetlens-satellite-source',{
+                type:'raster',
+                tiles:[SATELLITE_URL],
+                tileSize:256,
+                attribution:'Tiles © Esri'
+            });
+            const firstSymbol=(map.getStyle().layers||[]).find(l=>l.type==='symbol');
+            map.addLayer({
+                id:'streetlens-satellite',
+                type:'raster',
+                source:'streetlens-satellite-source',
+                layout:{visibility:'none'}
+            },firstSymbol ? firstSymbol.id : undefined);
+        }
         map.setLayoutProperty('streetlens-satellite','visibility',active?'visible':'none');
     }
 
-    function resetMap(map, mini) {
-        if (map) map.fitBounds(BOUNDS,{padding:mini?18:45,duration:350,maxZoom:14});
+    function resetMap(map,mini) {
+        if(map)map.fitBounds(BOUNDS,{padding:mini?14:35,duration:350,maxZoom:15});
     }
 
     function openMap() {
@@ -1308,10 +1397,12 @@
         if(!maps.modal){
             maps.modal=createMap('streetLensModalMap','streetLensModalMapLoading',false);
             let satellite=false;
-            document.getElementById('streetLensModalSatellite').onclick=()=>{satellite=!satellite;setSatellite(maps.modal,satellite)};
-            document.getElementById('streetLensModalReset').onclick=()=>resetMap(maps.modal,false);
+            const sat=document.getElementById('streetLensModalSatellite');
+            const reset=document.getElementById('streetLensModalReset');
+            if(sat)sat.onclick=()=>{satellite=!satellite;setSatellite(maps.modal,satellite);};
+            if(reset)reset.onclick=()=>resetMap(maps.modal,false);
         }
-        setTimeout(()=>maps.modal && maps.modal.resize(),80);
+        setTimeout(()=>maps.modal&&maps.modal.resize(),80);
     }
 
     function closeMap() {
