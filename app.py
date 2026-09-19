@@ -1,4 +1,8 @@
 from functools import wraps
+import json
+import time
+import urllib.parse
+import urllib.request
 
 from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, session, url_for
@@ -18,6 +22,68 @@ with app.app_context():
     # Idempotent: safe to call on every cold start. For anything beyond this
     # simple schema, switch to Flask-Migrate / Alembic instead.
     db.create_all()
+
+# Small server-side OSM proxy for the StreetLens PCI map.
+# The browser calls our own Vercel origin, avoiding cross-origin/rate-limit
+# problems that can occur when the deployed browser calls Overpass directly.
+OVERPASS_ENDPOINTS = [
+    "https://overpass.private.coffee/api/interpreter",
+    "https://overpass-api.de/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+]
+OVERPASS_QUERY = "[out:json][timeout:20];way[\"highway\"][\"name\"](39.910,-75.091,39.928,-75.062);out tags geom;"
+_osm_cache = {"expires": 0, "data": None}
+
+
+@app.route("/api/pci-roads")
+def pci_roads():
+    global _osm_cache
+    now = time.time()
+    if _osm_cache["data"] is not None and now < _osm_cache["expires"]:
+        response = app.response_class(
+            response=json.dumps(_osm_cache["data"]),
+            status=200,
+            mimetype="application/json",
+        )
+        response.headers["Cache-Control"] = "public, max-age=900, s-maxage=900"
+        return response
+
+    body = urllib.parse.urlencode({"data": OVERPASS_QUERY}).encode("utf-8")
+    last_error = "unknown error"
+
+    for endpoint in OVERPASS_ENDPOINTS:
+        try:
+            req = urllib.request.Request(
+                endpoint,
+                data=body,
+                method="POST",
+                headers={
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "User-Agent": "StreetLens/1.0 pavement-condition-dashboard",
+                    "Accept": "application/json",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=24) as upstream:
+                payload = upstream.read()
+            data = json.loads(payload.decode("utf-8"))
+            _osm_cache = {"expires": now + 900, "data": data}
+            response = app.response_class(
+                response=json.dumps(data),
+                status=200,
+                mimetype="application/json",
+            )
+            response.headers["Cache-Control"] = "public, max-age=900, s-maxage=900"
+            return response
+        except Exception as exc:
+            last_error = f"{endpoint}: {exc}"
+            continue
+
+    return app.response_class(
+        response=json.dumps({"error": "OSM road data unavailable", "detail": last_error}),
+        status=502,
+        mimetype="application/json",
+    )
+
 
 DISTRESS = [
     {"label": "Alligator crack", "pct": 62, "color": "#3b82f6", "sub": "Avg width 5mm · high density"},

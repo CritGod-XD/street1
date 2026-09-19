@@ -1217,7 +1217,6 @@
     const BOUNDS = [[-75.091,39.910],[-75.062,39.928]];
     const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
     const SATELLITE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-    const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
     const maps = {};
 
     const COLORS = {
@@ -1298,8 +1297,22 @@
         const source = map.getSource('streetlens-pci-source');
         if (!source) return;
         try {
-            const response = await fetch(`${OVERPASS_URL}?data=${encodeURIComponent(overpassQuery())}`);
-            if (!response.ok) throw new Error(`Overpass HTTP ${response.status}`);
+            // Same-origin server proxy. This is important on Vercel because
+            // calling public Overpass instances directly from the browser can
+            // be blocked/rate-limited differently from localhost.
+            const response = await fetch('/api/pci-roads', {
+                method: 'GET',
+                headers: {'Accept': 'application/json'},
+                cache: 'no-store'
+            });
+            if (!response.ok) {
+                let detail = `HTTP ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    if (errorData.detail) detail += ` — ${errorData.detail}`;
+                } catch (_) {}
+                throw new Error(detail);
+            }
             const data = await response.json();
             const features = [];
             const seen = new Set();
