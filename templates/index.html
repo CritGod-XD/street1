@@ -164,69 +164,87 @@
             font: inherit;
         }
     
-        /* StreetLens interactive inspection map */
-        .streetlens-map-modal .modal-map, .modal-map:has(#streetLensMap) {
+        /* StreetLens interactive route maps */
+        .map-card {
             position: relative;
-            overflow: hidden;
-            min-height: 520px;
-            background: #101722;
+            cursor: default;
         }
-        #streetLensMap {
-            position: absolute;
-            inset: 0;
+        #streetLensDashboardMap, #streetLensModalMap {
             width: 100%;
             height: 100%;
-            min-height: 520px;
+            min-height: 0;
         }
-        .streetlens-map-tools {
-            position: absolute;
-            top: 14px;
-            right: 14px;
-            z-index: 5;
-            display: flex;
-            gap: 8px;
-        }
-        .streetlens-map-tools button {
-            border: 1px solid rgba(255,255,255,.16);
-            background: rgba(15,23,42,.9);
-            color: #fff;
-            border-radius: 8px;
-            padding: 9px 12px;
-            cursor: pointer;
-            font: inherit;
-            font-size: 12px;
-        }
-        .streetlens-map-tools button:hover { background: rgba(30,41,59,.98); }
-        .streetlens-map-legend {
-            position: absolute;
-            left: 14px;
-            bottom: 14px;
-            z-index: 5;
-            padding: 10px 12px;
-            border: 1px solid rgba(255,255,255,.12);
-            border-radius: 9px;
-            background: rgba(15,23,42,.9);
-            color: #e5e7eb;
-            font-size: 11px;
-            backdrop-filter: blur(8px);
-        }
-        .streetlens-map-legend-row { display:flex; align-items:center; gap:7px; margin:3px 0; }
-        .streetlens-map-dot { width:9px; height:9px; border-radius:50%; display:inline-block; }
-        .streetlens-map-dot.good { background:#84cc16; }
-        .streetlens-map-dot.fair { background:#eab308; }
-        .streetlens-map-dot.poor { background:#ef4444; }
         .streetlens-map-loading {
-            position:absolute; inset:0; z-index:10; display:flex; align-items:center; justify-content:center;
-            background:#101722; color:#cbd5e1; font-size:13px;
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            z-index: 5;
+            background: #111b;
+            color: #aaa;
+            font: 11px Inter, sans-serif;
+            pointer-events: none;
+            transition: opacity .2s ease;
         }
-        .streetlens-map-loading.hidden { display:none; }
-        .streetlens-popup { font: 12px/1.45 Inter, sans-serif; color:#111827; min-width:165px; }
-        .streetlens-popup strong { display:block; margin-bottom:6px; font-size:13px; }
-        .streetlens-popup-row { display:flex; justify-content:space-between; gap:12px; }
-        @media (max-width: 700px) {
-            .modal-map:has(#streetLensMap), #streetLensMap { min-height: 430px; }
-            .streetlens-map-tools { top: 10px; right: 10px; }
+        .streetlens-map-loading.hidden-map-loading { opacity: 0; }
+        .streetlens-map-mini-legend, .streetlens-map-tools, .streetlens-map-legend {
+            position: absolute;
+            z-index: 10;
         }
+        .streetlens-map-mini-legend {
+            left: 10px;
+            bottom: 10px;
+            display: flex;
+            gap: 9px;
+            padding: 6px 8px;
+            background: #101010e8;
+            border: 1px solid #2a2a2a;
+            border-radius: 5px;
+            color: #aaa;
+            font: 9px Inter, sans-serif;
+            pointer-events: none;
+        }
+        .streetlens-map-mini-legend span { display:flex; align-items:center; }
+        .streetlens-map-mini-legend i, .streetlens-map-legend i {
+            width: 7px; height: 7px; border-radius: 50%; display:inline-block; margin-right:5px;
+        }
+        .streetlens-map-mini-tools {
+            top: 9px;
+            right: 9px;
+            display: flex;
+            gap: 5px;
+        }
+        .streetlens-map-mini-tools button, .streetlens-map-tools button {
+            border: 1px solid #3a3a3a;
+            background: #111e;
+            color: #ddd;
+            border-radius: 5px;
+            padding: 6px 8px;
+            font: 10px Inter, sans-serif;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+        }
+        .streetlens-map-mini-tools button:hover, .streetlens-map-tools button:hover { background:#222e; }
+        .modal-map { position: relative; }
+        .streetlens-map-legend {
+            left: 14px; bottom: 14px;
+            display: grid; gap: 7px;
+            padding: 9px 11px;
+            background: #101010e8;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            color: #ddd;
+            font: 10px Inter, sans-serif;
+            pointer-events: none;
+        }
+        .streetlens-map-tools { top: 14px; right: 14px; display:flex; gap:6px; }
+        .streetlens-map-popup { font-family: Inter, sans-serif; color:#111; min-width:150px; }
+        .streetlens-map-popup strong { display:block; font-size:12px; margin-bottom:5px; }
+        .streetlens-map-popup div { font-size:10px; line-height:1.55; }
+        .streetlens-map-popup .demo-note { color:#777; margin-top:4px; font-size:9px; }
+        .maplibregl-popup-content { border-radius:7px; padding:10px 12px; }
+        .maplibregl-ctrl-group { border-radius:5px !important; overflow:hidden; }
+        .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin-bottom:7px; margin-right:7px; }
 </style>
 </head>
 
@@ -724,129 +742,25 @@
                 </div>
 
 
-                <div
-                    class="map-card"
-                    onclick="openMap()"
-                >
+                <div class="map-card" aria-label="Interactive StreetLens route map">
 
-                    <svg
-                        viewBox="0 0 300 220"
-                        aria-label="Route overview map"
-                    >
+                    <div id="streetLensDashboardMap"></div>
 
-                        <rect
-                            width="300"
-                            height="220"
-                            fill="#121212"
-                        />
+                    <div id="streetLensDashboardMapLoading" class="streetlens-map-loading">
+                        Loading StreetLens map…
+                    </div>
 
-                        <g opacity=".35">
+                    <div class="streetlens-map-mini-legend">
+                        <span><i class="good"></i> Good</span>
+                        <span><i class="fair"></i> Fair</span>
+                        <span><i class="poor"></i> Poor</span>
+                    </div>
 
-                            {% for i in range(7) %}
-                            <line
-                                x1="{{ i * 50 }}"
-                                y1="0"
-                                x2="{{ i * 50 }}"
-                                y2="220"
-                                stroke="#222"
-                            />
-                            {% endfor %}
-
-                            {% for i in range(5) %}
-                            <line
-                                x1="0"
-                                y1="{{ i * 55 }}"
-                                x2="300"
-                                y2="{{ i * 55 }}"
-                                stroke="#222"
-                            />
-                            {% endfor %}
-
-                        </g>
-
-
-                        <path
-                            d="M85 195 C105 155 104 125 88 95 C69 61 98 39 143 34 C191 29 233 45 245 76 C258 109 238 130 240 157 C243 180 258 191 275 201"
-                            fill="none"
-                            stroke="#353535"
-                            stroke-width="15"
-                            stroke-linecap="round"
-                        />
-
-                        <path
-                            d="M85 195 C105 155 104 125 88 95 C69 61 98 39 143 34"
-                            fill="none"
-                            stroke="#57a45d"
-                            stroke-width="10"
-                            stroke-linecap="round"
-                        />
-
-                        <path
-                            d="M143 34 C191 29 233 45 245 76"
-                            fill="none"
-                            stroke="#d4a62f"
-                            stroke-width="10"
-                            stroke-linecap="round"
-                        />
-
-                        <path
-                            d="M245 76 C258 109 238 130 240 157 C243 180 258 191 275 201"
-                            fill="none"
-                            stroke="#cf573f"
-                            stroke-width="10"
-                            stroke-linecap="round"
-                        />
-
-                        <circle
-                            cx="240"
-                            cy="157"
-                            r="7"
-                            fill="#f0ead5"
-                            stroke="#222"
-                            stroke-width="2"
-                        />
-
-                        <text
-                            x="34"
-                            y="35"
-                            fill="#444"
-                            font-size="9"
-                            font-family="monospace"
-                        >
-                            MP 50.0
-                        </text>
-
-                        <text
-                            x="105"
-                            y="115"
-                            fill="#333"
-                            font-size="9"
-                            font-family="monospace"
-                        >
-                            MP 51.5
-                        </text>
-
-                        <text
-                            x="162"
-                            y="180"
-                            fill="#555"
-                            font-size="9"
-                            font-family="monospace"
-                        >
-                            52.1 ◀
-                        </text>
-
-                        <text
-                            x="160"
-                            y="215"
-                            fill="#333"
-                            font-size="9"
-                            font-family="monospace"
-                        >
-                            MP 53.0
-                        </text>
-
-                    </svg>
+                    <div class="streetlens-map-mini-tools">
+                        <button id="streetLensDashboardSatellite" type="button">🛰</button>
+                        <button id="streetLensDashboardReset" type="button">↺</button>
+                        <button id="streetLensDashboardExpand" type="button">⛶</button>
+                    </div>
 
                 </div>
 
@@ -1180,18 +1094,16 @@
 
 
         <div class="modal-map">
-            <div id="streetLensMap"></div>
-            <div id="streetLensMapLoading" class="streetlens-map-loading">Loading StreetLens map…</div>
-
+            <div id="streetLensModalMap"></div>
+            <div id="streetLensModalMapLoading" class="streetlens-map-loading">Loading StreetLens map…</div>
             <div class="streetlens-map-legend">
-                <div class="streetlens-map-legend-row"><i class="streetlens-map-dot good"></i> Good</div>
-                <div class="streetlens-map-legend-row"><i class="streetlens-map-dot fair"></i> Fair</div>
-                <div class="streetlens-map-legend-row"><i class="streetlens-map-dot poor"></i> Poor</div>
+                <div><i class="good"></i> Good</div>
+                <div><i class="fair"></i> Fair</div>
+                <div><i class="poor"></i> Poor</div>
             </div>
-
             <div class="streetlens-map-tools">
-                <button id="streetLensSatelliteBtn" type="button">🛰 Satellite</button>
-                <button id="streetLensResetBtn" type="button">↺ Reset</button>
+                <button id="streetLensModalSatellite" type="button">🛰 Satellite</button>
+                <button id="streetLensModalReset" type="button">↺ Reset</button>
             </div>
         </div>
 
@@ -1200,7 +1112,7 @@
 
             ● Inspection Corridor · Collingswood, NJ
 
-            <span id="streetLensMapCoords">Demo coordinates</span>
+            <span id="streetLensMapCoords">Demo inspection data</span>
 
         </div>
 
@@ -1283,108 +1195,150 @@
 </script>
 
 
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>\n<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
 (function () {
-    let streetLensMap = null;
-    let streetLensMapReady = false;
-    let satelliteOn = false;
-
-    const RESET_BOUNDS = [[-75.091, 39.910], [-75.062, 39.928]];
-
-    // Demo inspection data for the presentation. Replace this array with API data later.
-    const DEMO_SEGMENTS = [
-        { route:'Haddon Avenue', mp:'51.8', condition:'Good', score:18, color:'#84cc16', coords:[[-75.0898,39.9180],[-75.0855,39.9188],[-75.0810,39.9192]] },
-        { route:'Haddon Avenue', mp:'52.0', condition:'Fair', score:46, color:'#eab308', coords:[[-75.0810,39.9192],[-75.0765,39.9190],[-75.0720,39.9182]] },
-        { route:'Haddon Avenue', mp:'52.2', condition:'Poor', score:79, color:'#ef4444', coords:[[-75.0720,39.9182],[-75.0680,39.9169],[-75.0645,39.9154]] },
-        { route:'Haddon Avenue', mp:'52.4', condition:'Good', score:24, color:'#84cc16', coords:[[-75.0645,39.9154],[-75.0622,39.9136]] },
-        { route:'Collings Avenue', mp:'10.1', condition:'Good', score:22, color:'#84cc16', coords:[[-75.0852,39.9145],[-75.0812,39.9137],[-75.0771,39.9129]] },
-        { route:'Collings Avenue', mp:'10.3', condition:'Fair', score:51, color:'#eab308', coords:[[-75.0771,39.9129],[-75.0730,39.9122],[-75.0690,39.9115]] },
-        { route:'Collings Avenue', mp:'10.5', condition:'Poor', score:73, color:'#ef4444', coords:[[-75.0690,39.9115],[-75.0650,39.9109]] },
-        { route:'Cuthbert Boulevard', mp:'4.6', condition:'Poor', score:71, color:'#ef4444', coords:[[-75.0890,39.9242],[-75.0845,39.9232],[-75.0800,39.9220]] },
-        { route:'Cuthbert Boulevard', mp:'4.8', condition:'Fair', score:48, color:'#eab308', coords:[[-75.0800,39.9220],[-75.0755,39.9208],[-75.0710,39.9197]] },
-        { route:'Cuthbert Boulevard', mp:'5.0', condition:'Good', score:19, color:'#84cc16', coords:[[-75.0710,39.9197],[-75.0670,39.9187],[-75.0635,39.9176]] }
+    const SEGMENTS = [
+        { id:'haddon-51-8', route:'Haddon Avenue', mp:'51.8', condition:'Good', score:18, color:'#84cc16', coords:[[-75.0819,39.9208],[-75.0787,39.9199],[-75.0755,39.9189]] },
+        { id:'haddon-52-0', route:'Haddon Avenue', mp:'52.0', condition:'Fair', score:46, color:'#eab308', coords:[[-75.0755,39.9189],[-75.0721,39.9180],[-75.0688,39.9171]] },
+        { id:'haddon-52-2', route:'Haddon Avenue', mp:'52.2', condition:'Poor', score:79, color:'#ef4444', coords:[[-75.0688,39.9171],[-75.0660,39.9163],[-75.0633,39.9155]] },
+        { id:'haddon-52-4', route:'Haddon Avenue', mp:'52.4', condition:'Good', score:24, color:'#84cc16', coords:[[-75.0633,39.9155],[-75.0610,39.9148],[-75.0592,39.9139]] },
+        { id:'collings-10-1', route:'Collings Avenue', mp:'10.1', condition:'Good', score:22, color:'#84cc16', coords:[[-75.0804,39.9150],[-75.0774,39.9141],[-75.0745,39.9133]] },
+        { id:'collings-10-3', route:'Collings Avenue', mp:'10.3', condition:'Fair', score:51, color:'#eab308', coords:[[-75.0745,39.9133],[-75.0715,39.9124],[-75.0686,39.9116]] },
+        { id:'collings-10-5', route:'Collings Avenue', mp:'10.5', condition:'Poor', score:73, color:'#ef4444', coords:[[-75.0686,39.9116],[-75.0660,39.9108],[-75.0634,39.9101]] },
+        { id:'cuthbert-4-6', route:'Cuthbert Boulevard', mp:'4.6', condition:'Poor', score:71, color:'#ef4444', coords:[[-75.0870,39.9098],[-75.0840,39.9120],[-75.0811,39.9142]] },
+        { id:'cuthbert-4-8', route:'Cuthbert Boulevard', mp:'4.8', condition:'Fair', score:48, color:'#eab308', coords:[[-75.0811,39.9142],[-75.0782,39.9164],[-75.0754,39.9185]] },
+        { id:'cuthbert-5-0', route:'Cuthbert Boulevard', mp:'5.0', condition:'Good', score:19, color:'#84cc16', coords:[[-75.0754,39.9185],[-75.0730,39.9204],[-75.0710,39.9223]] }
     ];
 
-    function featureCollection(items) {
-        return { type:'FeatureCollection', features:items.map((d,i)=>({
-            type:'Feature', id:i, properties:{...d}, geometry:{type:'LineString',coordinates:d.coords}
-        }))};
+    const BOUNDS = [[-75.091,39.908],[-75.058,39.924]];
+    const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
+    const SATELLITE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+    const maps = {};
+
+    function geojsonByCondition(condition) {
+        return {
+            type:'FeatureCollection',
+            features: SEGMENTS.filter(s => s.condition === condition).map(s => ({
+                type:'Feature',
+                properties:{id:s.id,route:s.route,mp:s.mp,condition:s.condition,score:s.score,color:s.color},
+                geometry:{type:'LineString',coordinates:s.coords}
+            }))
+        };
     }
 
-    function pointCollection(items) {
-        return { type:'FeatureCollection', features:items.map((d,i)=>({
-            type:'Feature', id:i, properties:{...d}, geometry:{type:'Point',coordinates:d.coords[Math.floor(d.coords.length/2)]}
-        }))};
+    function pointsGeoJSON() {
+        return {
+            type:'FeatureCollection',
+            features: SEGMENTS.map(s => ({
+                type:'Feature',
+                properties:{id:s.id,route:s.route,mp:s.mp,condition:s.condition,score:s.score,color:s.color},
+                geometry:{type:'Point',coordinates:s.coords[0]}
+            }))
+        };
     }
 
-    function addStreetLensLayers() {
-        const map = streetLensMap;
-        map.addSource('streetlens-satellite-source',{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,attribution:'Tiles © Esri'});
-        map.addLayer({id:'streetlens-satellite',type:'raster',source:'streetlens-satellite-source',layout:{visibility:'none'}});
+    function popupHTML(p) {
+        return `<div class="streetlens-map-popup"><strong>${p.route}</strong><div><b>Mile Post:</b> MP ${p.mp}</div><div><b>Condition:</b> ${p.condition}</div><div><b>Distress Score:</b> ${p.score}/100</div><div class="demo-note">Demo inspection data</div></div>`;
+    }
 
-        map.addSource('streetlens-routes-source',{type:'geojson',data:featureCollection(DEMO_SEGMENTS)});
-        map.addLayer({id:'streetlens-route-outline',type:'line',source:'streetlens-routes-source',paint:{'line-color':'#0b1220','line-width':11,'line-opacity':0.88}});
-        map.addLayer({id:'streetlens-routes',type:'line',source:'streetlens-routes-source',paint:{'line-color':['get','color'],'line-width':7,'line-opacity':0.98,'line-cap':'round','line-join':'round'}});
+    function firstSymbolLayer(map) {
+        const layers = map.getStyle().layers || [];
+        const symbol = layers.find(l => l.type === 'symbol');
+        return symbol ? symbol.id : undefined;
+    }
 
-        map.addSource('streetlens-points-source',{type:'geojson',data:pointCollection(DEMO_SEGMENTS)});
-        map.addLayer({id:'streetlens-points',type:'circle',source:'streetlens-points-source',paint:{'circle-radius':5,'circle-color':['get','color'],'circle-stroke-color':'#fff','circle-stroke-width':1.5}});
-        map.addLayer({id:'streetlens-mp-labels',type:'symbol',source:'streetlens-points-source',layout:{'text-field':['concat','MP ',['get','mp']],'text-size':11,'text-offset':[0,1.35],'text-anchor':'top'},paint:{'text-color':'#fff','text-halo-color':'#0b1220','text-halo-width':1.5}});
+    function addStreetLensLayers(map) {
+        const beforeId = firstSymbolLayer(map);
 
-        map.on('mouseenter','streetlens-routes',()=>map.getCanvas().style.cursor='pointer');
-        map.on('mouseleave','streetlens-routes',()=>map.getCanvas().style.cursor='');
-        map.on('click','streetlens-routes',e=>{
-            const p=e.features[0].properties;
-            new maplibregl.Popup({closeButton:true,closeOnClick:true,offset:10}).setLngLat(e.lngLat).setHTML(
-                `<div class="streetlens-popup"><strong>${p.route}</strong><div class="streetlens-popup-row"><span>Mile Post</span><b>${p.mp}</b></div><div class="streetlens-popup-row"><span>Condition</span><b>${p.condition}</b></div><div class="streetlens-popup-row"><span>Distress Score</span><b>${p.score}/100</b></div><div style="margin-top:6px;color:#6b7280">Demo inspection data</div></div>`
-            ).addTo(map);
+        map.addSource('streetlens-good', {type:'geojson',data:geojsonByCondition('Good')});
+        map.addSource('streetlens-fair', {type:'geojson',data:geojsonByCondition('Fair')});
+        map.addSource('streetlens-poor', {type:'geojson',data:geojsonByCondition('Poor')});
+        map.addSource('streetlens-points', {type:'geojson',data:pointsGeoJSON()});
+        map.addSource('streetlens-satellite-source', {type:'raster',tiles:[SATELLITE_URL],tileSize:256,attribution:'Tiles © Esri'});
+
+        map.addLayer({id:'streetlens-satellite',type:'raster',source:'streetlens-satellite-source',layout:{visibility:'none'}}, beforeId);
+
+        // Thin casing first, then the condition color on top. This keeps the color visible.
+        ['good','fair','poor'].forEach(condition => {
+            const source = `streetlens-${condition}`;
+            map.addLayer({id:`streetlens-${condition}-casing`,type:'line',source,layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#111827','line-width':9,'line-opacity':0.9}}, beforeId);
+            map.addLayer({id:`streetlens-${condition}`,type:'line',source,layout:{'line-cap':'round','line-join':'round'},paint:{'line-color': condition==='good'?'#84cc16':condition==='fair'?'#eab308':'#ef4444','line-width':5.5,'line-opacity':0.98}}, beforeId);
         });
 
-        map.on('load',()=>{});
-        map.fitBounds(RESET_BOUNDS,{padding:45,duration:0});
-    }
+        // Mile-post markers are deliberately above the basemap labels.
+        map.addLayer({id:'streetlens-mileposts',type:'circle',source:'streetlens-points',paint:{'circle-radius':5,'circle-color':['get','color'],'circle-stroke-color':'#fff','circle-stroke-width':1.5}}, undefined);
+        map.addLayer({id:'streetlens-milepost-labels',type:'symbol',source:'streetlens-points',layout:{'text-field':['concat','MP ',['get','mp']],'text-size':10,'text-offset':[0,1.4],'text-anchor':'top'},paint:{'text-color':'#fff','text-halo-color':'#111','text-halo-width':1.2}}, undefined);
 
-    function initStreetLensMap() {
-        if (streetLensMap || typeof maplibregl === 'undefined') return;
-        streetLensMap = new maplibregl.Map({container:'streetLensMap',style:'https://tiles.openfreemap.org/styles/liberty',center:[-75.0784,39.9153],zoom:13.8,attributionControl:true});
-        streetLensMap.addControl(new maplibregl.NavigationControl(),'top-left');
-        streetLensMap.addControl(new maplibregl.ScaleControl({maxWidth:120,unit:'imperial'}),'bottom-right');
-        streetLensMap.on('load',()=>{
-            addStreetLensLayers();
-            streetLensMapReady=true;
-            document.getElementById('streetLensMapLoading')?.classList.add('hidden');
+        ['good','fair','poor'].forEach(condition => {
+            const id=`streetlens-${condition}`;
+            map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
+            map.on('mouseleave',id,()=>map.getCanvas().style.cursor='');
+            map.on('click',id,e=>{
+                const p=e.features[0].properties;
+                new maplibregl.Popup({offset:10}).setLngLat(e.lngLat).setHTML(popupHTML(p)).addTo(map);
+            });
         });
-        streetLensMap.on('error',e=>{ console.warn('StreetLens map error',e.error || e); });
     }
 
-    function toggleSatellite() {
-        if(!streetLensMapReady) return;
-        satelliteOn=!satelliteOn;
-        streetLensMap.setLayoutProperty('streetlens-satellite','visibility',satelliteOn?'visible':'none');
-        document.getElementById('streetLensSatelliteBtn').textContent=satelliteOn?'🗺 Street Map':'🛰 Satellite';
+
+    function createMap(containerId, loadingId, mini) {
+        const map = new maplibregl.Map({container:containerId,style:STYLE_URL,center:[-75.075,39.916],zoom:13.5,attributionControl:true});
+        map.addControl(new maplibregl.NavigationControl({showCompass:true}), 'top-left');
+        map.addControl(new maplibregl.ScaleControl({unit:'imperial'}),'bottom-right');
+        map.on('load',()=>{
+            addStreetLensLayers(map);
+            map.fitBounds(BOUNDS,{padding:mini?18:45,duration:0,maxZoom:14});
+            const loading=document.getElementById(loadingId);
+            if(loading) loading.classList.add('hidden-map-loading');
+        });
+        map.on('error',e=>console.warn('StreetLens map:',e.error||e));
+        return map;
     }
 
-    function resetStreetLensMap() {
-        if(streetLensMapReady) streetLensMap.fitBounds(RESET_BOUNDS,{padding:45,duration:500});
+    function setSatellite(map, active) {
+        if (!map || !map.getLayer('streetlens-satellite')) return;
+        map.setLayoutProperty('streetlens-satellite','visibility',active?'visible':'none');
     }
 
-    window.openMap=function(){
+    function resetMap(map, mini) {
+        if (map) map.fitBounds(BOUNDS,{padding:mini?18:45,duration:350,maxZoom:14});
+    }
+
+    function openMap() {
         const modal=document.getElementById('mapModal');
-        if(!modal) return;
+        if(!modal)return;
         modal.classList.remove('hidden');
-        initStreetLensMap();
-        setTimeout(()=>{ if(streetLensMap){streetLensMap.resize(); if(streetLensMapReady) streetLensMap.fitBounds(RESET_BOUNDS,{padding:45,duration:0});}},80);
-    };
-    window.closeMap=function(e){
+        if(!maps.modal){
+            maps.modal=createMap('streetLensModalMap','streetLensModalMapLoading',false);
+            let satellite=false;
+            document.getElementById('streetLensModalSatellite').onclick=()=>{satellite=!satellite;setSatellite(maps.modal,satellite)};
+            document.getElementById('streetLensModalReset').onclick=()=>resetMap(maps.modal,false);
+        }
+        setTimeout(()=>maps.modal && maps.modal.resize(),80);
+    }
+
+    function closeMap() {
         const modal=document.getElementById('mapModal');
-        if(!modal) return;
-        if(e && e.target!==modal) return;
-        modal.classList.add('hidden');
-    };
+        if(modal)modal.classList.add('hidden');
+    }
+
+    window.openMap=openMap;
+    window.closeMap=closeMap;
 
     document.addEventListener('DOMContentLoaded',()=>{
-        document.getElementById('streetLensSatelliteBtn')?.addEventListener('click',toggleSatellite);
-        document.getElementById('streetLensResetBtn')?.addEventListener('click',resetStreetLensMap);
+        if(!window.maplibregl)return;
+        maps.dashboard=createMap('streetLensDashboardMap','streetLensDashboardMapLoading',true);
+        let satellite=false;
+        const sat=document.getElementById('streetLensDashboardSatellite');
+        const reset=document.getElementById('streetLensDashboardReset');
+        const expand=document.getElementById('streetLensDashboardExpand');
+        if(sat)sat.onclick=(e)=>{e.stopPropagation();satellite=!satellite;setSatellite(maps.dashboard,satellite)};
+        if(reset)reset.onclick=(e)=>{e.stopPropagation();resetMap(maps.dashboard,true)};
+        if(expand)expand.onclick=(e)=>{e.stopPropagation();openMap()};
     });
 })();
 </script>
