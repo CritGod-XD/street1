@@ -25,6 +25,11 @@
         href="{{ url_for('static', filename='css/style.css') }}"
     >
 
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+    >
+
     <style>
         /* Authentication */
 
@@ -158,7 +163,71 @@
             cursor: pointer;
             font: inherit;
         }
-    </style>
+    
+        /* StreetLens interactive inspection map */
+        .streetlens-map-modal .modal-map, .modal-map:has(#streetLensMap) {
+            position: relative;
+            overflow: hidden;
+            min-height: 520px;
+            background: #101722;
+        }
+        #streetLensMap {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            min-height: 520px;
+        }
+        .streetlens-map-tools {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            z-index: 5;
+            display: flex;
+            gap: 8px;
+        }
+        .streetlens-map-tools button {
+            border: 1px solid rgba(255,255,255,.16);
+            background: rgba(15,23,42,.9);
+            color: #fff;
+            border-radius: 8px;
+            padding: 9px 12px;
+            cursor: pointer;
+            font: inherit;
+            font-size: 12px;
+        }
+        .streetlens-map-tools button:hover { background: rgba(30,41,59,.98); }
+        .streetlens-map-legend {
+            position: absolute;
+            left: 14px;
+            bottom: 14px;
+            z-index: 5;
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 9px;
+            background: rgba(15,23,42,.9);
+            color: #e5e7eb;
+            font-size: 11px;
+            backdrop-filter: blur(8px);
+        }
+        .streetlens-map-legend-row { display:flex; align-items:center; gap:7px; margin:3px 0; }
+        .streetlens-map-dot { width:9px; height:9px; border-radius:50%; display:inline-block; }
+        .streetlens-map-dot.good { background:#84cc16; }
+        .streetlens-map-dot.fair { background:#eab308; }
+        .streetlens-map-dot.poor { background:#ef4444; }
+        .streetlens-map-loading {
+            position:absolute; inset:0; z-index:10; display:flex; align-items:center; justify-content:center;
+            background:#101722; color:#cbd5e1; font-size:13px;
+        }
+        .streetlens-map-loading.hidden { display:none; }
+        .streetlens-popup { font: 12px/1.45 Inter, sans-serif; color:#111827; min-width:165px; }
+        .streetlens-popup strong { display:block; margin-bottom:6px; font-size:13px; }
+        .streetlens-popup-row { display:flex; justify-content:space-between; gap:12px; }
+        @media (max-width: 700px) {
+            .modal-map:has(#streetLensMap), #streetLensMap { min-height: 430px; }
+            .streetlens-map-tools { top: 10px; right: 10px; }
+        }
+</style>
 </head>
 
 <body>
@@ -1100,7 +1169,7 @@
         <div class="modal-head">
 
             <strong>
-                ● Inspection Location — US-1 NorthBound
+                ● StreetLens Inspection Map — Collingswood, NJ
             </strong>
 
             <button onclick="closeMap()">
@@ -1111,56 +1180,27 @@
 
 
         <div class="modal-map">
+            <div id="streetLensMap"></div>
+            <div id="streetLensMapLoading" class="streetlens-map-loading">Loading StreetLens map…</div>
 
-            <svg viewBox="0 0 640 380">
+            <div class="streetlens-map-legend">
+                <div class="streetlens-map-legend-row"><i class="streetlens-map-dot good"></i> Good</div>
+                <div class="streetlens-map-legend-row"><i class="streetlens-map-dot fair"></i> Fair</div>
+                <div class="streetlens-map-legend-row"><i class="streetlens-map-dot poor"></i> Poor</div>
+            </div>
 
-                <rect
-                    width="640"
-                    height="380"
-                    fill="#1a2744"
-                />
-
-                <rect
-                    x="302"
-                    width="36"
-                    height="380"
-                    fill="#2d4a6e"
-                />
-
-                <rect
-                    x="318"
-                    width="4"
-                    height="380"
-                    fill="#f1f5f9"
-                    opacity=".15"
-                />
-
-                <rect
-                    y="172"
-                    width="640"
-                    height="30"
-                    fill="#253d5a"
-                />
-
-                <circle
-                    cx="320"
-                    cy="190"
-                    r="9"
-                    fill="#84cc16"
-                />
-
-            </svg>
-
+            <div class="streetlens-map-tools">
+                <button id="streetLensSatelliteBtn" type="button">🛰 Satellite</button>
+                <button id="streetLensResetBtn" type="button">↺ Reset</button>
+            </div>
         </div>
 
 
         <div class="modal-foot">
 
-            ● Inspection Point
+            ● Inspection Corridor · Collingswood, NJ
 
-            <span>
-                Coords: 176.98°N, 169.99°W
-            </span>
+            <span id="streetLensMapCoords">Demo coordinates</span>
 
         </div>
 
@@ -1243,7 +1283,111 @@
 </script>
 
 
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>\n<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+(function () {
+    let streetLensMap = null;
+    let streetLensMapReady = false;
+    let satelliteOn = false;
+
+    const RESET_BOUNDS = [[-75.091, 39.910], [-75.062, 39.928]];
+
+    // Demo inspection data for the presentation. Replace this array with API data later.
+    const DEMO_SEGMENTS = [
+        { route:'Haddon Avenue', mp:'51.8', condition:'Good', score:18, color:'#84cc16', coords:[[-75.0898,39.9180],[-75.0855,39.9188],[-75.0810,39.9192]] },
+        { route:'Haddon Avenue', mp:'52.0', condition:'Fair', score:46, color:'#eab308', coords:[[-75.0810,39.9192],[-75.0765,39.9190],[-75.0720,39.9182]] },
+        { route:'Haddon Avenue', mp:'52.2', condition:'Poor', score:79, color:'#ef4444', coords:[[-75.0720,39.9182],[-75.0680,39.9169],[-75.0645,39.9154]] },
+        { route:'Haddon Avenue', mp:'52.4', condition:'Good', score:24, color:'#84cc16', coords:[[-75.0645,39.9154],[-75.0622,39.9136]] },
+        { route:'Collings Avenue', mp:'10.1', condition:'Good', score:22, color:'#84cc16', coords:[[-75.0852,39.9145],[-75.0812,39.9137],[-75.0771,39.9129]] },
+        { route:'Collings Avenue', mp:'10.3', condition:'Fair', score:51, color:'#eab308', coords:[[-75.0771,39.9129],[-75.0730,39.9122],[-75.0690,39.9115]] },
+        { route:'Collings Avenue', mp:'10.5', condition:'Poor', score:73, color:'#ef4444', coords:[[-75.0690,39.9115],[-75.0650,39.9109]] },
+        { route:'Cuthbert Boulevard', mp:'4.6', condition:'Poor', score:71, color:'#ef4444', coords:[[-75.0890,39.9242],[-75.0845,39.9232],[-75.0800,39.9220]] },
+        { route:'Cuthbert Boulevard', mp:'4.8', condition:'Fair', score:48, color:'#eab308', coords:[[-75.0800,39.9220],[-75.0755,39.9208],[-75.0710,39.9197]] },
+        { route:'Cuthbert Boulevard', mp:'5.0', condition:'Good', score:19, color:'#84cc16', coords:[[-75.0710,39.9197],[-75.0670,39.9187],[-75.0635,39.9176]] }
+    ];
+
+    function featureCollection(items) {
+        return { type:'FeatureCollection', features:items.map((d,i)=>({
+            type:'Feature', id:i, properties:{...d}, geometry:{type:'LineString',coordinates:d.coords}
+        }))};
+    }
+
+    function pointCollection(items) {
+        return { type:'FeatureCollection', features:items.map((d,i)=>({
+            type:'Feature', id:i, properties:{...d}, geometry:{type:'Point',coordinates:d.coords[Math.floor(d.coords.length/2)]}
+        }))};
+    }
+
+    function addStreetLensLayers() {
+        const map = streetLensMap;
+        map.addSource('streetlens-satellite-source',{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,attribution:'Tiles © Esri'});
+        map.addLayer({id:'streetlens-satellite',type:'raster',source:'streetlens-satellite-source',layout:{visibility:'none'}});
+
+        map.addSource('streetlens-routes-source',{type:'geojson',data:featureCollection(DEMO_SEGMENTS)});
+        map.addLayer({id:'streetlens-route-outline',type:'line',source:'streetlens-routes-source',paint:{'line-color':'#0b1220','line-width':11,'line-opacity':0.88}});
+        map.addLayer({id:'streetlens-routes',type:'line',source:'streetlens-routes-source',paint:{'line-color':['get','color'],'line-width':7,'line-opacity':0.98,'line-cap':'round','line-join':'round'}});
+
+        map.addSource('streetlens-points-source',{type:'geojson',data:pointCollection(DEMO_SEGMENTS)});
+        map.addLayer({id:'streetlens-points',type:'circle',source:'streetlens-points-source',paint:{'circle-radius':5,'circle-color':['get','color'],'circle-stroke-color':'#fff','circle-stroke-width':1.5}});
+        map.addLayer({id:'streetlens-mp-labels',type:'symbol',source:'streetlens-points-source',layout:{'text-field':['concat','MP ',['get','mp']],'text-size':11,'text-offset':[0,1.35],'text-anchor':'top'},paint:{'text-color':'#fff','text-halo-color':'#0b1220','text-halo-width':1.5}});
+
+        map.on('mouseenter','streetlens-routes',()=>map.getCanvas().style.cursor='pointer');
+        map.on('mouseleave','streetlens-routes',()=>map.getCanvas().style.cursor='');
+        map.on('click','streetlens-routes',e=>{
+            const p=e.features[0].properties;
+            new maplibregl.Popup({closeButton:true,closeOnClick:true,offset:10}).setLngLat(e.lngLat).setHTML(
+                `<div class="streetlens-popup"><strong>${p.route}</strong><div class="streetlens-popup-row"><span>Mile Post</span><b>${p.mp}</b></div><div class="streetlens-popup-row"><span>Condition</span><b>${p.condition}</b></div><div class="streetlens-popup-row"><span>Distress Score</span><b>${p.score}/100</b></div><div style="margin-top:6px;color:#6b7280">Demo inspection data</div></div>`
+            ).addTo(map);
+        });
+
+        map.on('load',()=>{});
+        map.fitBounds(RESET_BOUNDS,{padding:45,duration:0});
+    }
+
+    function initStreetLensMap() {
+        if (streetLensMap || typeof maplibregl === 'undefined') return;
+        streetLensMap = new maplibregl.Map({container:'streetLensMap',style:'https://tiles.openfreemap.org/styles/liberty',center:[-75.0784,39.9153],zoom:13.8,attributionControl:true});
+        streetLensMap.addControl(new maplibregl.NavigationControl(),'top-left');
+        streetLensMap.addControl(new maplibregl.ScaleControl({maxWidth:120,unit:'imperial'}),'bottom-right');
+        streetLensMap.on('load',()=>{
+            addStreetLensLayers();
+            streetLensMapReady=true;
+            document.getElementById('streetLensMapLoading')?.classList.add('hidden');
+        });
+        streetLensMap.on('error',e=>{ console.warn('StreetLens map error',e.error || e); });
+    }
+
+    function toggleSatellite() {
+        if(!streetLensMapReady) return;
+        satelliteOn=!satelliteOn;
+        streetLensMap.setLayoutProperty('streetlens-satellite','visibility',satelliteOn?'visible':'none');
+        document.getElementById('streetLensSatelliteBtn').textContent=satelliteOn?'🗺 Street Map':'🛰 Satellite';
+    }
+
+    function resetStreetLensMap() {
+        if(streetLensMapReady) streetLensMap.fitBounds(RESET_BOUNDS,{padding:45,duration:500});
+    }
+
+    window.openMap=function(){
+        const modal=document.getElementById('mapModal');
+        if(!modal) return;
+        modal.classList.remove('hidden');
+        initStreetLensMap();
+        setTimeout(()=>{ if(streetLensMap){streetLensMap.resize(); if(streetLensMapReady) streetLensMap.fitBounds(RESET_BOUNDS,{padding:45,duration:0});}},80);
+    };
+    window.closeMap=function(e){
+        const modal=document.getElementById('mapModal');
+        if(!modal) return;
+        if(e && e.target!==modal) return;
+        modal.classList.add('hidden');
+    };
+
+    document.addEventListener('DOMContentLoaded',()=>{
+        document.getElementById('streetLensSatelliteBtn')?.addEventListener('click',toggleSatellite);
+        document.getElementById('streetLensResetBtn')?.addEventListener('click',resetStreetLensMap);
+    });
+})();
+</script>
 
 </body>
 </html>
