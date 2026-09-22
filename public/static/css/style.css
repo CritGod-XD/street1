@@ -263,15 +263,7 @@ button,input{font:inherit}
 }
 
 .register-icon{
-    width:56px;
-    height:56px;
-    margin:auto;
-    border-radius:50%;
-    display:grid;
-    place-items:center;
-    background:#84cc1626;
-    color:#84cc16;
-    font-size:25px
+    display:none;
 }
 
 .register-view h3{
@@ -285,11 +277,16 @@ button,input{font:inherit}
 .register-view button{
     border-radius:6px;
     padding:13px;
-    background:#84cc1626;
-    color:#84cc16;
-    border:0;
+    background:#1a1a1a;
+    color:#e0e0e0;
+    border:1px solid #2a2a2a;
     font-weight:600;
     cursor:pointer
+}
+
+.register-view button:hover{
+    background:#202020;
+    border-color:#3a3a3a;
 }
 
 footer{
