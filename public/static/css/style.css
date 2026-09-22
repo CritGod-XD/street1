@@ -289,6 +289,59 @@ button,input{font:inherit}
     border-color:#3a3a3a;
 }
 
+/* =========================
+   REGISTER PAGE FIXES
+   ========================= */
+
+/* Keep register form fields and labels aligned to the left */
+.register-view form{
+    text-align:left;
+}
+
+.register-view form label{
+    text-align:left;
+}
+
+/* Create Account button - green */
+.register-view form button[type="submit"]{
+    background:#84cc16;
+    color:#0a0f1e;
+    border:0;
+    border-radius:6px;
+    padding:13px;
+    font-weight:600;
+    cursor:pointer;
+}
+
+.register-view form button[type="submit"]:hover{
+    background:#a3e635;
+}
+
+/* Password visibility buttons stay neutral */
+.register-view form button:not([type="submit"]){
+    color:#777;
+}
+
+.register-view form button:not([type="submit"]):hover{
+    color:#aaa;
+}
+
+/* Back to Login button - dark outlined */
+.register-view > button{
+    background:#1a1a1a;
+    color:#e0e0e0;
+    border:1px solid #2a2a2a;
+    border-radius:6px;
+    padding:13px;
+    font-weight:600;
+    cursor:pointer;
+}
+
+.register-view > button:hover{
+    background:#202020;
+    border-color:#3a3a3a;
+}
+
 footer{
     text-align:center;
     padding:14px;
