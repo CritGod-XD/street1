@@ -1379,35 +1379,77 @@
         const conditions = ['Good', 'Fair', 'Poor'];
 
         conditions.forEach(condition => {
-            const suffix = condition.toLowerCase();
-            const filter = ['==', ['get', 'condition'], condition];
+    const suffix = condition.toLowerCase();
+    const filter = ['==', ['get', 'condition'], condition];
 
-            map.addLayer({
-                id: `streetlens-pci-${suffix}-casing`,
-                type: 'line',
-                source,
-                filter,
-                layout: {'line-cap':'round','line-join':'round'},
-                paint: {
-                    'line-color': '#111827',
-                    'line-width': ['interpolate',['linear'],['zoom'],11,7,13,10,15,14,17,18],
-                    'line-opacity': 0.98
-                }
-            }, beforeId);
+    /*
+     * StreetLens road casing
+     * Slightly wider than the PCI line so the road has
+     * a subtle dark outline without looking oversized.
+     */
+    map.addLayer({
+        id: `streetlens-pci-${suffix}-casing`,
+        type: 'line',
+        source,
+        filter,
+        layout: {
+            'line-cap': 'round',
+            'line-join': 'round'
+        },
+        paint: {
+            'line-color': '#111827',
 
-            map.addLayer({
-                id: `streetlens-pci-${suffix}`,
-                type: 'line',
-                source,
-                filter,
-                layout: {'line-cap':'round','line-join':'round'},
-                paint: {
-                    'line-color': COLORS[condition],
-                    'line-width': ['interpolate',['linear'],['zoom'],11,4.5,13,7,15,10,17,13],
-                    'line-opacity': 1
-                }
-            }, beforeId);
-        });
+            // Reduced from the previous very thick casing
+            'line-width': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                11, 3.5,
+                13, 5.5,
+                15, 8,
+                17, 10
+            ],
+
+            // Slight transparency for a more natural road appearance
+            'line-opacity': 0.78
+        }
+    }, beforeId);
+
+    /*
+     * StreetLens PCI condition line
+     * Good  = green
+     * Fair  = yellow
+     * Poor  = red
+     */
+    map.addLayer({
+        id: `streetlens-pci-${suffix}`,
+        type: 'line',
+        source,
+        filter,
+        layout: {
+            'line-cap': 'round',
+            'line-join': 'round'
+        },
+        paint: {
+            'line-color': COLORS[condition],
+
+            // Thinner than the current version
+            'line-width': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                11, 2.5,
+                13, 4,
+                15, 6,
+                17, 8
+            ],
+
+            // Slight transparency so the underlying road
+            // texture/map remains visible.
+            'line-opacity': 0.72
+        }
+    }, beforeId);
+});
 
         map.addLayer({
             id: 'streetlens-pci-hit',
