@@ -1279,76 +1279,22 @@
         return `<div class="streetlens-map-popup"><strong>${record.name}</strong>${rows}<div style="margin-top:6px"><b>Map condition:</b> <span style="color:${COLORS[record.condition]};font-weight:700">${record.condition}</span></div><div class="demo-note">PCI source: Collingswood Collection List</div></div>`;
     }
 
-    function overpassQuery() {
-        const [sw, ne] = BOUNDS;
-        const [west, south] = sw;
-        const [east, north] = ne;
-        return `[out:json][timeout:25];way["highway"]["name"](${south},${west},${north},${east});out tags geom;`;
-    }
-
-    async function loadPCIFromOSM(map) {
-        const source = map.getSource('streetlens-pci-source');
-        if (!source) return;
-        try {
-            // Same-origin server proxy. This is important on Vercel because
-            // calling public Overpass instances directly from the browser can
-            // be blocked/rate-limited differently from localhost.
-            const response = await fetch('/api/pci-roads', {
-                method: 'GET',
-                headers: {'Accept': 'application/json'},
-                cache: 'no-store'
-            });
-            if (!response.ok) {
-                let detail = `HTTP ${response.status}`;
-                try {
-                    const errorData = await response.json();
-                    if (errorData.detail) detail += ` — ${errorData.detail}`;
-                } catch (_) {}
-                throw new Error(detail);
-            }
-            const data = await response.json();
-            const features = [];
-            const seen = new Set();
-
-            (data.elements || []).forEach(way => {
-                const osmName = way.tags && way.tags.name;
-                if (!osmName || !way.geometry || way.geometry.length < 2) return;
-                const record = findPCIRecord(osmName);
-                if (!record) return;
-
-                const coords = way.geometry.map(p => [p.lon, p.lat]);
-                const key = `${way.id}:${record.name}`;
-                if (seen.has(key)) return;
-                seen.add(key);
-                features.push({
-                    type: 'Feature',
-                    id: key,
-                    properties: {
-                        road: record.name,
-                        osmName,
-                        pci: Number(record.pci),
-                        condition: record.condition,
-                        treatment: record.treatment
-                    },
-                    geometry: {type: 'LineString', coordinates: coords}
-                });
-            });
-
-            source.setData({type:'FeatureCollection', features});
-            const badge = document.querySelector(`#${map.getContainer().id} .streetlens-pci-count`);
-            if (badge) badge.textContent = `${features.length} mapped PCI segments · 109 evaluated roads`;
-            console.info(`StreetLens PCI: mapped ${features.length} OSM road segments from the spreadsheet.`);
-        } catch (error) {
-            console.error('StreetLens PCI/OSM overlay:', error);
-            const badge = document.querySelector(`#${map.getContainer().id} .streetlens-pci-count`);
-            if (badge) badge.textContent = 'PCI overlay unavailable — check network';
-        }
-    }
-
+    // The PCI values are hardcoded from the current Collingswood dataset above.
+    // Road geometry comes directly from the OpenFreeMap/OpenMapTiles vector tiles
+    // already used by the basemap. This removes the Overpass/API round-trip from
+    // the critical rendering path, so PCI colors can render as soon as the map
+    // tiles are available.
     function addStreetLensLayers(map) {
         const beforeId = firstSymbolLayer(map);
+        const sourceId = 'openmaptiles';
+        const roadSourceLayer = 'transportation_name';
 
-        // Satellite base layer. It is kept underneath the PCI roads and labels.
+        if (!map.getSource(sourceId)) {
+            console.warn('StreetLens: OpenMapTiles source was not found in the basemap style.');
+            return;
+        }
+
+        // Satellite remains an optional basemap layer.
         if (!map.getSource('streetlens-satellite-source')) {
             map.addSource('streetlens-satellite-source', {
                 type: 'raster',
@@ -1364,101 +1310,99 @@
             }, beforeId);
         }
 
-        // IMPORTANT: do not try to color OpenFreeMap's transportation layer by
-        // road name. Its `transportation` layer does not expose the road name;
-        // `transportation_name` is a label-oriented subset. Instead, we fetch
-        // the actual OSM road geometries once and keep them in a GeoJSON source.
-        if (!map.getSource('streetlens-pci-source')) {
-            map.addSource('streetlens-pci-source', {
-                type: 'geojson',
-                data: {type: 'FeatureCollection', features: []}
-            });
-        }
-
-        const source = 'streetlens-pci-source';
+        // The road names are already present in the basemap's named-road vector
+        // layer. We only use the hardcoded spreadsheet names to select them.
+        // No Overpass request, GeoJSON construction, or road-name matching API
+        // call is needed anymore.
         const conditions = ['Good', 'Fair', 'Poor'];
+        const nameExpression = [
+            'coalesce',
+            ['get', 'name'],
+            ['get', 'name_en'],
+            ['get', 'name:latin']
+        ];
 
         conditions.forEach(condition => {
-    const suffix = condition.toLowerCase();
-    const filter = ['==', ['get', 'condition'], condition];
+            const suffix = condition.toLowerCase();
+            const names = PCI_NAMES.filter(name => PCI_BY_NAME[name].condition === condition);
+            const filter = [
+                'all',
+                ['==', ['geometry-type'], 'LineString'],
+                ['match', nameExpression, names, true, false]
+            ];
 
-    /*
-     * StreetLens road casing
-     * Slightly wider than the PCI line so the road has
-     * a subtle dark outline without looking oversized.
-     */
-    map.addLayer({
-        id: `streetlens-pci-${suffix}-casing`,
-        type: 'line',
-        source,
-        filter,
-        layout: {
-            'line-cap': 'round',
-            'line-join': 'round'
-        },
-        paint: {
-            'line-color': '#111827',
+            map.addLayer({
+                id: `streetlens-pci-${suffix}-casing`,
+                type: 'line',
+                source: sourceId,
+                'source-layer': roadSourceLayer,
+                minzoom: 12,
+                filter,
+                layout: {
+                    'line-cap': 'round',
+                    'line-join': 'round'
+                },
+                paint: {
+                    'line-color': '#111827',
+                    'line-width': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        11, 3.5,
+                        13, 5.5,
+                        15, 8,
+                        17, 10
+                    ],
+                    'line-opacity': 1
+                }
+            }, beforeId);
 
-            // Reduced from the previous very thick casing
-            'line-width': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                11, 3.5,
-                13, 5.5,
-                15, 8,
-                17, 10
-            ],
+            map.addLayer({
+                id: `streetlens-pci-${suffix}`,
+                type: 'line',
+                source: sourceId,
+                'source-layer': roadSourceLayer,
+                minzoom: 12,
+                filter,
+                layout: {
+                    'line-cap': 'round',
+                    'line-join': 'round'
+                },
+                paint: {
+                    'line-color': COLORS[condition],
+                    'line-width': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        11, 2.5,
+                        13, 4,
+                        15, 6,
+                        17, 8
+                    ],
+                    'line-opacity': 1
+                }
+            }, beforeId);
+        });
 
-            // Slight transparency for a more natural road appearance
-            'line-opacity': 0.70
-        }
-    }, beforeId);
-
-    /*
-     * StreetLens PCI condition line
-     * Good  = green
-     * Fair  = yellow
-     * Poor  = red
-     */
-    map.addLayer({
-        id: `streetlens-pci-${suffix}`,
-        type: 'line',
-        source,
-        filter,
-        layout: {
-            'line-cap': 'round',
-            'line-join': 'round'
-        },
-        paint: {
-            'line-color': COLORS[condition],
-
-            // Thinner than the current version
-            'line-width': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                11, 2.5,
-                13, 4,
-                15, 6,
-                17, 8
-            ],
-
-            // Slight transparency so the underlying road
-            // texture/map remains visible.
-            'line-opacity': 0.70
-        }
-    }, beforeId);
-});
-
+        // Wide invisible hit target for the same hardcoded named roads.
         map.addLayer({
             id: 'streetlens-pci-hit',
             type: 'line',
-            source,
-            layout: {'line-cap':'round','line-join':'round'},
+            source: sourceId,
+            'source-layer': roadSourceLayer,
+            minzoom: 12,
+            filter: [
+                'all',
+                ['==', ['geometry-type'], 'LineString'],
+                ['match', nameExpression, PCI_NAMES, true, false]
+            ],
+            layout: {
+                'line-cap': 'round',
+                'line-join': 'round'
+            },
             paint: {
                 'line-color': '#ffffff',
-                'line-width': ['interpolate',['linear'],['zoom'],11,14,13,18,15,24,17,30],
+                'line-width': ['interpolate', ['linear'], ['zoom'], 11, 14, 13, 18, 15, 24, 17, 30],
                 'line-opacity': 0
             }
         }, beforeId);
@@ -1471,17 +1415,11 @@
         });
         map.on('click', 'streetlens-pci-hit', e => {
             const props = e.features?.[0]?.properties || {};
-            const record = {
-                name: props.road || props.osmName || 'Road',
-                pci: Number(props.pci),
-                condition: props.condition,
-                treatment: props.treatment,
-                records: [{
-                    PCI: Number(props.pci),
-                    'Maintenance Treatment Suggestion': props.treatment || 'Not specified'
-                }]
-            };
-            new maplibregl.Popup({offset:10,maxWidth:'290px'})
+            const osmName = props.name || props.name_en || props['name:latin'] || '';
+            const record = findPCIRecord(osmName);
+            if (!record) return;
+
+            new maplibregl.Popup({offset: 10, maxWidth: '290px'})
                 .setLngLat(e.lngLat)
                 .setHTML(popupHTML(record))
                 .addTo(map);
@@ -1489,11 +1427,8 @@
 
         const badge = document.createElement('div');
         badge.className = 'streetlens-pci-count';
-        badge.textContent = 'Loading PCI road geometry…';
+        badge.textContent = '109 evaluated roads · PCI overlay ready';
         map.getContainer().appendChild(badge);
-
-        // Fetch actual OSM road geometry and map it to the spreadsheet PCI.
-        loadPCIFromOSM(map);
     }
 
     function createMap(containerId, loadingId, mini) {
