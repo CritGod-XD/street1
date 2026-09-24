@@ -1006,23 +1006,22 @@
                             <path
                                 d="M35 105 A75 75 0 0 1 185 105"
                                 fill="none"
+                                id="streetLensGaugeProgress"
                                 stroke="#f97316"
                                 stroke-width="14"
                                 stroke-linecap="round"
-                                stroke-dasharray="136 236"
+                                stroke-dasharray="0 236"
                             />
 
                             <text
-                                x="110"
+                                id="streetLensScoreValue" x="110"
                                 y="95"
                                 text-anchor="middle"
                                 fill="#f1f1f1"
                                 font-size="36"
                                 font-weight="700"
                                 font-family="Outfit"
-                            >
-                                29
-                            </text>
+                            >—</text>
 
                             <text
                                 x="110"
@@ -1032,30 +1031,26 @@
                                 font-size="9"
                                 font-family="Inter"
                             >
-                                scale: 100 = best condition
+                                PCI: 100 = best condition
                             </text>
 
                         </svg>
 
                     </div>
-
-
-                    <div class="condition">
-                        CONDITION: POOR
+                    <div id="streetLensCondition" class="condition">
+                        CONDITION: —
                     </div>
 
 
-                    <div class="pills">
-
-                        {% for p in pills %}
-
+                    <div id="streetLensRoadSummary" class="pills road-summary">
                         <div>
-                            <span>{{ p.label }}</span>
-                            <b>{{ p.score }}</b>
+                            <span>Street name</span>
+                            <b id="streetLensSelectedRoad">—</b>
                         </div>
-
-                        {% endfor %}
-
+                        <div>
+                            <span>Maintenance</span>
+                            <b id="streetLensSelectedTreatment">—</b>
+                        </div>
                     </div>
 
                 </div>
@@ -1078,7 +1073,7 @@
 >
 
     <div
-        class="modal-card"
+        class="modal-card map-modal-card"
         onclick="event.stopPropagation()"
     >
 
@@ -1088,9 +1083,10 @@
                 ● StreetLens Inspection Map — Collingswood, NJ
             </strong>
 
-            <button onclick="closeMap()">
-                ×
-            </button>
+            <div class="modal-head-actions">
+                <button id="streetLensModalFullscreen" type="button" title="Full screen map">⛶</button>
+                <button onclick="closeMap()" title="Close map">×</button>
+            </div>
 
         </div>
 
@@ -1271,6 +1267,80 @@
         const layers = map.getStyle().layers || [];
         const symbol = layers.find(l => l.type === 'symbol');
         return symbol ? symbol.id : undefined;
+    }
+
+    function roadRecordFromProperties(props) {
+        let records = [];
+        try {
+            records = props.records ? JSON.parse(props.records) : [];
+        } catch (_) {}
+        if (!records.length) {
+            records = [{
+                PCI: Number(props.pci),
+                'Maintenance Treatment Suggestion': props.treatment || 'Not specified'
+            }];
+        }
+        return {
+            name: props.road || props.osmName || 'Road',
+            pci: Number(props.pci),
+            condition: props.condition || 'Unknown',
+            treatment: props.treatment || 'Not specified',
+            records
+        };
+    }
+
+    function updateSelectedRoad(record) {
+        const scoreEl = document.getElementById('streetLensScoreValue');
+        const conditionEl = document.getElementById('streetLensCondition');
+        const roadEl = document.getElementById('streetLensSelectedRoad');
+        const treatmentEl = document.getElementById('streetLensSelectedTreatment');
+        const gaugeEl = document.getElementById('streetLensGaugeProgress');
+        const footerEl = document.getElementById('streetLensMapCoords');
+
+        if (!record || !Number.isFinite(record.pci)) return;
+
+        // PCI is the road-specific condition score used by the dashboard.
+        // 100 = best condition, matching the value shown in the map popup.
+        const pci = Math.max(0, Math.min(100, Math.round(record.pci)));
+        const condition = String(record.condition || 'Unknown');
+        const treatment = record.treatment || 'Not specified';
+
+        if (scoreEl) scoreEl.textContent = pci;
+        if (roadEl) roadEl.textContent = record.name || 'Road';
+        if (roadEl) roadEl.title = record.name || 'Road';
+        if (treatmentEl) treatmentEl.textContent = treatment;
+        if (treatmentEl) treatmentEl.title = treatment;
+
+        if (conditionEl) {
+            const color = COLORS[condition] || '#aaa';
+            conditionEl.textContent = `CONDITION: ${condition.toUpperCase()}`;
+            conditionEl.style.color = color;
+            conditionEl.style.borderColor = `${color}55`;
+            conditionEl.style.background = `${color}18`;
+        }
+
+        if (gaugeEl) {
+            const arcLength = 236;
+            const filled = (pci / 100) * arcLength;
+            gaugeEl.setAttribute('stroke-dasharray', `${filled} ${arcLength}`);
+            gaugeEl.setAttribute('stroke', COLORS[condition] || '#f97316');
+        }
+
+        if (footerEl) footerEl.textContent = `Selected road: ${record.name || 'Road'}`;
+        window.streetLensSelectedRoad = record;
+    }
+
+    function selectDefaultRoad() {
+        const features = STREETLENS_PRELOADED_PCI.features || [];
+        if (!features.length) return;
+
+        // Prefer the road used in the current demo screenshots; otherwise use
+        // the first prepared PCI road so a selection always exists on startup.
+        const preferred = features.find(feature =>
+            normalizeRoadName(feature.properties?.road) === normalizeRoadName('Newton Ave')
+        );
+        const feature = preferred || features[0];
+        updateSelectedRoad(roadRecordFromProperties(feature.properties || {}));
     }
 
     function popupHTML(record) {
@@ -1475,23 +1545,8 @@
         });
         map.on('click', 'streetlens-pci-hit', e => {
             const props = e.features?.[0]?.properties || {};
-            let records = [];
-            try {
-                records = props.records ? JSON.parse(props.records) : [];
-            } catch (_) {}
-            if (!records.length) {
-                records = [{
-                    PCI: Number(props.pci),
-                    'Maintenance Treatment Suggestion': props.treatment || 'Not specified'
-                }];
-            }
-            const record = {
-                name: props.road || props.osmName || 'Road',
-                pci: Number(props.pci),
-                condition: props.condition,
-                treatment: props.treatment,
-                records
-            };
+            const record = roadRecordFromProperties(props);
+            updateSelectedRoad(record);
             new maplibregl.Popup({offset:10,maxWidth:'290px'})
                 .setLngLat(e.lngLat)
                 .setHTML(popupHTML(record))
@@ -1508,6 +1563,9 @@
             loadPCIFromOSM(map);
         }
         map.getContainer().appendChild(badge);
+
+        // Give the dashboard a selected road immediately on first load.
+        selectDefaultRoad();
     }
 
     function createMap(containerId, loadingId, mini) {
@@ -1548,16 +1606,40 @@
             let satellite = false;
             const sat = document.getElementById('streetLensModalSatellite');
             const reset = document.getElementById('streetLensModalReset');
+            const fullscreen = document.getElementById('streetLensModalFullscreen');
             if (sat) sat.onclick = () => { satellite = !satellite; setSatellite(maps.modal, satellite); };
             if (reset) reset.onclick = () => resetMap(maps.modal, false);
+            if (fullscreen) fullscreen.onclick = toggleMapFullscreen;
         }
         setTimeout(() => maps.modal && maps.modal.resize(), 80);
     }
 
+    async function toggleMapFullscreen() {
+        const modal = document.getElementById('mapModal');
+        if (!modal) return;
+        try {
+            if (!document.fullscreenElement) {
+                await modal.requestFullscreen();
+            } else {
+                await document.exitFullscreen();
+            }
+        } catch (error) {
+            console.warn('StreetLens map fullscreen:', error);
+        }
+        setTimeout(() => maps.modal && maps.modal.resize(), 100);
+    }
+
     function closeMap() {
         const modal = document.getElementById('mapModal');
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+        }
         if (modal) modal.classList.add('hidden');
     }
+
+    document.addEventListener('fullscreenchange', () => {
+        setTimeout(() => maps.modal && maps.modal.resize(), 100);
+    });
 
     window.openMap = openMap;
     window.closeMap = closeMap;
