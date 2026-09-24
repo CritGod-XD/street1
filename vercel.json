@@ -4,5 +4,6 @@
     "app.py": {
       "maxDuration": 30
     }
-  }
+  },
+  "buildCommand": "python scripts/build_pci_geojson.py"
 }
