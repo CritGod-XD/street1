@@ -761,7 +761,8 @@
                     <div class="streetlens-map-mini-tools">
                         <button id="streetLensDashboardSatellite" type="button">🛰</button>
                         <button id="streetLensDashboardReset" type="button">↺</button>
-                        <button id="streetLensDashboardExpand" type="button">⛶</button>
+                        <button id="streetLensDashboardExpand" type="button" title="Open map">⤢</button>
+                         <button id="streetLensDashboardFullscreen" type="button" title="Full screen map">⛶</button>
                     </div>
 
                 </div>
@@ -786,49 +787,19 @@
                 </div>
 
 
-                <div class="sample-list">
+                <div class="sample-carousel" aria-label="ML detected crack images">
+                    <button class="sample-nav sample-prev" id="samplePrev" type="button" aria-label="Previous crack image">↑</button>
 
-                    <div class="sample">
-
-                        <img
-                            src="{{ url_for('static', filename='images/crack-1.png') }}"
-                            alt="Transverse crack"
-                        >
-
-                        <p>
-                            Transverse crack · side joint
-                        </p>
-
+                    <div class="sample-stage">
+                        <img id="sampleImage" src="{{ url_for('static', filename='images/crack-1.png') }}" alt="Transverse crack">
+                        <div class="sample-caption">
+                            <strong id="sampleTitle">Transverse crack</strong>
+                            <span id="sampleDescription">side joint</span>
+                        </div>
+                        <span class="sample-counter" id="sampleCounter">1 / 3</span>
                     </div>
 
-
-                    <div class="sample">
-
-                        <img
-                            src="{{ url_for('static', filename='images/crack-2.png') }}"
-                            alt="Alligator cracking"
-                        >
-
-                        <p>
-                            Alligator cracking
-                        </p>
-
-                    </div>
-
-
-                    <div class="sample">
-
-                        <img
-                            src="{{ url_for('static', filename='images/crack-3.png') }}"
-                            alt="Longitudinal crack"
-                        >
-
-                        <p>
-                            Longitudinal crack
-                        </p>
-
-                    </div>
-
+                    <button class="sample-nav sample-next" id="sampleNext" type="button" aria-label="Next crack image">↓</button>
                 </div>
 
 
@@ -1568,6 +1539,31 @@
         selectDefaultRoad();
     }
 
+    // ML crack-image carousel: show one frame at a time so crack markings remain clear.
+    const CRACK_FRAMES = [
+        { src: "{{ url_for('static', filename='images/crack-1.png') }}", title: 'Transverse crack', description: 'side joint' },
+        { src: "{{ url_for('static', filename='images/crack-2.png') }}", title: 'Alligator cracking', description: 'interconnected cracking pattern' },
+        { src: "{{ url_for('static', filename='images/crack-3.png') }}", title: 'Longitudinal crack', description: 'longitudinal pavement crack' }
+    ];
+    let crackIndex = 0;
+
+    function renderCrackFrame() {
+        const frame = CRACK_FRAMES[crackIndex];
+        const image = document.getElementById('sampleImage');
+        const title = document.getElementById('sampleTitle');
+        const description = document.getElementById('sampleDescription');
+        const counter = document.getElementById('sampleCounter');
+        if (image) { image.src = frame.src; image.alt = frame.title; }
+        if (title) title.textContent = frame.title;
+        if (description) description.textContent = frame.description;
+        if (counter) counter.textContent = `${crackIndex + 1} / ${CRACK_FRAMES.length}`;
+    }
+
+    function changeCrackFrame(direction) {
+        crackIndex = (crackIndex + direction + CRACK_FRAMES.length) % CRACK_FRAMES.length;
+        renderCrackFrame();
+    }
+
     function createMap(containerId, loadingId, mini) {
         const map = new maplibregl.Map({
             container: containerId,
@@ -1651,9 +1647,21 @@
         const sat = document.getElementById('streetLensDashboardSatellite');
         const reset = document.getElementById('streetLensDashboardReset');
         const expand = document.getElementById('streetLensDashboardExpand');
+        const dashboardFullscreen = document.getElementById('streetLensDashboardFullscreen');
         if (sat) sat.onclick = e => { e.stopPropagation(); satellite = !satellite; setSatellite(maps.dashboard, satellite); };
         if (reset) reset.onclick = e => { e.stopPropagation(); resetMap(maps.dashboard, true); };
         if (expand) expand.onclick = e => { e.stopPropagation(); openMap(); };
+        if (dashboardFullscreen) dashboardFullscreen.onclick = async e => {
+            e.stopPropagation();
+            openMap();
+            setTimeout(() => toggleMapFullscreen(), 120);
+        };
+
+        const samplePrev = document.getElementById('samplePrev');
+        const sampleNext = document.getElementById('sampleNext');
+        if (samplePrev) samplePrev.onclick = () => changeCrackFrame(-1);
+        if (sampleNext) sampleNext.onclick = () => changeCrackFrame(1);
+        renderCrackFrame();
     });
 })();
 </script>
