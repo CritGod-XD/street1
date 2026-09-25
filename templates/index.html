@@ -209,22 +209,57 @@
             width: 7px; height: 7px; border-radius: 50%; display:inline-block; margin-right:5px;
         }
         .streetlens-map-mini-tools {
-            top: 9px;
-            right: 9px;
-            display: flex;
-            gap: 5px;
+            position: absolute !important;
+            top: 9px !important;
+            right: 9px !important;
+            z-index: 100 !important;
+            display: flex !important;
+            gap: 5px !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
         }
-        .streetlens-map-mini-tools button, .streetlens-map-tools button {
+
+        .streetlens-map-mini-tools button,
+        .streetlens-map-tools button {
+            width: 34px;
+            height: 34px;
+            box-sizing: border-box;
             border: 1px solid #3a3a3a;
-            background: #111e;
-            color: #ddd;
+            background: rgba(17, 17, 17, .94);
+            color: #f1f1f1;
             border-radius: 5px;
-            padding: 6px 8px;
-            font: 10px Inter, sans-serif;
+            padding: 0;
+            font: 15px Inter, sans-serif;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             backdrop-filter: blur(5px);
+            position: relative;
+            z-index: 101;
         }
-        .streetlens-map-mini-tools button:hover, .streetlens-map-tools button:hover { background:#222e; }
+
+        .streetlens-map-mini-tools button:hover,
+        .streetlens-map-tools button:hover {
+            background: #222;
+            border-color: #555;
+        }
+
+        .map-card:fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            min-height: 100vh !important;
+            border-radius: 0 !important;
+            z-index: 99999 !important;
+            background: #111;
+        }
+
+        .map-card:fullscreen #streetLensDashboardMap {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
         .modal-map { position: relative; }
         .streetlens-map-legend {
             left: 14px; bottom: 14px;
@@ -1625,6 +1660,23 @@
         setTimeout(() => maps.modal && maps.modal.resize(), 100);
     }
 
+    async function toggleDashboardMapFullscreen() {
+        const mapCard = document.querySelector('.map-card');
+        if (!mapCard) return;
+
+        try {
+            if (!document.fullscreenElement) {
+                await mapCard.requestFullscreen();
+            } else {
+                await document.exitFullscreen();
+            }
+        } catch (error) {
+            console.warn('StreetLens dashboard map fullscreen:', error);
+        }
+
+        setTimeout(() => maps.dashboard && maps.dashboard.resize(), 120);
+    }
+
     function closeMap() {
         const modal = document.getElementById('mapModal');
         if (document.fullscreenElement) {
@@ -1634,7 +1686,10 @@
     }
 
     document.addEventListener('fullscreenchange', () => {
-        setTimeout(() => maps.modal && maps.modal.resize(), 100);
+        setTimeout(() => {
+            if (maps.modal) maps.modal.resize();
+            if (maps.dashboard) maps.dashboard.resize();
+        }, 120);
     });
 
     window.openMap = openMap;
@@ -1653,8 +1708,7 @@
         if (expand) expand.onclick = e => { e.stopPropagation(); openMap(); };
         if (dashboardFullscreen) dashboardFullscreen.onclick = async e => {
             e.stopPropagation();
-            openMap();
-            setTimeout(() => toggleMapFullscreen(), 120);
+            await toggleDashboardMapFullscreen();
         };
 
         const samplePrev = document.getElementById('samplePrev');
