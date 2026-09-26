@@ -26,12 +26,21 @@ OVERPASS_ENDPOINTS = [
     "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
 ]
 
-BOUNDS = (-75.091, 39.910, -75.062, 39.928)
-QUERY = (
-    '[out:json][timeout:25];'
-    f'way["highway"]["name"]({BOUNDS[1]},{BOUNDS[0]},{BOUNDS[3]},{BOUNDS[2]});'
-    'out tags geom;'
-)
+# The original single bounding-box query was large enough to time out during
+# some Vercel builds.  Split it into smaller tiles so each Overpass request is
+# cheap and can succeed independently.
+BOUNDS = (-75.091, 39.910, -75.062, 39.928)  # west, south, east, north
+TILE_ROWS = 3
+TILE_COLS = 3
+
+
+def make_query(west: float, south: float, east: float, north: float) -> str:
+    return (
+        '[out:json][timeout:20];'
+        f'way["highway"]["name"]({south},{west},{north},{east});'
+        'out tags geom;'
+    )
+
 
 
 def normalize(value: str) -> str:
@@ -62,27 +71,63 @@ def load_pci_table(html: str) -> dict:
 
 
 def fetch_osm() -> dict:
-    body = urllib.parse.urlencode({"data": QUERY}).encode("utf-8")
-    last_error = None
-    for endpoint in OVERPASS_ENDPOINTS:
-        try:
-            request = urllib.request.Request(
-                endpoint,
-                data=body,
-                method="POST",
-                headers={
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "User-Agent": "StreetLens/1.0 build-pci-geojson",
-                    "Accept": "application/json",
-                },
-            )
-            with urllib.request.urlopen(request, timeout=45) as response:
-                return json.loads(response.read().decode("utf-8"))
-        except Exception as exc:
-            last_error = f"{endpoint}: {exc}"
-            print(f"Overpass failed: {last_error}", file=sys.stderr)
-            time.sleep(0.5)
-    raise RuntimeError(f"All Overpass endpoints failed: {last_error}")
+    west, south, east, north = BOUNDS
+    lon_step = (east - west) / TILE_COLS
+    lat_step = (north - south) / TILE_ROWS
+    elements = {}
+    failures = []
+
+    def fetch_tile(query: str):
+        body = urllib.parse.urlencode({"data": query}).encode("utf-8")
+        last_error = None
+        for endpoint in OVERPASS_ENDPOINTS:
+            try:
+                request = urllib.request.Request(
+                    endpoint,
+                    data=body,
+                    method="POST",
+                    headers={
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "User-Agent": "StreetLens/1.0 build-pci-geojson",
+                        "Accept": "application/json",
+                    },
+                )
+                with urllib.request.urlopen(request, timeout=30) as response:
+                    return json.loads(response.read().decode("utf-8"))
+            except Exception as exc:
+                last_error = f"{endpoint}: {exc}"
+        raise RuntimeError(last_error or "unknown Overpass error")
+
+    for row in range(TILE_ROWS):
+        tile_south = south + row * lat_step
+        tile_north = north if row == TILE_ROWS - 1 else south + (row + 1) * lat_step
+        for col in range(TILE_COLS):
+            tile_west = west + col * lon_step
+            tile_east = east if col == TILE_COLS - 1 else west + (col + 1) * lon_step
+            query = make_query(tile_west, tile_south, tile_east, tile_north)
+            try:
+                data = fetch_tile(query)
+                for element in data.get("elements", []):
+                    element_id = element.get("id")
+                    if element_id is not None:
+                        elements[element_id] = element
+            except Exception as exc:
+                failures.append(f"tile {row + 1},{col + 1}: {exc}")
+                print(f"Overpass tile failed: {failures[-1]}", file=sys.stderr)
+            time.sleep(0.15)
+
+    if not elements:
+        # Deployment must not fail merely because Overpass is temporarily
+        # unavailable. The browser/runtime endpoint can retry later.
+        print(
+            "Overpass unavailable during build; keeping existing embedded PCI geometry and continuing.",
+            file=sys.stderr,
+        )
+        return {"elements": []}
+
+    if failures:
+        print(f"Overpass: {len(failures)} tile(s) failed; using successful tiles.", file=sys.stderr)
+    return {"elements": list(elements.values())}
 
 
 def main() -> None:
@@ -136,7 +181,11 @@ def main() -> None:
         })
 
     if not features:
-        raise RuntimeError("OSM returned zero PCI-matched road segments; refusing to overwrite the template")
+        print(
+            "No PCI-matched OSM segments were available during build; preserving the existing template and continuing.",
+            file=sys.stderr,
+        )
+        return
 
     geojson = {"type": "FeatureCollection", "features": features}
     payload = json.dumps(geojson, separators=(",", ":"), ensure_ascii=False)
