@@ -236,6 +236,11 @@ button,input{font:inherit}
 /* REGISTER BUTTON */
 
 .register-btn{
+    display:block;
+    width:100%;
+    box-sizing:border-box;
+    text-align:center;
+    text-decoration:none;
     border-radius:6px;
     padding:13px;
     background:transparent;
@@ -1039,3 +1044,24 @@ footer{
         display:none
     }
 }
+
+
+/* StreetLens dashboard v5 */
+.streetlens-dashboard-grid{grid-template-columns:minmax(230px,.85fr) minmax(420px,1.45fr) minmax(260px,.9fr)!important;gap:0;min-height:calc(100vh - 68px)}
+.streetlens-left-column{padding:18px 12px 20px 20px;border-right:1px solid #1e1e1e}.streetlens-ml-column{min-width:0;padding:18px 12px 20px;border-right:1px solid #1e1e1e}.streetlens-right-column{padding:18px 20px 20px 12px;min-width:0}.streetlens-main-map-card{height:270px}.streetlens-left-details{margin-top:10px}
+.streetlens-ml-card{margin:0;padding:12px;height:calc(100vh - 104px);min-height:620px;display:flex;flex-direction:column}.streetlens-ml-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex:0 0 auto}.streetlens-ml-head h2{font-size:12px}.streetlens-ml-head span{display:block;margin-top:4px}.streetlens-frame-status{padding:5px 8px;border:1px solid #2b2b2b;border-radius:4px;color:#aaa;font:10px 'JetBrains Mono'}
+.streetlens-road-scroll{position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;background:#080808;border:1px solid #252525;border-radius:5px;scrollbar-width:thin;scrollbar-color:#555 #111;overscroll-behavior:contain}.streetlens-road-scroll::-webkit-scrollbar{width:8px}.streetlens-road-scroll::-webkit-scrollbar-track{background:#111}.streetlens-road-scroll::-webkit-scrollbar-thumb{background:#4a4a4a;border-radius:8px}.streetlens-road-strip{width:100%}.streetlens-road-frame{width:100%;margin:0;padding:0;line-height:0;background:#080808}.streetlens-road-frame+.streetlens-road-frame{margin-top:-1px}.streetlens-road-frame img{display:block;width:100%;height:auto;min-height:220px;object-fit:cover;background:#0b0b0b;border:0;border-radius:0}.streetlens-scroll-hint{position:sticky;bottom:10px;width:max-content;margin:-32px auto 10px;padding:6px 9px;background:#0c0c0ce8;border:1px solid #303030;border-radius:5px;color:#888;font:9px Inter;pointer-events:none}.streetlens-ml-legend{flex:0 0 auto}.streetlens-score-card{height:auto;min-height:350px}.streetlens-breakdown-card{height:auto;min-height:360px;margin-top:12px}.streetlens-right-column .analytics-card{padding:14px 16px}.streetlens-right-column .gauge{height:165px}.streetlens-right-column .gauge svg{width:245px;height:155px;max-width:100%}
+@media(max-width:1200px){.streetlens-dashboard-grid{grid-template-columns:minmax(220px,.8fr) minmax(360px,1.25fr) minmax(240px,.85fr)!important}.streetlens-ml-card{min-height:560px}}@media(max-width:1000px){.streetlens-dashboard-grid{grid-template-columns:1fr!important}.streetlens-left-column,.streetlens-ml-column{border-right:0;border-bottom:1px solid #222;padding:16px}.streetlens-right-column{padding:16px}.streetlens-ml-card{height:620px;min-height:0}}
+
+/* Excel-backed ML road viewer */
+.streetlens-road-toolbar{display:flex;align-items:center;gap:6px;padding:0 0 8px}
+.streetlens-road-toolbar button{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;padding:0 9px;border:1px solid #303030;border-radius:5px;background:#111;color:#d7d7d7;font:600 10px Inter,sans-serif;cursor:pointer}
+.streetlens-road-toolbar button:hover{background:#1a1a1a;border-color:#484848;color:#fff}
+.streetlens-road-toolbar button:focus-visible{outline:2px solid #777;outline-offset:2px}
+.streetlens-road-zoom-label{margin-left:auto;color:#777;font:600 9px 'JetBrains Mono',monospace}
+.streetlens-road-strip{transform:scale(1);transform-origin:top center;transition:transform .22s ease,margin-bottom .22s ease;will-change:transform}
+.streetlens-road-frame{position:relative;display:block;width:100%;margin:0;padding:0;line-height:0;background:#080808}
+.streetlens-road-frame+.streetlens-road-frame{margin-top:0}
+.streetlens-road-frame img{display:block;width:100%;height:auto;min-height:0;object-fit:contain;background:#0b0b0b;border:0;border-radius:0}
+.streetlens-road-frame figcaption{position:absolute;top:6px;right:7px;display:flex;gap:5px;padding:3px 5px;background:#080808d9;border:1px solid #303030;border-radius:4px;color:#ddd;font:600 8px 'JetBrains Mono',monospace;line-height:1;pointer-events:none}
+.streetlens-road-frame figcaption span+span{color:#999}

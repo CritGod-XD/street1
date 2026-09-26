@@ -34,6 +34,16 @@ OVERPASS_ENDPOINTS = [
 OVERPASS_QUERY = "[out:json][timeout:20];way[\"highway\"][\"name\"](39.910,-75.091,39.928,-75.062);out tags geom;"
 _osm_cache = {"expires": 0, "data": None}
 
+# Ordered ML inspection frames extracted from the Image Log spreadsheet.
+# The JSON keeps the viewer easy to replace later with an API-backed frame list.
+ROAD_FRAMES = []
+ROAD_FRAMES_META = app.static_folder + "/images/road_frames/road_frames.json"
+try:
+    with open(ROAD_FRAMES_META, "r", encoding="utf-8") as fh:
+        ROAD_FRAMES = json.load(fh)
+except (OSError, ValueError):
+    ROAD_FRAMES = []
+
 
 @app.route("/api/pci-roads")
 def pci_roads():
@@ -110,10 +120,17 @@ def login_required(view):
 
 
 @app.route("/")
+def root():
+    if session.get("user_id"):
+        return redirect(url_for("dashboard"))
+    return redirect(url_for("login"))
+
+
+@app.route("/login", methods=["GET"])
 def login():
     if session.get("user_id"):
         return redirect(url_for("dashboard"))
-    return render_template("index.html", screen="login")
+    return render_template("login.html")
 
 
 @app.route("/login", methods=["POST"])
@@ -136,6 +153,13 @@ def login_submit():
         session.permanent = True
 
     return redirect(url_for("dashboard"))
+
+
+@app.route("/register", methods=["GET"])
+def register_page():
+    if session.get("user_id"):
+        return redirect(url_for("dashboard"))
+    return render_template("register.html")
 
 
 @app.route("/register", methods=["POST"])
@@ -193,6 +217,8 @@ def dashboard():
         distress=DISTRESS,
         pills=PILLS,
         username=session.get("username"),
+        road_frames=ROAD_FRAMES,
+        road_length_ft=(ROAD_FRAMES[-1]["station_end"] if ROAD_FRAMES else 0),
     )
 
 
