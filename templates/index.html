@@ -815,31 +815,6 @@
         selectDefaultRoad();
     }
 
-    // ML crack-image carousel: show one frame at a time so crack markings remain clear.
-    const CRACK_FRAMES = [
-        { src: "{{ url_for('static', filename='images/crack-1.png') }}", title: 'Transverse crack', description: 'side joint' },
-        { src: "{{ url_for('static', filename='images/crack-2.png') }}", title: 'Alligator cracking', description: 'interconnected cracking pattern' },
-        { src: "{{ url_for('static', filename='images/crack-3.png') }}", title: 'Longitudinal crack', description: 'longitudinal pavement crack' }
-    ];
-    let crackIndex = 0;
-
-    function renderCrackFrame() {
-        const frame = CRACK_FRAMES[crackIndex];
-        const image = document.getElementById('sampleImage');
-        const title = document.getElementById('sampleTitle');
-        const description = document.getElementById('sampleDescription');
-        const counter = document.getElementById('sampleCounter');
-        if (image) { image.src = frame.src; image.alt = frame.title; }
-        if (title) title.textContent = frame.title;
-        if (description) description.textContent = frame.description;
-        if (counter) counter.textContent = `${crackIndex + 1} / ${CRACK_FRAMES.length}`;
-    }
-
-    function changeCrackFrame(direction) {
-        crackIndex = (crackIndex + direction + CRACK_FRAMES.length) % CRACK_FRAMES.length;
-        renderCrackFrame();
-    }
-
     function createMap(containerId, loadingId, mini) {
         const map = new maplibregl.Map({
             container: containerId,
