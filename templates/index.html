@@ -441,8 +441,24 @@
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
-const STREETLENS_ROAD_REGISTRY = {{ road_registry|tojson }};
-const STREETLENS_ROADS = STREETLENS_ROAD_REGISTRY.roads || [];
+let STREETLENS_ROAD_REGISTRY = {version:1, section_length_ft:2500, roads:[]};
+let STREETLENS_ROADS = [];
+let STREETLENS_REGISTRY_READY = null;
+
+async function loadStreetLensRegistry() {
+    try {
+        const response = await fetch("{{ url_for('static', filename='data/road_registry.json') }}", {cache:"no-store"});
+        if (!response.ok) throw new Error(`Registry request failed: ${response.status}`);
+        const data = await response.json();
+        STREETLENS_ROAD_REGISTRY = data && typeof data === 'object' ? data : STREETLENS_ROAD_REGISTRY;
+        STREETLENS_ROADS = Array.isArray(STREETLENS_ROAD_REGISTRY.roads) ? STREETLENS_ROAD_REGISTRY.roads : [];
+    } catch (error) {
+        console.error("StreetLens road registry:", error);
+        STREETLENS_ROAD_REGISTRY = {version:1, section_length_ft:2500, roads:[]};
+        STREETLENS_ROADS = [];
+    }
+}
+STREETLENS_REGISTRY_READY = loadStreetLensRegistry();
 (function () {
     // StreetLens PCI data imported from "Collingswood Collection List.xlsx".
     // The basemap supplies the actual road geometry; this data only controls
@@ -677,7 +693,7 @@ const STREETLENS_ROADS = STREETLENS_ROAD_REGISTRY.roads || [];
         return [[west-dx,south-dy],[east+dx,north+dy]];
     }
 
-    const ROAD_DATA_BOUNDS = roadDataBounds();
+    let ROAD_DATA_BOUNDS = BOUNDS;
 
     function buildRoadSectionGeoJSON() {
         const features=[];
@@ -719,7 +735,7 @@ const STREETLENS_ROADS = STREETLENS_ROAD_REGISTRY.roads || [];
         return {type:'FeatureCollection',features};
     }
 
-    const STREETLENS_ROAD_SECTIONS = buildRoadSectionGeoJSON();
+    let STREETLENS_ROAD_SECTIONS = {type:'FeatureCollection',features:[]};
 
     function firstSymbolLayer(map) {
         const layers = map.getStyle().layers || [];
@@ -855,27 +871,6 @@ const STREETLENS_ROADS = STREETLENS_ROAD_REGISTRY.roads || [];
         }
     }
 
-    function selectInitialStreetLensRoad() {
-        const firstRoad = STREETLENS_ROADS.find(r => r.status === 'available') || STREETLENS_ROADS[0];
-        if (!firstRoad || !firstRoad.frames || !firstRoad.frames.length) return;
-
-        const firstFrame = firstRoad.frames[0];
-        updateSelectedRoad({
-            road_id: firstRoad.road_id,
-            name: firstRoad.name,
-            pci: firstFrame.detector_psci,
-            detector_psci: firstFrame.detector_psci,
-            condition: firstFrame.condition || pcsiCondition(firstFrame.detector_psci),
-            treatment: firstRoad.status === 'available' ? 'Uploaded' : 'Pending upload',
-            frames: firstRoad.frames,
-            image_available: firstRoad.status === 'available',
-            station_start: firstFrame.station_start,
-            station_end: firstFrame.station_end,
-            latitude: firstFrame.latitude,
-            longitude: firstFrame.longitude
-        });
-    }
-
     function createMap(containerId, loadingId, mini) {
         const map = new maplibregl.Map({
             container: containerId,
@@ -910,14 +905,18 @@ const STREETLENS_ROADS = STREETLENS_ROAD_REGISTRY.roads || [];
         if (!modal) return;
         modal.classList.remove('hidden');
         if (!maps.modal) {
-            maps.modal = createMap('streetLensModalMap', 'streetLensModalMapLoading', false);
+            STREETLENS_REGISTRY_READY.then(() => {
+                ROAD_DATA_BOUNDS = roadDataBounds();
+                STREETLENS_ROAD_SECTIONS = buildRoadSectionGeoJSON();
+                maps.modal = createMap('streetLensModalMap', 'streetLensModalMapLoading', false);
             let satellite = false;
             const sat = document.getElementById('streetLensModalSatellite');
             const reset = document.getElementById('streetLensModalReset');
             const fullscreen = document.getElementById('streetLensModalFullscreen');
             if (sat) sat.onclick = () => { satellite = !satellite; setSatellite(maps.modal, satellite); };
             if (reset) reset.onclick = () => resetMap(maps.modal, false);
-            if (fullscreen) fullscreen.onclick = toggleMapFullscreen;
+                if (fullscreen) fullscreen.onclick = toggleMapFullscreen;
+            });
         }
         setTimeout(() => maps.modal && maps.modal.resize(), 80);
     }
@@ -972,13 +971,11 @@ const STREETLENS_ROADS = STREETLENS_ROAD_REGISTRY.roads || [];
     window.openMap = openMap;
     window.closeMap = closeMap;
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Populate the score and inspection viewer independently of the map.
-        // This keeps the core inspection data working even if the basemap or
-        // its external style takes longer to load.
-        selectInitialStreetLensRoad();
-
+    document.addEventListener('DOMContentLoaded', async () => {
         if (!window.maplibregl) return;
+        await STREETLENS_REGISTRY_READY;
+        ROAD_DATA_BOUNDS = roadDataBounds();
+        STREETLENS_ROAD_SECTIONS = buildRoadSectionGeoJSON();
         maps.dashboard = createMap('streetLensDashboardMap', 'streetLensDashboardMapLoading', true);
         let satellite = false;
         const sat = document.getElementById('streetLensDashboardSatellite');

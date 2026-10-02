@@ -52,19 +52,14 @@ def main() -> None:
 
     # These are the markers required by the current dashboard JS.
     required_markers = (
-        "const STREETLENS_ROAD_REGISTRY =",
-        "const STREETLENS_ROADS =",
+        "let STREETLENS_ROAD_REGISTRY =",
+        "let STREETLENS_ROADS =",
         "const STREETLENS_PRELOADED_PCI =",
         "const PCSI_COLORS =",
     )
     missing_markers = [m for m in required_markers if m not in html]
     if missing_markers:
         raise RuntimeError("Dashboard template is missing: " + ", ".join(missing_markers))
-
-    # Make sure the template still contains the Jinja data injection used by
-    # the dashboard. This catches accidental conversion to a static HTML file.
-    if "{{ road_registry|tojson }}" not in html:
-        raise RuntimeError("road_registry Jinja injection is missing from index.html")
 
     # Keep the old build-time GeoJSON marker harmlessly present for compatibility
     # with older cached deployments; the current map does not depend on it.
