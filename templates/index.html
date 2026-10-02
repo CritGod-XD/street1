@@ -855,6 +855,27 @@ const STREETLENS_ROADS = STREETLENS_ROAD_REGISTRY.roads || [];
         }
     }
 
+    function selectInitialStreetLensRoad() {
+        const firstRoad = STREETLENS_ROADS.find(r => r.status === 'available') || STREETLENS_ROADS[0];
+        if (!firstRoad || !firstRoad.frames || !firstRoad.frames.length) return;
+
+        const firstFrame = firstRoad.frames[0];
+        updateSelectedRoad({
+            road_id: firstRoad.road_id,
+            name: firstRoad.name,
+            pci: firstFrame.detector_psci,
+            detector_psci: firstFrame.detector_psci,
+            condition: firstFrame.condition || pcsiCondition(firstFrame.detector_psci),
+            treatment: firstRoad.status === 'available' ? 'Uploaded' : 'Pending upload',
+            frames: firstRoad.frames,
+            image_available: firstRoad.status === 'available',
+            station_start: firstFrame.station_start,
+            station_end: firstFrame.station_end,
+            latitude: firstFrame.latitude,
+            longitude: firstFrame.longitude
+        });
+    }
+
     function createMap(containerId, loadingId, mini) {
         const map = new maplibregl.Map({
             container: containerId,
@@ -952,6 +973,11 @@ const STREETLENS_ROADS = STREETLENS_ROAD_REGISTRY.roads || [];
     window.closeMap = closeMap;
 
     document.addEventListener('DOMContentLoaded', () => {
+        // Populate the score and inspection viewer independently of the map.
+        // This keeps the core inspection data working even if the basemap or
+        // its external style takes longer to load.
+        selectInitialStreetLensRoad();
+
         if (!window.maplibregl) return;
         maps.dashboard = createMap('streetLensDashboardMap', 'streetLensDashboardMapLoading', true);
         let satellite = false;
