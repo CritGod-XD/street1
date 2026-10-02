@@ -31,3 +31,10 @@ Build Completed
 ```
 
 The current PCSI map is generated from the geotagged road registry in the deployed static data. It does not require Overpass during the Vercel build.
+
+
+## Runtime fix (Vercel)
+- Database initialization is lazy; importing `app.py` no longer calls `db.create_all()`.
+- This prevents a missing/unavailable database from crashing every Vercel route at cold start.
+- Vercel uses `/tmp/streetlens.db` only as a fallback when `DATABASE_URL` is absent. For persistent accounts, configure `DATABASE_URL` to Neon/Postgres.
+- Authentication requests initialize the schema only when needed and log the actual database exception if initialization fails.

@@ -19,10 +19,25 @@ app.config.from_object(Config)
 
 db.init_app(app)
 
-with app.app_context():
-    # Idempotent: safe to call on every cold start. For anything beyond this
-    # simple schema, switch to Flask-Migrate / Alembic instead.
-    db.create_all()
+# Do NOT touch the database while the Vercel function module is importing.
+# Vercel can invoke the function before a database connection is available,
+# and its deployment filesystem is not a safe place for SQLite files.  The
+# dashboard itself does not need the database; only authentication does.
+_DB_READY = False
+
+def ensure_db():
+    """Create the tiny auth schema lazily on the first DB-backed request."""
+    global _DB_READY
+    if _DB_READY:
+        return True
+    try:
+        with app.app_context():
+            db.create_all()
+        _DB_READY = True
+        return True
+    except Exception as exc:
+        app.logger.exception("StreetLens database initialization failed: %s", exc)
+        return False
 
 # Small server-side OSM proxy for the StreetLens PCI map.
 # The browser calls our own Vercel origin, avoiding cross-origin/rate-limit
@@ -162,6 +177,10 @@ def login():
 
 @app.route("/login", methods=["POST"])
 def login_submit():
+    if not ensure_db():
+        flash("The account database is temporarily unavailable. Please try again.", "error")
+        return redirect(url_for("login"))
+
     identifier = (request.form.get("username") or "").strip()
     password = request.form.get("password") or ""
 
@@ -191,6 +210,10 @@ def register_page():
 
 @app.route("/register", methods=["POST"])
 def register():
+    if not ensure_db():
+        flash("The account database is temporarily unavailable. Please try again.", "error")
+        return redirect(url_for("register_page"))
+
     username = (request.form.get("username") or "").strip()
     email = (request.form.get("email") or "").strip().lower()
     password = request.form.get("password") or ""
