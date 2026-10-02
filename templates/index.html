@@ -1,0 +1,980 @@
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>
+        StreetLens · Pavement Condition
+    </title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+    >
+
+    <style>
+        /* Authentication */
+
+        .auth-message {
+            margin: 0 0 18px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.4;
+            border: 1px solid rgba(255,255,255,.08);
+        }
+
+        .auth-message.error {
+            background: rgba(220, 70, 70, .12);
+            border-color: rgba(220, 70, 70, .3);
+            color: #ffaaa0;
+        }
+
+        .auth-message.success {
+            background: rgba(70, 180, 100, .12);
+            border-color: rgba(70, 180, 100, .3);
+            color: #9be0aa;
+        }
+
+        .auth-message.info {
+            background: rgba(70, 130, 220, .12);
+            border-color: rgba(70, 130, 220, .3);
+            color: #a8c8ff;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-wrapper input {
+            width: 100%;
+            padding-right: 48px;
+            box-sizing: border-box;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #777;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-toggle:hover {
+            color: #ddd;
+        }
+
+        .register-view .password-toggle {
+            padding: 0;
+        }
+
+        .password-toggle svg {
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+        }
+
+        .password-toggle .eye-off {
+            display: none;
+        }
+
+        .password-toggle.revealed .eye {
+            display: none;
+        }
+
+        .password-toggle.revealed .eye-off {
+            display: block;
+        }
+
+        .auth-form label {
+            display: block;
+        }
+
+        .auth-form input[type="text"],
+        .auth-form input[type="email"],
+        .auth-form input[type="password"] {
+            margin-top: 7px;
+        }
+
+        .login-card input[type="email"] {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: #ffffff0f;
+            border: 1px solid #ffffff1a;
+            color: #f1f5f9;
+            outline: 0;
+        }
+
+        .register-view h3 {
+            margin-bottom: 8px;
+        }
+
+        .register-view p {
+            line-height: 1.5;
+        }
+
+        .auth-form small {
+            display: block;
+            margin-top: 18px;
+        }
+
+        .signout-form {
+            display: inline;
+            margin: 0;
+            padding: 0;
+        }
+
+        .signout {
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            font: inherit;
+        }
+    
+        /* StreetLens interactive route maps */
+        .map-card {
+            position: relative;
+            cursor: default;
+        }
+        #streetLensDashboardMap, #streetLensModalMap {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+        }
+        .streetlens-map-loading {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            z-index: 5;
+            background: #111b;
+            color: #aaa;
+            font: 11px Inter, sans-serif;
+            pointer-events: none;
+            transition: opacity .2s ease;
+        }
+        .streetlens-map-loading.hidden-map-loading { opacity: 0; }
+        .streetlens-map-mini-legend, .streetlens-map-tools, .streetlens-map-legend {
+            position: absolute;
+            z-index: 10;
+        }
+        .streetlens-map-mini-legend {
+            left: 10px;
+            bottom: 10px;
+            display: flex;
+            gap: 9px;
+            padding: 6px 8px;
+            background: #101010e8;
+            border: 1px solid #2a2a2a;
+            border-radius: 5px;
+            color: #aaa;
+            font: 9px Inter, sans-serif;
+            pointer-events: none;
+        }
+        .streetlens-map-mini-legend span { display:flex; align-items:center; }
+        .streetlens-map-mini-legend i, .streetlens-map-legend i {
+            width: 7px; height: 7px; border-radius: 50%; display:inline-block; margin-right:5px;
+        }
+        .streetlens-map-mini-tools {
+            position: absolute !important;
+            top: 9px !important;
+            right: 9px !important;
+            z-index: 100 !important;
+            display: flex !important;
+            gap: 5px !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        .streetlens-map-mini-tools button,
+        .streetlens-map-tools button {
+            width: 34px;
+            height: 34px;
+            box-sizing: border-box;
+            border: 1px solid #3a3a3a;
+            background: rgba(17, 17, 17, .94);
+            color: #f1f1f1;
+            border-radius: 5px;
+            padding: 0;
+            font: 15px Inter, sans-serif;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            position: relative;
+            z-index: 101;
+        }
+
+        .streetlens-map-mini-tools button:hover,
+        .streetlens-map-tools button:hover {
+            background: #222;
+            border-color: #555;
+        }
+
+        .map-card:fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            min-height: 100vh !important;
+            border-radius: 0 !important;
+            z-index: 99999 !important;
+            background: #111;
+        }
+
+        .map-card:fullscreen #streetLensDashboardMap {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .modal-map { position: relative; }
+        .streetlens-map-legend {
+            left: 14px; bottom: 14px;
+            display: grid; gap: 7px;
+            padding: 9px 11px;
+            background: #101010e8;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            color: #ddd;
+            font: 10px Inter, sans-serif;
+            pointer-events: none;
+        }
+        .streetlens-map-tools { top: 14px; right: 14px; display:flex; gap:6px; }
+        .streetlens-map-popup { font-family: Inter, sans-serif; color:#111; min-width:150px; }
+        .streetlens-map-popup strong { display:block; font-size:12px; margin-bottom:5px; }
+        .streetlens-map-popup div { font-size:10px; line-height:1.55; }
+        .streetlens-map-popup .demo-note { color:#777; margin-top:4px; font-size:9px; }
+        .maplibregl-popup-content { border-radius:7px; padding:10px 12px; }
+        .maplibregl-ctrl-group { border-radius:5px !important; overflow:hidden; }
+        .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin-bottom:7px; margin-right:7px; }
+
+        .streetlens-pci-count {
+            position:absolute; top:10px; left:10px; z-index:12;
+            padding:6px 9px; border-radius:5px;
+            background:#101010e8; border:1px solid #2a2a2a;
+            color:#e5e7eb; font:10px Inter,sans-serif;
+            pointer-events:none;
+        }
+        .map-card { overflow:hidden; }
+
+/* StreetLens dashboard v5 */
+.streetlens-dashboard-grid{grid-template-columns:minmax(230px,.85fr) minmax(420px,1.45fr) minmax(260px,.9fr)!important;gap:0;min-height:calc(100vh - 68px)}
+.header-actions-only{margin-left:auto;display:flex;align-items:center}.streetlens-road-toolbar{display:flex;align-items:center;gap:7px;flex:0 0 auto}.streetlens-road-ctrl-hint{margin-left:auto;color:#666;font:9px Inter,sans-serif}.streetlens-road-zoom-label{min-width:42px;text-align:right;color:#888;font:9px 'JetBrains Mono',monospace}
+.streetlens-left-column{padding:18px 12px 20px 20px;border-right:1px solid #1e1e1e}.streetlens-ml-column{min-width:0;padding:18px 12px 20px;border-right:1px solid #1e1e1e}.streetlens-right-column{padding:18px 20px 20px 12px;min-width:0}.streetlens-main-map-card{height:270px}.streetlens-left-details{margin-top:10px}
+.streetlens-ml-card{margin:0;padding:12px;height:calc(100vh - 104px);min-height:620px;display:flex;flex-direction:column}.streetlens-ml-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex:0 0 auto}.streetlens-ml-head h2{font-size:12px}.streetlens-ml-head span{display:block;margin-top:4px}.streetlens-frame-status{padding:5px 8px;border:1px solid #2b2b2b;border-radius:4px;color:#aaa;font:10px 'JetBrains Mono'}
+.streetlens-road-scroll{position:relative;flex:1 1 auto;min-height:0;overflow:auto;background:#080808;border:1px solid #252525;border-radius:5px;scrollbar-width:thin;scrollbar-color:#555 #111;overscroll-behavior:contain}.streetlens-road-scroll::-webkit-scrollbar{width:8px}.streetlens-road-scroll::-webkit-scrollbar-track{background:#111}.streetlens-road-scroll::-webkit-scrollbar-thumb{background:#4a4a4a;border-radius:8px}.streetlens-road-strip{width:100%}.streetlens-road-frame{width:100%;margin:0;padding:0;line-height:0;background:#080808}.streetlens-road-frame+.streetlens-road-frame{margin-top:-1px}.streetlens-road-frame img{display:block;width:100%;height:auto;min-height:220px;object-fit:cover;background:#0b0b0b;border:0;border-radius:0}.streetlens-scroll-hint{position:sticky;bottom:10px;width:max-content;margin:-32px auto 10px;padding:6px 9px;background:#0c0c0ce8;border:1px solid #303030;border-radius:5px;color:#888;font:9px Inter;pointer-events:none}.streetlens-ml-legend{flex:0 0 auto}.streetlens-score-card{height:auto;min-height:350px}.streetlens-breakdown-card{height:auto;min-height:360px;margin-top:12px}.streetlens-right-column .analytics-card{padding:14px 16px}.streetlens-right-column .gauge{height:165px}.streetlens-right-column .gauge svg{width:245px;height:155px;max-width:100%}
+@media(max-width:1200px){.streetlens-dashboard-grid{grid-template-columns:minmax(220px,.8fr) minmax(360px,1.25fr) minmax(240px,.85fr)!important}.streetlens-ml-card{min-height:560px}}@media(max-width:1000px){.streetlens-dashboard-grid{grid-template-columns:1fr!important}.streetlens-left-column,.streetlens-ml-column{border-right:0;border-bottom:1px solid #222;padding:16px}.streetlens-right-column{padding:16px}.streetlens-ml-card{height:620px;min-height:0}}
+
+
+        /* Excel-backed ML road viewer */
+        .streetlens-road-toolbar{display:flex;align-items:center;gap:6px;padding:0 0 8px}
+        .streetlens-road-toolbar button{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;padding:0 9px;border:1px solid #303030;border-radius:5px;background:#111;color:#d7d7d7;font:600 10px Inter,sans-serif;cursor:pointer}
+        .streetlens-road-toolbar button:hover{background:#1a1a1a;border-color:#484848;color:#fff}
+        .streetlens-road-toolbar button:focus-visible{outline:2px solid #777;outline-offset:2px}
+        .streetlens-road-zoom-label{margin-left:auto;color:#777;font:600 9px 'JetBrains Mono',monospace}
+        .streetlens-road-strip{transform:scale(1);transform-origin:top left;transition:transform .16s ease;will-change:transform;}
+        .streetlens-road-frame{position:relative;display:block;width:100%;margin:0;padding:0;line-height:0;background:#080808}
+        .streetlens-road-frame+.streetlens-road-frame{margin-top:0}
+        .streetlens-road-frame img{display:block;width:100%;height:auto;min-height:0;object-fit:contain;background:#0b0b0b;border:0;border-radius:0}
+        .streetlens-road-frame figcaption{position:absolute;top:6px;right:7px;display:flex;gap:5px;padding:3px 5px;background:#080808d9;border:1px solid #303030;border-radius:4px;color:#ddd;font:600 8px 'JetBrains Mono',monospace;line-height:1;pointer-events:none}
+        .streetlens-road-frame figcaption span+span{color:#999}
+
+        .streetlens-road-pending { min-height: 260px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; color:#777; text-align:center; border:1px dashed #2a2a2a; border-radius:8px; margin:10px; padding:24px; }
+        .streetlens-road-pending strong { color:#d7d7d7; font:600 13px Inter,sans-serif; }
+        .streetlens-road-pending span { color:#666; font:10px Inter,sans-serif; }
+        .streetlens-road-pending.hidden { display:none !important; }
+        .streetlens-road-strip.hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+
+
+<!-- DASHBOARD -->
+
+<div class="dashboard">
+
+    <header class="header">
+
+        <div class="header-brand">
+            <strong>StreetLens</strong>
+            <span>·</span>
+            <span>Pavement Condition</span>
+        </div>
+
+
+        <div class="header-actions-only">
+            <!-- Logout must be POST because Flask route is POST-only -->
+            <form
+                action="{{ url_for('logout') }}"
+                method="POST"
+                class="signout-form"
+            >
+                <button type="submit" class="signout">Sign out</button>
+            </form>
+        </div>
+
+    </header>
+
+
+    <main class="dashboard-body streetlens-dashboard-grid">
+<aside class="left-column streetlens-left-column">
+<section class="route-section">
+<div class="map-card streetlens-main-map-card" aria-label="Interactive StreetLens route map"><div id="streetLensDashboardMap"></div><div id="streetLensDashboardMapLoading" class="streetlens-map-loading">Loading StreetLens map…</div><div class="streetlens-map-mini-tools"><button id="streetLensDashboardSatellite" type="button" title="Satellite">🛰</button><button id="streetLensDashboardReset" type="button" title="Reset">↺</button><button id="streetLensDashboardExpand" type="button" title="Open map">⤢</button><button id="streetLensDashboardFullscreen" type="button" title="Full screen map">⛶</button></div></div></section>
+<section class="route-details streetlens-left-details"><div class="details-header"><strong>Route details</strong><label>Show route details<button id="detailsToggle" class="toggle" type="button" onclick="toggleDetails()" aria-label="Toggle route details"><span></span></button></label></div><div id="detailsContent" class="details-content hidden">{% for l, v in [('Route','US-1'),('Mile post','52.1'),('Direction','Northbound'),('Captured','09/12/25'),('Coordinate','40.2143°, -74.759°')] %}<div><small>{{ l }}</small><strong>{{ v }}</strong></div>{% endfor %}</div></section>
+</aside>
+<section class="streetlens-ml-column"><section class="ml-card streetlens-ml-card">
+<div class="streetlens-road-scroll" id="streetLensRoadScroll" aria-label="Scrollable road inspection view">
+<div class="streetlens-road-toolbar" aria-label="Road image controls">
+<span class="streetlens-frame-status" id="streetLensFrameStatus">—</span>
+<button id="streetLensRoadZoomIn" type="button" title="Zoom in on the road frames" aria-label="Zoom in">＋</button>
+<span class="streetlens-road-ctrl-hint">Ctrl + scroll</span>
+<span id="streetLensRoadZoomLabel" class="streetlens-road-zoom-label">100%</span>
+</div>
+<div class="streetlens-road-strip" id="streetLensRoadStrip"></div>
+<div class="streetlens-road-pending hidden" id="streetLensRoadPending">
+    <strong>ML imagery pending upload</strong>
+    <span>The selected road does not have inspection frames uploaded yet.</span>
+</div>
+</div>
+<div class="sample-legend streetlens-ml-legend"><span><i style="background:#3b82f6"></i>Alligator crack</span><span><i style="background:#f97316"></i>Longitudinal crack</span><span><i style="background:#eab308"></i>Transverse crack</span><span><i style="background:#a855f7"></i>Pothole</span></div></section></section>
+<section class="right-column streetlens-right-column"><div class="analytics-card score streetlens-score-card"><h2>Overall distress score</h2><div class="gauge"><svg viewBox="0 0 220 130"><path d="M35 105 A75 75 0 0 1 185 105" fill="none" stroke="#2a2a2a" stroke-width="14" stroke-linecap="round"/><path d="M35 105 A75 75 0 0 1 185 105" fill="none" id="streetLensGaugeProgress" stroke="#f97316" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 236"/><text id="streetLensScoreValue" x="110" y="95" text-anchor="middle" fill="#f1f1f1" font-size="36" font-weight="700" font-family="Outfit">—</text><text x="110" y="113" text-anchor="middle" fill="#777" font-size="9" font-family="Inter">PCI: 100 = best condition</text></svg></div><div id="streetLensCondition" class="condition">CONDITION: —</div><div id="streetLensRoadSummary" class="pills road-summary">
+<div><span>Street name</span><b id="streetLensSelectedRoad">—</b></div>
+<div><span>Detector PSCI</span><b id="streetLensSelectedPsci">—</b></div>
+<div><span>Imagery status</span><b id="streetLensSelectedTreatment">—</b></div>
+<div><span>Survey length</span><b id="streetLensSelectedStation">—</b></div>
+<div><span>Latitude</span><b id="streetLensSelectedLatitude">—</b></div>
+<div><span>Longitude</span><b id="streetLensSelectedLongitude">—</b></div>
+</div></div>
+<div class="analytics-card breakdown streetlens-breakdown-card"><h2>Distress breakdown</h2>{% for d in distress %}<div class="distress-row"><div class="distress-line"><span><i class="swatch" data-color="{{ d.color }}"></i>{{ d.label }}</span><b>{{ d.pct }}%</b></div><div class="bar"><span style="width: {{ d.pct }}%; background: {{ d.color }};"></span></div><p>{{ d.sub }}</p></div>{% endfor %}</div></section>
+</main>
+
+</div>
+
+
+<!-- Map modal -->
+
+<div
+    id="mapModal"
+    class="modal hidden"
+    onclick="closeMap(event)"
+>
+
+    <div
+        class="modal-card map-modal-card"
+        onclick="event.stopPropagation()"
+    >
+
+        <div class="modal-head">
+
+            <strong>
+                ● StreetLens Inspection Map — Collingswood, NJ
+            </strong>
+
+            <div class="modal-head-actions">
+                <button id="streetLensModalFullscreen" type="button" title="Full screen map">⛶</button>
+                <button onclick="closeMap()" title="Close map">×</button>
+            </div>
+
+        </div>
+
+
+        <div class="modal-map">
+            <div id="streetLensModalMap"></div>
+            <div id="streetLensModalMapLoading" class="streetlens-map-loading">Loading StreetLens map…</div>
+            <div class="streetlens-map-legend">
+                <div><i style="background:#65a30d"></i> Good (85–100)</div>
+                <div><i style="background:#a3d635"></i> Satisfactory (70–84.99)</div>
+                <div><i style="background:#facc15"></i> Fair (55–69.99)</div>
+                <div><i style="background:#f59e0b"></i> Poor (40–54.99)</div>
+                <div><i style="background:#ef6c00"></i> Very Poor (25–39.99)</div>
+                <div><i style="background:#c63d2f"></i> Serious (10–24.99)</div>
+                <div><i style="background:#8f1d1d"></i> Failed (0–9.99)</div>
+            </div>
+            <div class="streetlens-map-tools">
+                <button id="streetLensModalSatellite" type="button">🛰 Satellite</button>
+                <button id="streetLensModalReset" type="button">↺ Reset</button>
+            </div>
+        </div>
+
+
+        <div class="modal-foot">
+
+            ● Inspection Corridor · Collingswood, NJ
+
+            <span id="streetLensMapCoords">Demo inspection data</span>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+const STREETLENS_ROAD_REGISTRY = {{ road_registry|tojson }};
+const STREETLENS_ROADS = STREETLENS_ROAD_REGISTRY.roads || [];
+(function () {
+    // StreetLens PCI data imported from "Collingswood Collection List.xlsx".
+    // The basemap supplies the actual road geometry; this data only controls
+    // the StreetLens overlay color and popup information.
+    const PCI_BY_NAME = {"Autumn Ave":{"name":"Autumn Ave","pci":65.0,"condition":"Poor","treatment":"Microsurfacing","records":[{"Road Name":"Autumn Ave","PCI":65.0,"Maintenance Treatment Suggestion":"Microsurfacing"}]},"Bellevue Ct":{"name":"Bellevue Ct","pci":70.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Bellevue Ct","PCI":70.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"W Summerfield Ave":{"name":"W Summerfield Ave","pci":70.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"W Summerfield Ave","PCI":70.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Allen Ln":{"name":"Allen Ln","pci":70.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Allen Ln","PCI":70.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"E Franklin Ave":{"name":"Franklin Ave (E)","pci":71.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Franklin Ave (E)","PCI":71.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Franklin Ave":{"name":"Franklin Ave (E)","pci":71.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Franklin Ave (E)","PCI":71.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Franklin Ave (E)":{"name":"Franklin Ave (E)","pci":71.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Franklin Ave (E)","PCI":71.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Oriental Ave":{"name":"Oriental Ave","pci":74.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Oriental Ave","PCI":74.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Magil Ave":{"name":"Magil Ave","pci":75.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Magil Ave","PCI":75.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"W Linden Ave":{"name":"W Linden Ave","pci":75.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"W Linden Ave","PCI":75.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Edison Ave":{"name":"Edison Ave","pci":79.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Edison Ave","PCI":79.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Spring Ave":{"name":"Spring Ave","pci":80.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Spring Ave","PCI":80.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Cattell Ave":{"name":"Cattell Ave","pci":80.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Cattell Ave","PCI":80.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Hillcrest Ave":{"name":"Hillcrest Ave","pci":80.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Hillcrest Ave","PCI":80.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Tatum Ave":{"name":"Tatum Ave","pci":80.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Tatum Ave","PCI":80.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Maple Ln":{"name":"Maple Ln","pci":80.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Maple Ln","PCI":80.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Colford Ave":{"name":"Colford Ave","pci":81.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Colford Ave","PCI":81.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Conrad Ave":{"name":"Conrad Ave","pci":81.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Conrad Ave","PCI":81.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Harding Ter":{"name":"Harding Terrace","pci":81.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Harding Terrace","PCI":81.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Harding Terrace":{"name":"Harding Terrace","pci":81.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Harding Terrace","PCI":81.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Sunset Ln":{"name":"Sunset Ln","pci":81.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Sunset Ln","PCI":81.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Garfield Ave":{"name":"Garfield Ave","pci":83.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Garfield Ave","PCI":83.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"S Atlantic Ave":{"name":"S Atlantic Ave","pci":84.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"S Atlantic Ave","PCI":84.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Lees Ave":{"name":"Lees Ave","pci":84.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Lees Ave","PCI":84.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"W Coulter Ave":{"name":"W Coulter Ave","pci":84.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"W Coulter Ave","PCI":84.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Dill Ave":{"name":"Dill Ave","pci":85.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Dill Ave","PCI":85.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Virginia Ave":{"name":"Virginia Ave","pci":85.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Virginia Ave","PCI":85.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Comly Ln":{"name":"Comly Ln","pci":85.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Comly Ln","PCI":85.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Linwood Ave":{"name":"Linwood Ave","pci":85.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Linwood Ave","PCI":85.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"W Narberth Ter":{"name":"W Narberth Terrace","pci":85.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"W Narberth Terrace","PCI":85.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"W Narberth Terrace":{"name":"W Narberth Terrace","pci":85.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"W Narberth Terrace","PCI":85.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Park Ave":{"name":"Park Ave (W Zane Ave – Collings Ave)","pci":86.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Park Ave (W Zane Ave – Collings Ave)","PCI":86.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Park Ave (W Zane Ave – Collings Ave)":{"name":"Park Ave (W Zane Ave – Collings Ave)","pci":86.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Park Ave (W Zane Ave – Collings Ave)","PCI":86.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Merrick":{"name":"Merrik Ave [Merrick]","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Merrik Ave [Merrick]","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Merrick Ave":{"name":"Merrik Ave [Merrick]","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Merrik Ave [Merrick]","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Merrik Ave [Merrick]":{"name":"Merrik Ave [Merrick]","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Merrik Ave [Merrick]","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"New Jersey Ave":{"name":"New Jersey Ave","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"New Jersey Ave","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Cedar Ave":{"name":"Cedar Ave","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Cedar Ave","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Lees Lane":{"name":"Lees Lane","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Lees Lane","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Lees Ln":{"name":"Lees Lane","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Lees Lane","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Bellmont Ave":{"name":"Bellmont Ave","pci":87.0,"condition":"Fair","treatment":"No maintenance needed","records":[{"Road Name":"Bellmont Ave","PCI":87.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Franklin Ave":{"name":"W Franklin Ave","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"W Franklin Ave","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"},{"Road Name":"W Franklin Ave","PCI":88.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Laurel Ave":{"name":"Laurel Ave","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Laurel Ave","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Park Ave (Collings Ave – Lees Ave)":{"name":"Park Ave (Collings Ave – Lees Ave)","pci":88.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Park Ave (Collings Ave – Lees Ave)","PCI":88.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Linden Ave":{"name":"Linden Ave","pci":88.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Linden Ave","PCI":88.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Ventnor Ave":{"name":"Ventnor Ave","pci":89.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Ventnor Ave","PCI":89.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Stokes Ave":{"name":"Stokes Ave","pci":89.0,"condition":"Fair","treatment":"No maintenance needed","records":[{"Road Name":"Stokes Ave","PCI":89.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Comly Ave":{"name":"Comly Ave","pci":90.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Comly Ave","PCI":90.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Eldridge Ave":{"name":"Eldridge Ave","pci":90.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Eldridge Ave","PCI":90.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Mansion Ave":{"name":"Mansion Ave","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Mansion Ave","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Lakeview Dr":{"name":"Lakeview Dr","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Lakeview Dr","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Sloan Ave":{"name":"Sloan Ave","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Sloan Ave","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Billson Ave":{"name":"Billson Ave","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Billson Ave","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Woodlawn Ave":{"name":"Woodlawn Ave","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Woodlawn Ave","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Woodlawn Ter":{"name":"Woodlawn Terrace","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Woodlawn Terrace","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Woodlawn Terrace":{"name":"Woodlawn Terrace","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Woodlawn Terrace","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"S Vineyard Blvd":{"name":"S Vineyard Blvd","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"S Vineyard Blvd","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Jessamine Ave":{"name":"Jessamine Ave","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Jessamine Ave","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"W Madison Ave":{"name":"W Madison Ave","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"W Madison Ave","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Pacific Ave":{"name":"Pacific Ave","pci":92.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Pacific Ave","PCI":92.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"W Knight Ave":{"name":"W Knight Ave","pci":92.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"W Knight Ave","PCI":92.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Park Ave (Arlington Ave)":{"name":"Park Ave (Arlington Ave)","pci":92.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Park Ave (Arlington Ave)","PCI":92.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Ogden Ave":{"name":"Ogden Ave","pci":92.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Ogden Ave","PCI":92.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E Summerfield Ave":{"name":"E Summerfield Ave","pci":92.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Summerfield Ave","PCI":92.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Stiles Ave":{"name":"W Stiles Ave","pci":92.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"W Stiles Ave","PCI":92.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"King Ave":{"name":"King Ave","pci":92.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"King Ave","PCI":92.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"E Madison Ave":{"name":"E Madison Ave","pci":92.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Madison Ave","PCI":92.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E Coulter Ave":{"name":"E Coulter Ave","pci":92.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Coulter Ave","PCI":92.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Lakeshore Dr":{"name":"Lakeshore Drive","pci":93.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Lakeshore Drive","PCI":93.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Lakeshore Drive":{"name":"Lakeshore Drive","pci":93.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Lakeshore Drive","PCI":93.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"N Vineyard Blvd":{"name":"N Vineyard Blvd","pci":93.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"N Vineyard Blvd","PCI":93.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Crestmont Ter":{"name":"Crestmont Terrace","pci":93.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Crestmont Terrace","PCI":93.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Crestmont Terrace":{"name":"Crestmont Terrace","pci":93.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Crestmont Terrace","PCI":93.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Harrison Ave":{"name":"Harrison Ave","pci":93.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Harrison Ave","PCI":93.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Bryant":{"name":"Byrant Ave [Bryant]","pci":93.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Byrant Ave [Bryant]","PCI":93.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Bryant Ave":{"name":"Byrant Ave [Bryant]","pci":93.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Byrant Ave [Bryant]","PCI":93.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Byrant Ave [Bryant]":{"name":"Byrant Ave [Bryant]","pci":93.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Byrant Ave [Bryant]","PCI":93.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Newton Ave":{"name":"Newton Ave (by Bettlewood Ave)","pci":93.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Newton Ave (by Bettlewood Ave)","PCI":93.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Newton Ave (by Bettlewood Ave)":{"name":"Newton Ave (by Bettlewood Ave)","pci":93.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Newton Ave (by Bettlewood Ave)","PCI":93.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E Knight Ave":{"name":"E Knight Ave","pci":93.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Knight Ave","PCI":93.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Washington Ave":{"name":"Washington Ave","pci":93.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Washington Ave","PCI":93.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Newton Ave (by Pewter Village)":{"name":"Newton Ave (by Pewter Village)","pci":94.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Newton Ave (by Pewter Village)","PCI":94.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Penn Ave":{"name":"Penn Ave (Partial)","pci":94.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Penn Ave (Partial)","PCI":94.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Penn Ave (Partial)":{"name":"Penn Ave (Partial)","pci":94.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Penn Ave (Partial)","PCI":94.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Harvard Ave":{"name":"Harvard Ave","pci":94.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Harvard Ave","PCI":94.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"N Atlantic Ave":{"name":"N Atlantic Ave (Irvin Ave – Powell Ln)","pci":94.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"N Atlantic Ave (Irvin Ave – Powell Ln)","PCI":94.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"N Atlantic Ave (Irvin Ave – Powell Ln)":{"name":"N Atlantic Ave (Irvin Ave – Powell Ln)","pci":94.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"N Atlantic Ave (Irvin Ave – Powell Ln)","PCI":94.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Homestead Ave":{"name":"W Homestead Ave","pci":94.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"W Homestead Ave","PCI":94.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Woodlynne Ave":{"name":"Woodlynne Ave","pci":94.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Woodlynne Ave","PCI":94.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Dwight Ave":{"name":"Dwight Ave","pci":94.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Dwight Ave","PCI":94.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Cambridge Ave":{"name":"Cambridge Ave","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Cambridge Ave","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Atlantic Ave":{"name":"Atlantic Ave (Merion Terrace – Browning Rd)","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Atlantic Ave (Merion Terrace – Browning Rd)","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Atlantic Ave (Merion Ter – Browning Rd)":{"name":"Atlantic Ave (Merion Terrace – Browning Rd)","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Atlantic Ave (Merion Terrace – Browning Rd)","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Atlantic Ave (Merion Terrace – Browning Rd)":{"name":"Atlantic Ave (Merion Terrace – Browning Rd)","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Atlantic Ave (Merion Terrace – Browning Rd)","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Frazer Ave":{"name":"Frazer Ave","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Frazer Ave","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Lincoln Ave":{"name":"Lincoln Ave","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Lincoln Ave","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Merion Ter":{"name":"Merion Terrace","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Merion Terrace","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Merion Terrace":{"name":"Merion Terrace","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Merion Terrace","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Park Ave (Lees Ave – W Cuthbert Blvd)":{"name":"Park Ave (Lees Ave – W Cuthbert Blvd)","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Park Ave (Lees Ave – W Cuthbert Blvd)","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Chelsea Ave":{"name":"Chelsea Ave","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Chelsea Ave","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Arlington Ave":{"name":"Arlington Ave","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Arlington Ave","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Maple Ave North":{"name":"Maple Ave North","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Maple Ave North","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Wallace Ave":{"name":"Wallace Ave","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Wallace Ave","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E Zane Ave":{"name":"E Zane Ave","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Zane Ave","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Champion Ave":{"name":"Champion Ave","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Champion Ave","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Conger Ave":{"name":"Conger Ave","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Conger Ave","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Grant Ave":{"name":"Grant Ave","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Grant Ave","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Atlantic Ave (Collings Ave – W Cuthbert Blvd)":{"name":"Atlantic Ave (Collings Ave – W Cuthbert Blvd)","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Atlantic Ave (Collings Ave – W Cuthbert Blvd)","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"N Atlantic Ave (W Homestead Ave – W Cuthbert Blvd)":{"name":"N Atlantic Ave (W Homestead Ave – W Cuthbert Blvd)","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"N Atlantic Ave (W Homestead Ave – W Cuthbert Blvd)","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Taylor Ave":{"name":"Taylor Ave","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Taylor Ave","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Maple Ter":{"name":"Maple Terrace","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Maple Terrace","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Maple Terrace":{"name":"Maple Terrace","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Maple Terrace","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Center St":{"name":"Center Street","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Center Street","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Center Street":{"name":"Center Street","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Center Street","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Ardmore Ter":{"name":"Ardmore Terrace","pci":97.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Ardmore Terrace","PCI":97.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Ardmore Terrace":{"name":"Ardmore Terrace","pci":97.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Ardmore Terrace","PCI":97.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Dayton Ave":{"name":"Dayton Ave","pci":97.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Dayton Ave","PCI":97.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Irwin Ave":{"name":"Irwin Ave","pci":97.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Irwin Ave","PCI":97.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"N Atlantic Ave (Billson Ave – W Homestead Ave)":{"name":"N Atlantic Ave (Billson Ave – W Homestead Ave)","pci":97.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"N Atlantic Ave (Billson Ave – W Homestead Ave)","PCI":97.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Highland Ave":{"name":"Highland Ave","pci":98.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Highland Ave","PCI":98.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Lawnside Ave":{"name":"Lawnside Ave","pci":98.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Lawnside Ave","PCI":98.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Gorman Ave":{"name":"W Gorman Ave","pci":98.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"W Gorman Ave","PCI":98.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Everett Ave":{"name":"Everett Ave","pci":98.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Everett Ave","PCI":98.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E Homestead Ave":{"name":"E Homestead Ave","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Homestead Ave","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E Palmer Ave":{"name":"E Palmer Ave","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Palmer Ave","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E Stiles Ave":{"name":"E Stiles Ave","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Stiles Ave","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Crestmont Ln":{"name":"Crestmont Ln","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Crestmont Ln","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Wayne Ter":{"name":"W Wayne Terrace","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"W Wayne Terrace","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Wayne Terrace":{"name":"W Wayne Terrace","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"W Wayne Terrace","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E W Wayne Ter":{"name":"W Wayne Terrace (E)","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"W Wayne Terrace (E)","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E W Wayne Terrace":{"name":"W Wayne Terrace (E)","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"W Wayne Terrace (E)","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Wayne Ter (E)":{"name":"W Wayne Terrace (E)","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"W Wayne Terrace (E)","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Wayne Terrace (E)":{"name":"W Wayne Terrace (E)","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"W Wayne Terrace (E)","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Powell Ln":{"name":"Powell Ln","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Powell Ln","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]}};
+    // Build-time generated from the same OSM geometry used by /api/pci-roads.
+    // The build step replaces this empty collection with the prepared PCI GeoJSON,
+    // so the dashboard does not wait for Overpass or a runtime API request.
+    const STREETLENS_PRELOADED_PCI = {"type":"FeatureCollection","features":[]};
+    const BOUNDS = [[-75.091,39.910],[-75.062,39.928]];
+    const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
+    const SATELLITE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+    const maps = {};
+
+    const COLORS = {
+        Good: '#84cc16',
+        Fair: '#eab308',
+        Poor: '#ef4444'
+    };
+
+    // Normalize road names so Excel names such as "Franklin Ave (E)" and
+    // OSM names such as "E Franklin Ave" can still be matched.
+    function normalizeRoadName(value) {
+        return String(value || '')
+            .toLowerCase()
+            .replace(/[\[\]\(\),.\-–—]/g, ' ')
+            .replace(/\bavenue\b/g, 'ave')
+            .replace(/\bstreet\b/g, 'st')
+            .replace(/\broad\b/g, 'rd')
+            .replace(/\bboulevard\b/g, 'blvd')
+            .replace(/\blane\b/g, 'ln')
+            .replace(/\bterrace\b/g, 'ter')
+            .replace(/\bdrive\b/g, 'dr')
+            .replace(/\bcourt\b/g, 'ct')
+            .replace(/\bplace\b/g, 'pl')
+            .replace(/\bparkway\b/g, 'pkwy')
+            .replace(/\bhighway\b/g, 'hwy')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function stripDirection(name) {
+        return normalizeRoadName(name)
+            .replace(/^(n|s|e|w|ne|nw|se|sw)\s+/, '')
+            .replace(/\s+(n|s|e|w|ne|nw|se|sw)$/, '')
+            .trim();
+    }
+
+    const PCI_NAMES = Object.keys(PCI_BY_NAME);
+    const PCI_EXACT = {};
+    const PCI_BASE = {};
+    PCI_NAMES.forEach(key => {
+        const record = PCI_BY_NAME[key];
+        const exact = normalizeRoadName(key);
+        const base = stripDirection(key);
+        PCI_EXACT[exact] = record;
+        if (!PCI_BASE[base]) PCI_BASE[base] = record;
+    });
+
+    function findPCIRecord(osmName) {
+        const exact = PCI_EXACT[normalizeRoadName(osmName)];
+        if (exact) return exact;
+        return PCI_BASE[stripDirection(osmName)] || null;
+    }
+
+    function firstSymbolLayer(map) {
+        const layers = map.getStyle().layers || [];
+        const symbol = layers.find(l => l.type === 'symbol');
+        return symbol ? symbol.id : undefined;
+    }
+
+    const PCSI_COLORS = {
+        'Good': '#65a30d',
+        'Satisfactory': '#a3d635',
+        'Fair': '#facc15',
+        'Poor': '#f59e0b',
+        'Very Poor': '#ef6c00',
+        'Serious': '#c63d2f',
+        'Failed': '#8f1d1d',
+        'No data': '#6b7280'
+    };
+
+    function pcsiCondition(value) {
+        const v = Number(value);
+        if (!Number.isFinite(v)) return 'No data';
+        if (v < 10) return 'Failed';
+        if (v < 25) return 'Serious';
+        if (v < 40) return 'Very Poor';
+        if (v < 55) return 'Poor';
+        if (v < 70) return 'Fair';
+        if (v < 85) return 'Satisfactory';
+        return 'Good';
+    }
+
+    function selectedRoadById(id) {
+        return STREETLENS_ROADS.find(r => r.road_id === id) || null;
+    }
+
+    function roadRecordFromSection(props) {
+        const psci = Number(props.detector_psci);
+        const road = selectedRoadById(props.road_id);
+        const frames = road?.frames || [];
+        return {
+            road_id: props.road_id,
+            name: road?.name || props.road_name || 'Road',
+            pci: Number.isFinite(psci) ? psci : null,
+            condition: pcsiCondition(psci),
+            treatment: frames.length ? `${frames.length} ML inspection frames available` : 'Pending upload',
+            detector_psci: Number.isFinite(psci) ? psci : null,
+            latitude: Number(props.latitude),
+            longitude: Number(props.longitude),
+            frame: props.frame || '',
+            station_start: Number(props.station_start),
+            station_end: Number(props.station_end),
+            frames,
+            image_available: frames.length > 0
+        };
+    }
+
+    function animateOverallScore(value, condition) {
+        const scoreEl = document.getElementById('streetLensScoreValue');
+        const gaugeEl = document.getElementById('streetLensGaugeProgress');
+        const conditionEl = document.getElementById('streetLensCondition');
+        const target = Number(value);
+        if (!Number.isFinite(target)) {
+            if (scoreEl) scoreEl.textContent = '—';
+            if (gaugeEl) gaugeEl.setAttribute('stroke-dasharray', '0 236');
+            if (conditionEl) conditionEl.textContent = 'CONDITION: —';
+            return;
+        }
+        const clamped = Math.max(0, Math.min(100, target));
+        const color = PCSI_COLORS[condition] || '#f59e0b';
+        if (gaugeEl) gaugeEl.setAttribute('stroke', color);
+        if (conditionEl) {
+            conditionEl.textContent = `CONDITION: ${String(condition || pcsiCondition(clamped)).toUpperCase()}`;
+            conditionEl.style.borderColor = color;
+            conditionEl.style.color = color;
+        }
+        const start = performance.now();
+        const duration = 700;
+        function tick(now) {
+            const t = Math.min(1, (now - start) / duration);
+            const eased = 1 - Math.pow(1 - t, 3);
+            const current = clamped * eased;
+            if (scoreEl) scoreEl.textContent = current.toFixed(1).replace(/\.0$/, '');
+            if (gaugeEl) {
+                const arc = 236 * (current / 100);
+                gaugeEl.setAttribute('stroke-dasharray', `${arc} 236`);
+            }
+            if (t < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+    }
+
+    function updateSelectedRoad(record) {
+        const roadEl = document.getElementById('streetLensSelectedRoad');
+        const treatmentEl = document.getElementById('streetLensSelectedTreatment');
+        const psciEl = document.getElementById('streetLensSelectedPsci');
+        const stationEl = document.getElementById('streetLensSelectedStation');
+        const footerEl = document.getElementById('streetLensMapCoords');
+        const latEl = document.getElementById('streetLensSelectedLatitude');
+        const lonEl = document.getElementById('streetLensSelectedLongitude');
+
+        if (!record) return;
+
+        animateOverallScore(record.detector_psci ?? record.pci, record.condition);
+
+        // The right-side Overall Distress Score now reflects the selected map section.
+        // summary. Detector PSCI is deliberately shown only at map-section level.
+        if (roadEl) {
+            roadEl.textContent = record.name || 'Road';
+            roadEl.title = record.name || 'Road';
+        }
+        if (latEl) latEl.textContent = Number.isFinite(Number(record.latitude)) ? Number(record.latitude).toFixed(6) + '°' : '—';
+        if (lonEl) lonEl.textContent = Number.isFinite(Number(record.longitude)) ? Number(record.longitude).toFixed(6) + '°' : '—';
+        if (psciEl) {
+            psciEl.textContent = Number.isFinite(Number(record.detector_psci)) ? Number(record.detector_psci).toFixed(1) : '—';
+        }
+        if (treatmentEl) {
+            treatmentEl.textContent = record.image_available
+                ? 'Uploaded'
+                : 'Pending upload';
+            treatmentEl.title = record.image_available
+                ? `${record.frames.length} inspection frames uploaded`
+                : 'Inspection imagery is not uploaded yet';
+        }
+        if (stationEl) {
+            const first = record.frames && record.frames.length ? Number(record.frames[0].station_start) : null;
+            const last = record.frames && record.frames.length ? Number(record.frames[record.frames.length - 1].station_end) : null;
+            stationEl.textContent = Number.isFinite(first) && Number.isFinite(last) ? `${first.toFixed(1)}–${last.toFixed(1)} ft` : '—';
+        }
+        if (footerEl) {
+            const suffix = record.detector_psci == null ? 'No detector PSCI' :
+                `Detector PSCI ${Number(record.detector_psci).toFixed(1)} · ${record.condition}`;
+            footerEl.textContent = `${record.name || 'Road'} · ${suffix}`;
+        }
+
+        window.streetLensSelectedRoad = record;
+        if (window.streetLensLoadRoadFrames) {
+            window.streetLensLoadRoadFrames(record.frames || []);
+        }
+    }
+
+    function popupHTML(record) {
+        const psci = record.detector_psci == null ? '—' : Number(record.detector_psci).toFixed(1);
+        const upload = record.image_available
+            ? `${record.frames.length} ML frames available`
+            : 'ML imagery pending upload';
+        return `<div class="streetlens-map-popup">
+            <strong>${record.name}</strong>
+            <div style="margin-top:5px"><b>Detector PSCI:</b> ${psci}</div>
+            <div><b>Condition:</b> <span style="color:${PCSI_COLORS[record.condition]};font-weight:700">${record.condition}</span></div>
+            <div><b>Station:</b> ${Number(record.station_start).toFixed(1)}–${Number(record.station_end).toFixed(1)} ft</div>
+            <div><b>Latitude:</b> ${Number(record.latitude).toFixed(6)}°</div>
+            <div><b>Longitude:</b> ${Number(record.longitude).toFixed(6)}°</div>
+            <div><b>Imagery:</b> ${upload}</div>
+        </div>`;
+    }
+
+    function roadDataBounds() {
+        const coords = [];
+        STREETLENS_ROADS.forEach(road => (road.frames || []).forEach(f => {
+            if (Number.isFinite(Number(f.longitude)) && Number.isFinite(Number(f.latitude))) {
+                coords.push([Number(f.longitude), Number(f.latitude)]);
+            }
+        }));
+        if (!coords.length) return BOUNDS;
+        let west=coords[0][0], east=coords[0][0], south=coords[0][1], north=coords[0][1];
+        coords.forEach(([lon,lat])=>{west=Math.min(west,lon);east=Math.max(east,lon);south=Math.min(south,lat);north=Math.max(north,lat);});
+        const dx=Math.max((east-west)*0.20,0.002);
+        const dy=Math.max((north-south)*0.20,0.002);
+        return [[west-dx,south-dy],[east+dx,north+dy]];
+    }
+
+    const ROAD_DATA_BOUNDS = roadDataBounds();
+
+    function buildRoadSectionGeoJSON() {
+        const features=[];
+        STREETLENS_ROADS.forEach(road=>{
+            const frames=road.frames||[];
+            for(let i=0;i<frames.length-1;i++){
+                const a=frames[i], b=frames[i+1];
+                if(!Number.isFinite(Number(a.longitude))||!Number.isFinite(Number(a.latitude))||
+                   !Number.isFinite(Number(b.longitude))||!Number.isFinite(Number(b.latitude))) continue;
+                features.push({
+                    type:'Feature',
+                    geometry:{type:'LineString',coordinates:[[Number(a.longitude),Number(a.latitude)],[Number(b.longitude),Number(b.latitude)]]},
+                    properties:{
+                        road_id:road.road_id, road_name:road.name,
+                        frame:a.frame, source_frame:a.source_frame,
+                        station_start:a.station_start, station_end:a.station_end,
+                        detector_psci:a.detector_psci,
+                        latitude:a.latitude, longitude:a.longitude,
+                        condition:pcsiCondition(a.detector_psci)
+                    }
+                });
+            }
+            if(frames.length){
+                const last=frames[frames.length-1];
+                features.push({
+                    type:'Feature',
+                    geometry:{type:'Point',coordinates:[Number(last.longitude),Number(last.latitude)]},
+                    properties:{
+                        road_id:road.road_id, road_name:road.name,
+                        frame:last.frame, source_frame:last.source_frame,
+                        station_start:last.station_start, station_end:last.station_end,
+                        detector_psci:last.detector_psci,
+                        latitude:last.latitude, longitude:last.longitude,
+                        condition:pcsiCondition(last.detector_psci)
+                    }
+                });
+            }
+        });
+        return {type:'FeatureCollection',features};
+    }
+
+    const STREETLENS_ROAD_SECTIONS = buildRoadSectionGeoJSON();
+
+    function firstSymbolLayer(map) {
+        const layers = map.getStyle().layers || [];
+        const symbol = layers.find(l => l.type === 'symbol');
+        return symbol ? symbol.id : undefined;
+    }
+
+    function addStreetLensLayers(map) {
+        const beforeId = firstSymbolLayer(map);
+
+        if (!map.getSource('streetlens-satellite-source')) {
+            map.addSource('streetlens-satellite-source', {
+                type:'raster',
+                tiles:[SATELLITE_URL],
+                tileSize:256,
+                attribution:'Tiles © Esri'
+            });
+            map.addLayer({
+                id:'streetlens-satellite',
+                type:'raster',
+                source:'streetlens-satellite-source',
+                layout:{visibility:'none'}
+            }, beforeId);
+        }
+
+        if (!map.getSource('streetlens-road-sections')) {
+            map.addSource('streetlens-road-sections',{
+                type:'geojson',
+                data:STREETLENS_ROAD_SECTIONS
+            });
+        }
+
+        const source='streetlens-road-sections';
+        const conditions=Object.keys(PCSI_COLORS).filter(c=>c!=='No data');
+
+        conditions.forEach(condition=>{
+            const safe=condition.toLowerCase().replace(/\s+/g,'-');
+            map.addLayer({
+                id:`streetlens-pcsi-${safe}-casing`,
+                type:'line',
+                source,
+                filter:['==',['get','condition'],condition],
+                layout:{'line-cap':'round','line-join':'round'},
+                paint:{
+                    'line-color':'#111827',
+                    'line-width':['interpolate',['linear'],['zoom'],12,6,14,9,16,13,18,17],
+                    'line-opacity':1
+                }
+            },beforeId);
+
+            map.addLayer({
+                id:`streetlens-pcsi-${safe}`,
+                type:'line',
+                source,
+                filter:['==',['get','condition'],condition],
+                layout:{'line-cap':'round','line-join':'round'},
+                paint:{
+                    'line-color':PCSI_COLORS[condition],
+                    'line-width':['interpolate',['linear'],['zoom'],12,3.5,14,5.5,16,8,18,10],
+                    'line-opacity':1
+                }
+            },beforeId);
+        });
+
+        map.addLayer({
+            id:'streetlens-pcsi-points',
+            type:'circle',
+            source,
+            filter:['==',['geometry-type'],'Point'],
+            paint:{
+                'circle-radius':['interpolate',['linear'],['zoom'],12,3,14,4,16,5],
+                'circle-color':['match',['get','condition'],
+                    'Good',PCSI_COLORS['Good'],
+                    'Satisfactory',PCSI_COLORS['Satisfactory'],
+                    'Fair',PCSI_COLORS['Fair'],
+                    'Poor',PCSI_COLORS['Poor'],
+                    'Very Poor',PCSI_COLORS['Very Poor'],
+                    'Serious',PCSI_COLORS['Serious'],
+                    'Failed',PCSI_COLORS['Failed'],
+                    '#6b7280'
+                ],
+                'circle-stroke-color':'#111827',
+                'circle-stroke-width':1.5
+            }
+        },beforeId);
+
+        map.addLayer({
+            id:'streetlens-pcsi-hit',
+            type:'line',
+            source,
+            filter:['==',['geometry-type'],'LineString'],
+            layout:{'line-cap':'round','line-join':'round'},
+            paint:{
+                'line-color':'#ffffff',
+                'line-width':['interpolate',['linear'],['zoom'],12,16,14,22,16,30,18,38],
+                'line-opacity':0
+            }
+        },beforeId);
+
+        const clickLayers=['streetlens-pcsi-hit','streetlens-pcsi-points'];
+        clickLayers.forEach(layer=>{
+            map.on('mouseenter',layer,()=>{map.getCanvas().style.cursor='pointer';});
+            map.on('mouseleave',layer,()=>{map.getCanvas().style.cursor='';});
+            map.on('click',layer,e=>{
+                const props=e.features?.[0]?.properties||{};
+                const record=roadRecordFromSection(props);
+                updateSelectedRoad(record);
+                new maplibregl.Popup({offset:10,maxWidth:'290px'})
+                    .setLngLat(e.lngLat)
+                    .setHTML(popupHTML(record))
+                    .addTo(map);
+            });
+        });
+
+        // Select the first uploaded road on initial load.
+        const firstRoad=STREETLENS_ROADS.find(r=>r.status==='available') || STREETLENS_ROADS[0];
+        if(firstRoad && firstRoad.frames?.length){
+            const firstFrame=firstRoad.frames[0];
+            updateSelectedRoad({
+                road_id:firstRoad.road_id,
+                name:firstRoad.name,
+                pci:firstFrame.detector_psci,
+                detector_psci:firstFrame.detector_psci,
+                condition:pcsiCondition(firstFrame.detector_psci),
+                treatment:`${firstRoad.frames.length} ML inspection frames available`,
+                frames:firstRoad.frames,
+                image_available:true,
+                station_start:firstFrame.station_start,
+                station_end:firstFrame.station_end,
+                latitude:firstFrame.latitude,
+                longitude:firstFrame.longitude
+            });
+        }
+    }
+
+    function createMap(containerId, loadingId, mini) {
+        const map = new maplibregl.Map({
+            container: containerId,
+            style: STYLE_URL,
+            center: [-75.1446, 39.7187],
+            zoom: 15,
+            attributionControl: true
+        });
+        map.addControl(new maplibregl.NavigationControl({showCompass:true}), 'top-left');
+        map.addControl(new maplibregl.ScaleControl({unit:'imperial'}), 'bottom-right');
+        map.on('load', () => {
+            try { addStreetLensLayers(map); } catch (err) { console.error('StreetLens PCI overlay:', err); }
+            map.fitBounds(ROAD_DATA_BOUNDS, {padding: mini ? 18 : 45, duration:0, maxZoom:17});
+            const loading = document.getElementById(loadingId);
+            if (loading) loading.classList.add('hidden-map-loading');
+        });
+        map.on('error', e => console.warn('StreetLens map:', e.error || e));
+        return map;
+    }
+
+    function setSatellite(map, active) {
+        if (!map || !map.getLayer('streetlens-satellite')) return;
+        map.setLayoutProperty('streetlens-satellite', 'visibility', active ? 'visible' : 'none');
+    }
+
+    function resetMap(map, mini) {
+        if (map) map.fitBounds(ROAD_DATA_BOUNDS, {padding: mini ? 18 : 45, duration:350, maxZoom:17});
+    }
+
+    function openMap() {
+        const modal = document.getElementById('mapModal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        if (!maps.modal) {
+            maps.modal = createMap('streetLensModalMap', 'streetLensModalMapLoading', false);
+            let satellite = false;
+            const sat = document.getElementById('streetLensModalSatellite');
+            const reset = document.getElementById('streetLensModalReset');
+            const fullscreen = document.getElementById('streetLensModalFullscreen');
+            if (sat) sat.onclick = () => { satellite = !satellite; setSatellite(maps.modal, satellite); };
+            if (reset) reset.onclick = () => resetMap(maps.modal, false);
+            if (fullscreen) fullscreen.onclick = toggleMapFullscreen;
+        }
+        setTimeout(() => maps.modal && maps.modal.resize(), 80);
+    }
+
+    async function toggleMapFullscreen() {
+        const modal = document.getElementById('mapModal');
+        if (!modal) return;
+        try {
+            if (!document.fullscreenElement) {
+                await modal.requestFullscreen();
+            } else {
+                await document.exitFullscreen();
+            }
+        } catch (error) {
+            console.warn('StreetLens map fullscreen:', error);
+        }
+        setTimeout(() => maps.modal && maps.modal.resize(), 100);
+    }
+
+    async function toggleDashboardMapFullscreen() {
+        const mapCard = document.querySelector('.map-card');
+        if (!mapCard) return;
+
+        try {
+            if (!document.fullscreenElement) {
+                await mapCard.requestFullscreen();
+            } else {
+                await document.exitFullscreen();
+            }
+        } catch (error) {
+            console.warn('StreetLens dashboard map fullscreen:', error);
+        }
+
+        setTimeout(() => maps.dashboard && maps.dashboard.resize(), 120);
+    }
+
+    function closeMap() {
+        const modal = document.getElementById('mapModal');
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+        }
+        if (modal) modal.classList.add('hidden');
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+        setTimeout(() => {
+            if (maps.modal) maps.modal.resize();
+            if (maps.dashboard) maps.dashboard.resize();
+        }, 120);
+    });
+
+    window.openMap = openMap;
+    window.closeMap = closeMap;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!window.maplibregl) return;
+        maps.dashboard = createMap('streetLensDashboardMap', 'streetLensDashboardMapLoading', true);
+        let satellite = false;
+        const sat = document.getElementById('streetLensDashboardSatellite');
+        const reset = document.getElementById('streetLensDashboardReset');
+        const expand = document.getElementById('streetLensDashboardExpand');
+        const dashboardFullscreen = document.getElementById('streetLensDashboardFullscreen');
+        if (sat) sat.onclick = e => { e.stopPropagation(); satellite = !satellite; setSatellite(maps.dashboard, satellite); };
+        if (reset) reset.onclick = e => { e.stopPropagation(); resetMap(maps.dashboard, true); };
+        if (expand) expand.onclick = e => { e.stopPropagation(); openMap(); };
+        if (dashboardFullscreen) dashboardFullscreen.onclick = async e => {
+            e.stopPropagation();
+            await toggleDashboardMapFullscreen();
+        };
+
+        const samplePrev = document.getElementById('samplePrev');
+        const sampleNext = document.getElementById('sampleNext');
+        if (samplePrev) samplePrev.onclick = () => changeCrackFrame(-1);
+        if (sampleNext) sampleNext.onclick = () => changeCrackFrame(1);
+        renderCrackFrame();
+    });
+})();
+</script>
+
+</body>
+</html>
