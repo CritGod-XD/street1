@@ -1096,3 +1096,27 @@ footer{
 .streetlens-right-column .road-summary>div{min-width:0!important;overflow:hidden!important}
 .streetlens-right-column .road-summary b{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:1200px){.streetlens-right-column .road-summary{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}}
+
+/* StreetLens UI cleanup: compact road metadata, aligned route details, and left preview. */
+.streetlens-left-preview{margin-top:10px;padding:10px;background:#161616;border:1px solid #272727;border-radius:6px;height:calc(100vh - 68px - 36px - 270px - 10px - 54px - 10px - 20px);min-height:260px;display:flex;flex-direction:column;overflow:hidden}
+.streetlens-left-preview-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:0 0 auto;margin-bottom:8px}
+.streetlens-left-preview-head strong{font-size:11px;color:#ddd;font-weight:600}
+.streetlens-left-preview-head span{font:9px 'JetBrains Mono',monospace;color:#666}
+.streetlens-left-preview-frame{flex:1 1 auto;min-height:0;overflow:hidden;border:1px solid #252525;border-radius:5px;background:#0b0b0b}
+.streetlens-left-preview-frame img{width:100%;height:100%;display:block;object-fit:cover;object-position:center}
+.streetlens-left-details .details-header{min-height:44px;height:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.streetlens-left-details .details-header label{display:flex;align-items:center;justify-content:flex-end;gap:8px;white-space:nowrap}
+.streetlens-left-details .details-content{grid-template-columns:repeat(2,minmax(0,1fr));gap:0;align-items:start}
+.streetlens-left-details .details-content div{min-width:0;padding:7px 10px;border-right:1px solid #222;border-bottom:1px solid #222}
+.streetlens-left-details .details-content div:nth-child(2n){border-right:0}
+.streetlens-left-details .details-content div:nth-last-child(-n+2){border-bottom:0}
+.streetlens-right-column .road-summary{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:7px!important}
+.streetlens-right-column .road-summary .road-summary-wide{grid-column:1 / -1}
+.streetlens-right-column .road-summary>div{min-width:0!important;overflow:visible!important}
+.streetlens-right-column .road-summary b{display:block;width:auto;max-width:100%;overflow:visible;text-overflow:clip;white-space:normal;overflow-wrap:anywhere;word-break:break-word;line-height:1.25}
+.streetlens-breakdown-card .distress-row p{display:none}
+.streetlens-breakdown-card .distress-row{margin-bottom:13px}
+.streetlens-breakdown-card .bar{margin-top:6px}
+.streetlens-breakdown-card{min-height:0!important}
+@media(max-width:1200px){.streetlens-left-preview{height:360px;min-height:260px}}
+@media(max-width:1000px){.streetlens-left-preview{height:360px}.streetlens-left-details .details-content{grid-template-columns:1fr}.streetlens-left-details .details-content div,.streetlens-left-details .details-content div:nth-child(2n),.streetlens-left-details .details-content div:nth-last-child(-n+2){border-right:0;border-bottom:1px solid #222}.streetlens-left-details .details-content div:last-child{border-bottom:0}}

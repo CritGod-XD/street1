@@ -348,7 +348,8 @@
 <aside class="left-column streetlens-left-column">
 <section class="route-section">
 <div class="map-card streetlens-main-map-card" aria-label="Interactive StreetLens route map"><div id="streetLensDashboardMap"></div><div id="streetLensDashboardMapLoading" class="streetlens-map-loading">Loading StreetLens map…</div><div class="streetlens-map-mini-tools"><button id="streetLensDashboardSatellite" type="button" title="Satellite">🛰</button><button id="streetLensDashboardReset" type="button" title="Reset">↺</button><button id="streetLensDashboardExpand" type="button" title="Open map">⤢</button><button id="streetLensDashboardFullscreen" type="button" title="Full screen map">⛶</button></div></div></section>
-<section class="route-details streetlens-left-details"><div class="details-header"><strong>Route details</strong><label>Show route details<button id="detailsToggle" class="toggle" type="button" onclick="toggleDetails()" aria-label="Toggle route details"><span></span></button></label></div><div id="detailsContent" class="details-content hidden">{% for l, v in [('Route','US-1'),('Mile post','52.1'),('Direction','Northbound'),('Captured','09/12/25'),('Coordinate','40.2143°, -74.759°')] %}<div><small>{{ l }}</small><strong>{{ v }}</strong></div>{% endfor %}</div></section>
+<section class="route-details streetlens-left-details"><div class="details-header"><strong>Route details</strong><label>Show route details<button id="detailsToggle" class="toggle" type="button" onclick="toggleDetails()" aria-label="Toggle route details"><span></span></button></label></div><div id="detailsContent" class="details-content hidden">{% for l, v in [('Route','US-1'),('Mile post','52.1'),('Direction','Northbound'),('Captured','09/12/25'),('Coordinate','40.2143°, -74.759°')]}<div><small>{{ l }}</small><strong>{{ v }}</strong></div>{% endfor %}</div></section>
+<section class="streetlens-left-preview" aria-label="Road image preview"><div class="streetlens-left-preview-head"><strong>Road image</strong><span>Preview</span></div><div class="streetlens-left-preview-frame"><img src="{{ url_for('static', filename='images/road_preview.png') }}" alt="Road inspection preview"></div></section>
 </aside>
 <section class="streetlens-ml-column"><section class="ml-card streetlens-ml-card">
 <div class="streetlens-road-scroll" id="streetLensRoadScroll" aria-label="Scrollable road inspection view">
@@ -366,10 +367,7 @@
 </div>
 <div class="sample-legend streetlens-ml-legend"><span><i style="background:#3b82f6"></i>Alligator crack</span><span><i style="background:#f97316"></i>Longitudinal crack</span><span><i style="background:#eab308"></i>Transverse crack</span><span><i style="background:#a855f7"></i>Pothole</span></div></section></section>
 <section class="right-column streetlens-right-column"><div class="analytics-card score streetlens-score-card"><h2>Overall distress score</h2><div class="gauge"><svg viewBox="0 0 220 130"><path d="M35 105 A75 75 0 0 1 185 105" fill="none" stroke="#2a2a2a" stroke-width="14" stroke-linecap="round"/><path d="M35 105 A75 75 0 0 1 185 105" fill="none" id="streetLensGaugeProgress" stroke="#f97316" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 236"/><text id="streetLensScoreValue" x="110" y="95" text-anchor="middle" fill="#f1f1f1" font-size="36" font-weight="700" font-family="Outfit">—</text><text x="110" y="113" text-anchor="middle" fill="#777" font-size="9" font-family="Inter">PCI: 100 = best condition</text></svg></div><div id="streetLensCondition" class="condition">CONDITION: —</div><div id="streetLensRoadSummary" class="pills road-summary">
-<div><span>Street name</span><b id="streetLensSelectedRoad">—</b></div>
-<div><span>Detector PSCI</span><b id="streetLensSelectedPsci">—</b></div>
-<div><span>Imagery status</span><b id="streetLensSelectedTreatment">—</b></div>
-<div><span>Survey length</span><b id="streetLensSelectedStation">—</b></div>
+<div class="road-summary-wide"><span>Street name</span><b id="streetLensSelectedRoad">—</b></div>
 <div><span>Latitude</span><b id="streetLensSelectedLatitude">—</b></div>
 <div><span>Longitude</span><b id="streetLensSelectedLongitude">—</b></div>
 </div></div>
