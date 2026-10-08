@@ -409,6 +409,31 @@
 .streetlens-main-map-card .streetlens-map-mini-tools{z-index:50}
 @media(max-width:850px){.streetlens-fullmap-shell{grid-template-columns:minmax(0,1fr) 300px;width:100vw;height:100vh;border-radius:0}.streetlens-map-sheet{padding:12px}.streetlens-fullmap-tools{right:8px;top:8px}.streetlens-fullmap-tools button{padding:7px 8px;font-size:10px}}
 </style>
+<style>
+/* StreetLens v22: clean map + Map 1 road/sidebar styling */
+.maplibregl-map{font-family:'DM Sans',sans-serif;background:#e9e7df}
+/* Keep the mini map clean: rounded pavement strokes with a restrained casing. */
+.streetlens-main-map-card .maplibregl-ctrl-group{background:rgba(18,24,22,.94)!important;border:1px solid rgba(255,255,255,.16)!important}
+.streetlens-main-map-card .maplibregl-ctrl-group button{color:#eef3ef!important}
+/* The full map uses the light editorial sidebar from the preferred reference. */
+.streetlens-fullmap-shell{background:#f3f0e7;border-color:#d5cec0}
+.streetlens-map-sheet{background:#f3f0e7!important;color:#26312c!important;border-left:1px solid #d5cec0!important;font-family:'DM Sans',sans-serif!important}
+.streetlens-map-sheet-head strong{color:#18211d!important;font-family:'DM Sans',sans-serif!important}
+.streetlens-map-sheet-head span,.streetlens-map-sheet-label{color:#68736d!important}
+.streetlens-map-sheet .streetlens-metric-block{background:#e8e2d6!important;border-color:#cfc5b4!important}
+.streetlens-map-segment-toggle{border-color:#9eb3aa!important;background:#f8f5ed!important}
+.streetlens-map-segment-toggle button{background:#f8f5ed!important;color:#43534c!important}
+.streetlens-map-segment-toggle button.active{background:#355d50!important;color:#fff!important}
+.streetlens-map-options{color:#4f5a55!important}
+.streetlens-find-input{background:#fffdf8!important;border-color:#cfc5b4!important;color:#202824!important}
+.streetlens-sheet-ranking{border-top-color:#d5cec0!important}
+.streetlens-ranking-row{color:#26312c!important;border-bottom-color:#d5cec0!important;background:transparent!important}
+.streetlens-ranking-row:hover{background:#e7e1d5!important}
+.streetlens-ranking-row b{color:#25342e!important}
+.streetlens-ranking-row small{color:#737d77!important}
+/* Map 1 style: rounded, readable, not oversized. */
+.streetlens-section-hover-card{font-family:'DM Sans',sans-serif!important}
+</style>
 </head>
 <body>
 
@@ -553,8 +578,8 @@ function lineColorExpression(){if(STREETLENS_METRIC==='sdi')return['step',['get'
 function visibilityExpression(){return['case',['get','visible'],1,0];}
 function addMapLayers(map){
   const mini=!!map._streetlensDashboard;
-  const caseWidth=mini?['case',['<',['get','len'],200],3.2,5.0]:['case',['<',['get','len'],200],4.5,6.6];
-  const lineWidth=mini?['case',['<',['get','len'],200],1.8,2.8]:['case',['<',['get','len'],200],2.2,3.8];
+  const caseWidth=mini?['case',['<',['get','len'],200],2.6,4.2]:['case',['<',['get','len'],200],3.6,5.6];
+  const lineWidth=mini?['case',['<',['get','len'],200],1.5,2.4]:['case',['<',['get','len'],200],2.0,3.4];
   map.addSource('streetlens-sections',{type:'geojson',data:buildGeoJSON()});
   map.addSource('streetlens-labels',{type:'geojson',data:buildLabelsGeoJSON()});
   map.addLayer({id:'streetlens-section-case',type:'line',source:'streetlens-sections',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#111614','line-opacity':visibilityExpression(),'line-width':caseWidth}});
@@ -582,7 +607,7 @@ function updateDashboardDetails(sec){if(!sec)return;const pci=Number(sec.pci),sd
 function updateLegendAndRanking(){const legend=document.getElementById('streetLensModalLegend');if(legend){const rows=STREETLENS_METRIC==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES;legend.innerHTML=rows.map(c=>`<div class="sheet-lg-row"><i style="background:${STREETLENS_COLORS[c[2]]}"></i><span>${c[1]}</span><small>${c[3]}</small></div>`).join('');}const label=document.getElementById('streetLensModalLegendLabel');if(label)label.textContent=STREETLENS_METRIC==='sdi'?'SDI of the section':'PCI rating (ASTM D6433)';const rankLabel=document.getElementById('streetLensRankingLabel');if(rankLabel)rankLabel.textContent=`All sections ranked by ${STREETLENS_METRIC.toUpperCase()}`;const box=document.getElementById('streetLensRoadRanking');if(!box||!STREETLENS_SECTION_DATA)return;const vals=STREETLENS_SECTION_DATA.sections.filter(sectionVisible);const sorted=[...vals].sort((a,b)=>STREETLENS_METRIC==='sdi'?Number(a.sdi)-Number(b.sdi):Number(a.pci)-Number(b.pci));box.innerHTML=sorted.map((s,i)=>`<button class="streetlens-ranking-row" data-section-key="${escapeHtml(s.run.key)}::${s.bin}"><span>${i+1}</span><span>${escapeHtml(s.run.name)}<small>Section ${s.bin} · ${n0(s.f0)}–${n0(s.f1)} ft</small></span><b>${STREETLENS_METRIC==='sdi'?fmt2(s.sdi):fmt1(s.pci)}</b></button>`).join('');box.querySelectorAll('[data-section-key]').forEach(btn=>btn.onclick=()=>{const s=STREETLENS_SECTION_DATA.sections.find(x=>`${x.run.key}::${x.bin}`===btn.dataset.sectionKey);if(s)focusSection(s)});const count=document.getElementById('streetLensRoadCount');if(count)count.textContent=`${STREETLENS_SECTION_DATA.sections.length} mapped sections · ${STREETLENS_SECTION_DATA.runs.length} street runs`;}
 function focusSection(sec){Object.values(STREETLENS_MAPS).forEach(map=>{if(!map)return;const b=new maplibregl.LngLatBounds();sec.coords.forEach(c=>b.extend(c));map.fitBounds(b,{padding:80,maxZoom:18,duration:650});});}
 function refreshMap(map){if(!map||!map.loaded())return;syncVisibility(map);}
-function addBasemap(map){const street={type:'raster',tiles:['https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png','https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png','https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'],tileSize:256,maxzoom:20,attribution:'© OpenStreetMap contributors © CARTO'};const sat={type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19,attribution:'Imagery © Esri'};map.addSource('streetlens-street',{type:'raster',...street});map.addLayer({id:'streetlens-street-basemap',type:'raster',source:'streetlens-street'});map.addSource('streetlens-satellite',{type:'raster',...sat});map.addLayer({id:'streetlens-satellite-basemap',type:'raster',source:'streetlens-satellite',layout:{visibility:'none'}});map._streetlensSatelliteOn=false;}
+function addBasemap(map){const street={type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19,attribution:'© Esri, HERE, Garmin, © OpenStreetMap contributors'};const sat={type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19,attribution:'Imagery © Esri'};map.addSource('streetlens-street',{type:'raster',...street});map.addLayer({id:'streetlens-street-basemap',type:'raster',source:'streetlens-street'});map.addSource('streetlens-satellite',{type:'raster',...sat});map.addLayer({id:'streetlens-satellite-basemap',type:'raster',source:'streetlens-satellite',layout:{visibility:'none'}});map._streetlensSatelliteOn=false;}
 function toggleSatellite(map){if(!map)return;map._streetlensSatelliteOn=!map._streetlensSatelliteOn;map.setLayoutProperty('streetlens-satellite-basemap','visibility',map._streetlensSatelliteOn?'visible':'none');map.setLayoutProperty('streetlens-street-basemap','visibility',map._streetlensSatelliteOn?'none':'visible');}
 function resetMap(map){if(map){fitRing(map);hideHover(map);refreshMap(map)}}
 function createStreetLensMap(id,cardId){const el=document.getElementById(id);if(!el)throw new Error('Map container not found: '+id);if(!window.maplibregl)throw new Error('MapLibre failed to load');const map=new maplibregl.Map({container:el,style:{version:8,sources:{},layers:[]},center:[-75.078,39.916],zoom:13,attributionControl:true,dragRotate:false});map._streetlensCardId=cardId;map._streetlensDashboard=(id==='streetLensDashboardMap');map.addControl(new maplibregl.NavigationControl({showCompass:true,showZoom:true}),'top-left');map.addControl(new maplibregl.ScaleControl({unit:'imperial'}),'bottom-left');map.on('load',()=>{addBasemap(map);addMapLayers(map);fitRing(map);document.getElementById(id==='streetLensModalMap'?'streetLensModalMapLoading':'streetLensDashboardMapLoading')?.classList.add('hidden-map-loading');});map.on('mousemove','streetlens-section-line',e=>{if(!e.features?.length)return;const f=e.features[0],sec=STREETLENS_SECTION_DATA.sections.find(s=>`${s.run.key}::${s.bin}`===f.properties.sectionKey);if(!sec)return;map.getCanvas().style.cursor='pointer';showHover(sec,map,e);});map.on('mousemove','streetlens-section-line-batch1',e=>{if(!e.features?.length)return;const f=e.features[0],sec=STREETLENS_SECTION_DATA.sections.find(s=>`${s.run.key}::${s.bin}`===f.properties.sectionKey);if(!sec)return;map.getCanvas().style.cursor='pointer';showHover(sec,map,e);});map.on('mouseleave','streetlens-section-line',()=>{map.getCanvas().style.cursor='';hideHover(map);});map.on('mouseleave','streetlens-section-line-batch1',()=>{map.getCanvas().style.cursor='';hideHover(map);});const clickSection=e=>{const f=e.features?.[0],sec=f&&STREETLENS_SECTION_DATA.sections.find(s=>`${s.run.key}::${s.bin}`===f.properties.sectionKey);if(sec)updateDashboardDetails(sec);};map.on('click','streetlens-section-line',clickSection);map.on('click','streetlens-section-line-batch1',clickSection);map.on('mousemove',e=>{const card=document.getElementById(cardId);if(card&&!card.hidden)positionHoverCard(card,map,e);});return map;}
