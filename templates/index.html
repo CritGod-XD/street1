@@ -19,10 +19,7 @@
         href="{{ url_for('static', filename='css/style.css') }}"
     >
 
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
-    >
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
         /* Authentication */
@@ -331,6 +328,30 @@
         .streetlens-ranking-score { font:700 11px JetBrains Mono,monospace; }
         .streetlens-ranking-condition { display:block; margin-top:2px; color:#777; font-size:9px; }
 </style>
+
+<style>
+/* Segmented inspection map — no legend/ranking is rendered over the dashboard map. */
+.streetlens-main-map-card{position:relative;overflow:hidden;background:#161c1b}
+#streetLensDashboardMap,#streetLensModalMap{width:100%;height:100%;min-height:0}
+.streetlens-fullmap-shell{width:min(1500px,96vw);height:min(900px,94vh);display:grid;grid-template-columns:330px minmax(0,1fr);background:#1a2120;border:1px solid #313b39;border-radius:8px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+.streetlens-map-sheet{background:#1a2120;color:#e8ecea;border-right:1px solid #313b39;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.streetlens-map-sheet-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:1px solid #313b39}
+.streetlens-map-sheet-head strong{display:block;font:700 20px/1.05 'Outfit',sans-serif}.streetlens-map-sheet-head span{display:block;color:#9aa6a2;font:11px/1.35 Inter,sans-serif;margin-top:5px}
+.streetlens-map-sheet-actions{display:flex;gap:5px}.streetlens-map-sheet-actions button{width:30px;height:30px;border:1px solid #3b4744;border-radius:5px;background:#111817;color:#ddd;cursor:pointer}.streetlens-map-sheet-actions button:hover{background:#222b29}
+.streetlens-map-sheet-label{margin:0 0 7px;color:#9aa6a2;font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.streetlens-map-segment-toggle{display:grid;grid-template-columns:1fr 1fr;border:1px solid #6cc4d4;border-radius:5px;overflow:hidden}.streetlens-map-segment-toggle button{border:0;background:transparent;color:#6cc4d4;padding:9px 6px;cursor:pointer;font:700 14px Outfit,sans-serif}.streetlens-map-segment-toggle button.active{background:#6cc4d4;color:#08242b}.streetlens-map-segment-toggle small{display:block;font:500 9px Inter,sans-serif;margin-top:3px;opacity:.85}
+.streetlens-sheet-legend{display:flex;flex-direction:column;gap:5px}.sheet-lg-row{display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:center;font:12px Inter,sans-serif}.sheet-lg-row i{width:9px;height:9px;border-radius:2px;border:1px solid #050707}.sheet-lg-row small{color:#8f9996;font-size:10px}
+.streetlens-map-options{display:flex;flex-direction:column;gap:7px;color:#b9c0bd;font:11px Inter,sans-serif}.streetlens-map-options label{display:flex;align-items:center;gap:7px}.streetlens-map-options input{accent-color:#6cc4d4}.dash-sample{width:25px;border-top:3px dashed #aaa}.thin-sample{width:25px;border-top:1.5px solid #aaa}
+.streetlens-find-input{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #313b39;border-radius:4px;background:#121716;color:#e8ecea;font:12px Inter,sans-serif;outline:none}.streetlens-find-input:focus{border-color:#6cc4d4}
+.streetlens-sheet-ranking{display:flex;flex-direction:column;border-top:1px solid #313b39}.streetlens-ranking-row{display:grid;grid-template-columns:20px 1fr auto;gap:7px;align-items:baseline;padding:7px 3px;border:0;border-bottom:1px solid #313b39;background:transparent;color:#e8ecea;text-align:left;cursor:pointer}.streetlens-ranking-row:hover{background:#121817}.streetlens-ranking-row>span:first-child{color:#89938f;font:11px 'JetBrains Mono',monospace}.streetlens-ranking-row>span:nth-child(2){font:12px Inter,sans-serif;overflow:hidden}.streetlens-ranking-row small{display:block;color:#7f8985;font-size:9px;margin-top:2px}.streetlens-ranking-row b{font:700 15px 'JetBrains Mono',monospace}
+.streetlens-map-sheet-foot{margin-top:auto;padding-top:8px;color:#727c79;font:10px/1.4 Inter,sans-serif;border-top:1px solid #313b39}
+.streetlens-fullmap-map-wrap{position:relative;min-width:0;min-height:0;background:#161c1b}.streetlens-fullmap-tools{position:absolute;right:12px;top:12px;z-index:900;display:flex;gap:6px}.streetlens-fullmap-tools button{border:1px solid #3b4744;background:#111817e8;color:#ddd;border-radius:5px;padding:7px 10px;font:11px Inter,sans-serif;cursor:pointer;backdrop-filter:blur(5px)}.streetlens-fullmap-tools button:hover{background:#222b29}
+.streetlens-section-hover-card{position:absolute;z-index:1200;width:280px;max-width:calc(100% - 20px);padding:11px 12px;background:#fbfbf9;color:#1c2422;border:1px solid #1c2422;border-radius:5px;box-shadow:0 8px 24px rgba(0,0,0,.3);font:12px Inter,sans-serif;pointer-events:none}.streetlens-section-hover-card .hover-title{font:700 18px/1.1 'Outfit',sans-serif}.streetlens-section-hover-card .hover-sub{color:#5d6966;font-size:10px;margin:3px 0 8px}.hover-metrics{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:6px;margin-bottom:8px}.hover-metrics>div{border:1px solid #d3d8d4;border-radius:4px;padding:6px}.hover-metrics span{display:block;color:#5d6966;font-size:9px}.hover-metrics b{display:block;font:700 19px/1 'Outfit',sans-serif;margin-top:3px}.hover-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:10px}.hover-grid span{color:#5d6966}.hover-grid b{text-align:right;font-weight:600}.hover-flag{margin-top:7px;padding:5px 7px;border-left:3px solid #f39a32;background:#eef0ee;color:#5d6966;font-size:9px}
+.streetlens-street-label{background:transparent;border:0;box-shadow:none;color:#e8ecea;font:600 12px/1 'Outfit',sans-serif;letter-spacing:.03em;padding:0;text-shadow:0 0 3px #161c1b,0 0 3px #161c1b,0 0 3px #161c1b}.streetlens-street-label:before{display:none}
+.leaflet-container{font:inherit;background:#161c1b}.leaflet-control-zoom a,.leaflet-control-attribution{background:#1a2120;color:#e8ecea;border-color:#313b39}.leaflet-control-zoom a:hover{background:#242d2b;color:#fff}.leaflet-control-attribution{background:rgba(26,33,32,.88)!important}.leaflet-control-attribution a{color:#9aa6a2}.leaflet-control-scale-line{background:rgba(26,33,32,.8);border-color:#a9b5b1;color:#e8ecea;text-shadow:none}
+#mapModal:fullscreen{padding:0;background:#000}.modal:fullscreen .streetlens-fullmap-shell{width:100vw;height:100vh;border:0;border-radius:0;box-shadow:none}.modal:fullscreen .streetlens-map-sheet{border-radius:0}
+@media(max-width:850px){.streetlens-fullmap-shell{grid-template-columns:280px 1fr;width:100vw;height:100vh;border-radius:0}.streetlens-map-sheet{padding:12px}.streetlens-map-sheet-head strong{font-size:17px}}
+</style>
 </head>
 <body>
 
@@ -366,7 +387,7 @@
     <main class="dashboard-body streetlens-dashboard-grid">
 <aside class="left-column streetlens-left-column">
 <section class="route-section">
-<div class="map-card streetlens-main-map-card" aria-label="Interactive StreetLens route map"><div id="streetLensDashboardMap"></div><div id="streetLensDashboardMapLoading" class="streetlens-map-loading">Loading 108 evaluated roads…</div><div class="streetlens-map-metric"><button id="streetLensMetricPCI" class="active" type="button">PCI</button><button id="streetLensMetricSDI" type="button">SDI</button></div><div class="streetlens-map-legend streetlens-dashboard-legend" id="streetLensDashboardLegend"></div><div class="streetlens-map-mini-tools"><button id="streetLensDashboardSatellite" type="button" title="Satellite">🛰</button><button id="streetLensDashboardReset" type="button" title="Reset">↺</button><button id="streetLensDashboardExpand" type="button" title="Open map">⤢</button><button id="streetLensDashboardFullscreen" type="button" title="Full screen map">⛶</button></div></div></section>
+<div class="map-card streetlens-main-map-card" aria-label="Interactive StreetLens route map"><div id="streetLensDashboardMap"></div><div id="streetLensDashboardMapLoading" class="streetlens-map-loading">Loading segmented inspection map…</div><div id="streetLensDashboardHoverCard" class="streetlens-section-hover-card" hidden></div><div class="streetlens-map-mini-tools"><button id="streetLensDashboardSatellite" type="button" title="Satellite">🛰</button><button id="streetLensDashboardReset" type="button" title="Reset">↺</button><button id="streetLensDashboardExpand" type="button" title="Open map">⤢</button><button id="streetLensDashboardFullscreen" type="button" title="Full screen map">⛶</button></div></div></section>
 <section class="route-details streetlens-left-details"><div class="details-header"><strong>Route details</strong><label>Show route details<button id="detailsToggle" class="toggle" type="button" onclick="toggleDetails()" aria-label="Toggle route details"><span></span></button></label></div><div id="detailsContent" class="details-content hidden">{% for l, v in [('Route','US-1'),('Mile post','52.1'),('Direction','Northbound'),('Captured','09/12/25'),('Coordinate','40.2143°, -74.759°')] %}<div><small>{{ l }}</small><strong>{{ v }}</strong></div>{% endfor %}</div></section>
 <section class="streetlens-left-preview" aria-label="Road image preview"><div class="streetlens-left-preview-head"><strong>Road image</strong><span>Preview</span></div><div class="streetlens-left-preview-frame"><img src="/static/images/road_preview.png" alt="Road inspection preview"></div></section>
 </aside>
@@ -385,7 +406,7 @@
 </div>
 </div>
 <div class="sample-legend streetlens-ml-legend"><span><i style="background:#4a90c4"></i>Alligator crack</span><span><i style="background:#c1543d"></i>Longitudinal crack</span><span><i style="background:#d1a13c"></i>Transverse crack</span><span><i style="background:#9370c4"></i>Pothole</span></div></section></section>
-<section class="right-column streetlens-right-column"><div class="analytics-card streetlens-ranking-card"><div class="streetlens-ranking-head"><h2>Road ranking</h2><span id="streetLensRoadCount">108 evaluated</span></div><p class="streetlens-ranking-sub" id="streetLensRankingLabel">Worst → best by PCI</p><div id="streetLensRoadRanking" class="streetlens-road-ranking"></div></div><div class="analytics-card score streetlens-score-card"><h2>Overall distress score</h2><div class="gauge"><svg viewBox="0 0 220 130"><path d="M35 105 A75 75 0 0 1 185 105" fill="none" stroke="#2a2a2a" stroke-width="14" stroke-linecap="round"/><path d="M35 105 A75 75 0 0 1 185 105" fill="none" id="streetLensGaugeProgress" stroke="#c1543d" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 236"/><text id="streetLensScoreValue" x="110" y="95" text-anchor="middle" fill="#f1f1f1" font-size="36" font-weight="700" font-family="Outfit">—</text><text x="110" y="113" text-anchor="middle" fill="#777" font-size="9" font-family="Inter">PCI: 100 = best condition</text></svg></div><div id="streetLensCondition" class="condition">CONDITION: —</div><div id="streetLensRoadSummary" class="pills road-summary">
+<section class="right-column streetlens-right-column"><div class="analytics-card score streetlens-score-card"><h2>Overall distress score</h2><div class="gauge"><svg viewBox="0 0 220 130"><path d="M35 105 A75 75 0 0 1 185 105" fill="none" stroke="#2a2a2a" stroke-width="14" stroke-linecap="round"/><path d="M35 105 A75 75 0 0 1 185 105" fill="none" id="streetLensGaugeProgress" stroke="#c1543d" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 236"/><text id="streetLensScoreValue" x="110" y="95" text-anchor="middle" fill="#f1f1f1" font-size="36" font-weight="700" font-family="Outfit">—</text><text x="110" y="113" text-anchor="middle" fill="#777" font-size="9" font-family="Inter">PCI: 100 = best condition</text></svg></div><div id="streetLensCondition" class="condition">CONDITION: —</div><div id="streetLensRoadSummary" class="pills road-summary">
 <div class="road-summary-wide"><span>Street name</span><b id="streetLensSelectedRoad">—</b></div>
 <div><span>PCI</span><b id="streetLensSelectedPci">—</b></div>
 <div><span>SDI</span><b id="streetLensSelectedSdi">—</b></div>
@@ -398,539 +419,328 @@
 </div>
 
 
-<!-- Map modal -->
-
-<div
-    id="mapModal"
-    class="modal hidden"
-    onclick="closeMap(event)"
->
-
-    <div
-        class="modal-card map-modal-card"
-        onclick="event.stopPropagation()"
-    >
-
-        <div class="modal-head">
-
-            <strong>
-                ● StreetLens Inspection Map — Collingswood, NJ
-            </strong>
-
-            <div class="modal-head-actions">
-                <button id="streetLensModalFullscreen" type="button" title="Full screen map">⛶</button>
-                <button onclick="closeMap()" title="Close map">×</button>
-            </div>
-
+<!-- Full inspection map -->
+<div id="mapModal" class="modal hidden" onclick="closeMap(event)">
+  <div class="streetlens-fullmap-shell" onclick="event.stopPropagation()">
+    <aside class="streetlens-map-sheet">
+      <div class="streetlens-map-sheet-head">
+        <div>
+          <strong>StreetLens Inspection Map</strong>
+          <span>Collingswood, NJ · segmented pavement condition</span>
         </div>
-
-
-        <div class="modal-map">
-            <div id="streetLensModalMap"></div>
-            <div id="streetLensModalMapLoading" class="streetlens-map-loading">Loading StreetLens map…</div>
-            <div class="streetlens-map-legend">
-                <div><i style="background:#65a30d"></i> Good (85–100)</div>
-                <div><i style="background:#a3d635"></i> Satisfactory (70–84.99)</div>
-                <div><i style="background:#facc15"></i> Fair (55–69.99)</div>
-                <div><i style="background:#f59e0b"></i> Poor (40–54.99)</div>
-                <div><i style="background:#ef6c00"></i> Very Poor (25–39.99)</div>
-                <div><i style="background:#c63d2f"></i> Serious (10–24.99)</div>
-                <div><i style="background:#8f1d1d"></i> Failed (0–9.99)</div>
-            </div>
-            <div class="streetlens-map-tools">
-                <button id="streetLensModalSatellite" type="button">🛰 Satellite</button>
-                <button id="streetLensModalReset" type="button">↺ Reset</button>
-            </div>
+        <div class="streetlens-map-sheet-actions">
+          <button id="streetLensModalFullscreen" type="button" title="Full screen map">⛶</button>
+          <button id="streetLensModalClose" type="button" title="Close map">×</button>
         </div>
-
-
-        <div class="modal-foot">
-
-            ● Inspection Corridor · Collingswood, NJ
-
-            <span id="streetLensMapCoords">Demo inspection data</span>
-
+      </div>
+      <div>
+        <p class="streetlens-map-sheet-label">Color the map by</p>
+        <div class="streetlens-map-segment-toggle" role="group" aria-label="Metric">
+          <button id="streetLensModalMetricSDI" type="button" class="active" aria-pressed="true">SDI<small>Surface Distress Index · 0–5</small></button>
+          <button id="streetLensModalMetricPCI" type="button" aria-pressed="false">PCI<small>Pavement Condition Index · 0–100</small></button>
         </div>
-
+      </div>
+      <div>
+        <p class="streetlens-map-sheet-label" id="streetLensModalLegendLabel">SDI of the section</p>
+        <div id="streetLensModalLegend" class="streetlens-sheet-legend"></div>
+      </div>
+      <div class="streetlens-map-options">
+        <label><input type="checkbox" id="streetLensShowBatch1" checked><span class="dash-sample"></span><span>Batch 1 runs · dashed</span></label>
+        <label><input type="checkbox" id="streetLensShowEndPieces" checked><span class="thin-sample"></span><span>End pieces under 200 ft · thin</span></label>
+      </div>
+      <div>
+        <p class="streetlens-map-sheet-label">Find a street</p>
+        <input id="streetLensFindStreet" class="streetlens-find-input" list="streetLensStreetList" placeholder="Type a street name" autocomplete="off">
+        <datalist id="streetLensStreetList"></datalist>
+      </div>
+      <div>
+        <p class="streetlens-map-sheet-label" id="streetLensRankingLabel">Lowest ten sections by SDI</p>
+        <div id="streetLensRoadRanking" class="streetlens-sheet-ranking"></div>
+      </div>
+      <p class="streetlens-map-sheet-foot" id="streetLensRoadCount"></p>
+    </aside>
+    <div class="streetlens-fullmap-map-wrap">
+      <div id="streetLensModalMap"></div>
+      <div id="streetLensModalMapLoading" class="streetlens-map-loading">Loading segmented inspection map…</div>
+      <div id="streetLensModalHoverCard" class="streetlens-section-hover-card" hidden></div>
+      <div class="streetlens-fullmap-tools">
+        <button id="streetLensModalSatellite" type="button">🛰 Satellite</button>
+        <button id="streetLensModalReset" type="button">↺ Reset</button>
+      </div>
     </div>
-
+  </div>
 </div>
 
-
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+/* StreetLens segmented Collingswood map — section data comes from the supplied SDI/PCI sample map. */
 let STREETLENS_ROAD_REGISTRY = {version:1, section_length_ft:2500, roads:[]};
 let STREETLENS_ROADS = [];
 let STREETLENS_REGISTRY_READY = null;
+let STREETLENS_SECTION_DATA = null;
+let STREETLENS_METRIC = 'sdi';
+let STREETLENS_MAPS = {};
+let STREETLENS_PINNED = null;
 
-async function loadStreetLensRegistry() {
-    try {
-        const response = await fetch("{{ url_for('static', filename='data/road_registry.json') }}", {cache:"no-store"});
-        if (!response.ok) throw new Error(`Registry request failed: ${response.status}`);
-        const data = await response.json();
-        STREETLENS_ROAD_REGISTRY = data && typeof data === 'object' ? data : STREETLENS_ROAD_REGISTRY;
-        STREETLENS_ROADS = Array.isArray(STREETLENS_ROAD_REGISTRY.roads) ? STREETLENS_ROAD_REGISTRY.roads : [];
-    } catch (error) {
-        console.error("StreetLens road registry:", error);
-        STREETLENS_ROAD_REGISTRY = {version:1, section_length_ft:2500, roads:[]};
-        STREETLENS_ROADS = [];
-    }
+async function loadStreetLensRegistry(){
+  try{
+    const r=await fetch("{{ url_for('static', filename='data/road_registry.json') }}",{cache:'no-store'});
+    if(!r.ok) throw new Error('registry '+r.status);
+    const d=await r.json(); STREETLENS_ROAD_REGISTRY=d||STREETLENS_ROAD_REGISTRY; STREETLENS_ROADS=Array.isArray(d?.roads)?d.roads:[];
+  }catch(e){console.warn('StreetLens registry:',e);}
 }
-STREETLENS_REGISTRY_READY = loadStreetLensRegistry();
-(function () {
-    // StreetLens PCI data imported from "Collingswood Collection List.xlsx".
-    // The basemap supplies the actual road geometry; this data only controls
-    // the StreetLens overlay color and popup information.
-    const PCI_BY_NAME = {"Autumn Ave":{"name":"Autumn Ave","pci":65.0,"condition":"Poor","treatment":"Microsurfacing","records":[{"Road Name":"Autumn Ave","PCI":65.0,"Maintenance Treatment Suggestion":"Microsurfacing"}]},"Bellevue Ct":{"name":"Bellevue Ct","pci":70.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Bellevue Ct","PCI":70.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"W Summerfield Ave":{"name":"W Summerfield Ave","pci":70.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"W Summerfield Ave","PCI":70.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Allen Ln":{"name":"Allen Ln","pci":70.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Allen Ln","PCI":70.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"E Franklin Ave":{"name":"Franklin Ave (E)","pci":71.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Franklin Ave (E)","PCI":71.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Franklin Ave":{"name":"Franklin Ave (E)","pci":71.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Franklin Ave (E)","PCI":71.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Franklin Ave (E)":{"name":"Franklin Ave (E)","pci":71.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Franklin Ave (E)","PCI":71.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Oriental Ave":{"name":"Oriental Ave","pci":74.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Oriental Ave","PCI":74.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Magil Ave":{"name":"Magil Ave","pci":75.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Magil Ave","PCI":75.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"W Linden Ave":{"name":"W Linden Ave","pci":75.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"W Linden Ave","PCI":75.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Edison Ave":{"name":"Edison Ave","pci":79.0,"condition":"Poor","treatment":"Patching and crack sealing","records":[{"Road Name":"Edison Ave","PCI":79.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Spring Ave":{"name":"Spring Ave","pci":80.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Spring Ave","PCI":80.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Cattell Ave":{"name":"Cattell Ave","pci":80.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Cattell Ave","PCI":80.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Hillcrest Ave":{"name":"Hillcrest Ave","pci":80.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Hillcrest Ave","PCI":80.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Tatum Ave":{"name":"Tatum Ave","pci":80.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Tatum Ave","PCI":80.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Maple Ln":{"name":"Maple Ln","pci":80.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Maple Ln","PCI":80.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Colford Ave":{"name":"Colford Ave","pci":81.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Colford Ave","PCI":81.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Conrad Ave":{"name":"Conrad Ave","pci":81.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Conrad Ave","PCI":81.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Harding Ter":{"name":"Harding Terrace","pci":81.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Harding Terrace","PCI":81.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Harding Terrace":{"name":"Harding Terrace","pci":81.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Harding Terrace","PCI":81.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Sunset Ln":{"name":"Sunset Ln","pci":81.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Sunset Ln","PCI":81.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Garfield Ave":{"name":"Garfield Ave","pci":83.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Garfield Ave","PCI":83.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"S Atlantic Ave":{"name":"S Atlantic Ave","pci":84.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"S Atlantic Ave","PCI":84.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Lees Ave":{"name":"Lees Ave","pci":84.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Lees Ave","PCI":84.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"W Coulter Ave":{"name":"W Coulter Ave","pci":84.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"W Coulter Ave","PCI":84.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Dill Ave":{"name":"Dill Ave","pci":85.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Dill Ave","PCI":85.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Virginia Ave":{"name":"Virginia Ave","pci":85.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Virginia Ave","PCI":85.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Comly Ln":{"name":"Comly Ln","pci":85.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Comly Ln","PCI":85.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Linwood Ave":{"name":"Linwood Ave","pci":85.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Linwood Ave","PCI":85.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"W Narberth Ter":{"name":"W Narberth Terrace","pci":85.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"W Narberth Terrace","PCI":85.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"W Narberth Terrace":{"name":"W Narberth Terrace","pci":85.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"W Narberth Terrace","PCI":85.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Park Ave":{"name":"Park Ave (W Zane Ave – Collings Ave)","pci":86.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Park Ave (W Zane Ave – Collings Ave)","PCI":86.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Park Ave (W Zane Ave – Collings Ave)":{"name":"Park Ave (W Zane Ave – Collings Ave)","pci":86.0,"condition":"Fair","treatment":"Patching and crack sealing","records":[{"Road Name":"Park Ave (W Zane Ave – Collings Ave)","PCI":86.0,"Maintenance Treatment Suggestion":"Patching and crack sealing"}]},"Merrick":{"name":"Merrik Ave [Merrick]","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Merrik Ave [Merrick]","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Merrick Ave":{"name":"Merrik Ave [Merrick]","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Merrik Ave [Merrick]","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Merrik Ave [Merrick]":{"name":"Merrik Ave [Merrick]","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Merrik Ave [Merrick]","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"New Jersey Ave":{"name":"New Jersey Ave","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"New Jersey Ave","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Cedar Ave":{"name":"Cedar Ave","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Cedar Ave","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Lees Lane":{"name":"Lees Lane","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Lees Lane","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Lees Ln":{"name":"Lees Lane","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Lees Lane","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Bellmont Ave":{"name":"Bellmont Ave","pci":87.0,"condition":"Fair","treatment":"No maintenance needed","records":[{"Road Name":"Bellmont Ave","PCI":87.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Franklin Ave":{"name":"W Franklin Ave","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"W Franklin Ave","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"},{"Road Name":"W Franklin Ave","PCI":88.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Laurel Ave":{"name":"Laurel Ave","pci":87.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Laurel Ave","PCI":87.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Park Ave (Collings Ave – Lees Ave)":{"name":"Park Ave (Collings Ave – Lees Ave)","pci":88.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Park Ave (Collings Ave – Lees Ave)","PCI":88.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Linden Ave":{"name":"Linden Ave","pci":88.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Linden Ave","PCI":88.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Ventnor Ave":{"name":"Ventnor Ave","pci":89.0,"condition":"Fair","treatment":"Crack sealing","records":[{"Road Name":"Ventnor Ave","PCI":89.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Stokes Ave":{"name":"Stokes Ave","pci":89.0,"condition":"Fair","treatment":"No maintenance needed","records":[{"Road Name":"Stokes Ave","PCI":89.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Comly Ave":{"name":"Comly Ave","pci":90.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Comly Ave","PCI":90.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Eldridge Ave":{"name":"Eldridge Ave","pci":90.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Eldridge Ave","PCI":90.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Mansion Ave":{"name":"Mansion Ave","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Mansion Ave","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Lakeview Dr":{"name":"Lakeview Dr","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Lakeview Dr","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Sloan Ave":{"name":"Sloan Ave","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Sloan Ave","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Billson Ave":{"name":"Billson Ave","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Billson Ave","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Woodlawn Ave":{"name":"Woodlawn Ave","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Woodlawn Ave","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Woodlawn Ter":{"name":"Woodlawn Terrace","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Woodlawn Terrace","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Woodlawn Terrace":{"name":"Woodlawn Terrace","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Woodlawn Terrace","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"S Vineyard Blvd":{"name":"S Vineyard Blvd","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"S Vineyard Blvd","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Jessamine Ave":{"name":"Jessamine Ave","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Jessamine Ave","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"W Madison Ave":{"name":"W Madison Ave","pci":91.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"W Madison Ave","PCI":91.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Pacific Ave":{"name":"Pacific Ave","pci":92.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Pacific Ave","PCI":92.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"W Knight Ave":{"name":"W Knight Ave","pci":92.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"W Knight Ave","PCI":92.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Park Ave (Arlington Ave)":{"name":"Park Ave (Arlington Ave)","pci":92.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Park Ave (Arlington Ave)","PCI":92.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Ogden Ave":{"name":"Ogden Ave","pci":92.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Ogden Ave","PCI":92.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E Summerfield Ave":{"name":"E Summerfield Ave","pci":92.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Summerfield Ave","PCI":92.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Stiles Ave":{"name":"W Stiles Ave","pci":92.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"W Stiles Ave","PCI":92.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"King Ave":{"name":"King Ave","pci":92.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"King Ave","PCI":92.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"E Madison Ave":{"name":"E Madison Ave","pci":92.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Madison Ave","PCI":92.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E Coulter Ave":{"name":"E Coulter Ave","pci":92.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Coulter Ave","PCI":92.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Lakeshore Dr":{"name":"Lakeshore Drive","pci":93.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Lakeshore Drive","PCI":93.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Lakeshore Drive":{"name":"Lakeshore Drive","pci":93.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Lakeshore Drive","PCI":93.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"N Vineyard Blvd":{"name":"N Vineyard Blvd","pci":93.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"N Vineyard Blvd","PCI":93.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Crestmont Ter":{"name":"Crestmont Terrace","pci":93.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Crestmont Terrace","PCI":93.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Crestmont Terrace":{"name":"Crestmont Terrace","pci":93.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Crestmont Terrace","PCI":93.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Harrison Ave":{"name":"Harrison Ave","pci":93.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Harrison Ave","PCI":93.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Bryant":{"name":"Byrant Ave [Bryant]","pci":93.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Byrant Ave [Bryant]","PCI":93.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Bryant Ave":{"name":"Byrant Ave [Bryant]","pci":93.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Byrant Ave [Bryant]","PCI":93.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Byrant Ave [Bryant]":{"name":"Byrant Ave [Bryant]","pci":93.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Byrant Ave [Bryant]","PCI":93.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Newton Ave":{"name":"Newton Ave (by Bettlewood Ave)","pci":93.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Newton Ave (by Bettlewood Ave)","PCI":93.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Newton Ave (by Bettlewood Ave)":{"name":"Newton Ave (by Bettlewood Ave)","pci":93.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Newton Ave (by Bettlewood Ave)","PCI":93.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E Knight Ave":{"name":"E Knight Ave","pci":93.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Knight Ave","PCI":93.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Washington Ave":{"name":"Washington Ave","pci":93.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Washington Ave","PCI":93.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Newton Ave (by Pewter Village)":{"name":"Newton Ave (by Pewter Village)","pci":94.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"Newton Ave (by Pewter Village)","PCI":94.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Penn Ave":{"name":"Penn Ave (Partial)","pci":94.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Penn Ave (Partial)","PCI":94.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Penn Ave (Partial)":{"name":"Penn Ave (Partial)","pci":94.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Penn Ave (Partial)","PCI":94.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Harvard Ave":{"name":"Harvard Ave","pci":94.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Harvard Ave","PCI":94.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"N Atlantic Ave":{"name":"N Atlantic Ave (Irvin Ave – Powell Ln)","pci":94.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"N Atlantic Ave (Irvin Ave – Powell Ln)","PCI":94.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"N Atlantic Ave (Irvin Ave – Powell Ln)":{"name":"N Atlantic Ave (Irvin Ave – Powell Ln)","pci":94.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"N Atlantic Ave (Irvin Ave – Powell Ln)","PCI":94.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Homestead Ave":{"name":"W Homestead Ave","pci":94.0,"condition":"Good","treatment":"Crack sealing","records":[{"Road Name":"W Homestead Ave","PCI":94.0,"Maintenance Treatment Suggestion":"Crack sealing"}]},"Woodlynne Ave":{"name":"Woodlynne Ave","pci":94.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Woodlynne Ave","PCI":94.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Dwight Ave":{"name":"Dwight Ave","pci":94.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Dwight Ave","PCI":94.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Cambridge Ave":{"name":"Cambridge Ave","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Cambridge Ave","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Atlantic Ave":{"name":"Atlantic Ave (Merion Terrace – Browning Rd)","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Atlantic Ave (Merion Terrace – Browning Rd)","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Atlantic Ave (Merion Ter – Browning Rd)":{"name":"Atlantic Ave (Merion Terrace – Browning Rd)","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Atlantic Ave (Merion Terrace – Browning Rd)","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Atlantic Ave (Merion Terrace – Browning Rd)":{"name":"Atlantic Ave (Merion Terrace – Browning Rd)","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Atlantic Ave (Merion Terrace – Browning Rd)","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Frazer Ave":{"name":"Frazer Ave","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Frazer Ave","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Lincoln Ave":{"name":"Lincoln Ave","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Lincoln Ave","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Merion Ter":{"name":"Merion Terrace","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Merion Terrace","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Merion Terrace":{"name":"Merion Terrace","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Merion Terrace","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Park Ave (Lees Ave – W Cuthbert Blvd)":{"name":"Park Ave (Lees Ave – W Cuthbert Blvd)","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Park Ave (Lees Ave – W Cuthbert Blvd)","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Chelsea Ave":{"name":"Chelsea Ave","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Chelsea Ave","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Arlington Ave":{"name":"Arlington Ave","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Arlington Ave","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Maple Ave North":{"name":"Maple Ave North","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Maple Ave North","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Wallace Ave":{"name":"Wallace Ave","pci":95.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Wallace Ave","PCI":95.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E Zane Ave":{"name":"E Zane Ave","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Zane Ave","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Champion Ave":{"name":"Champion Ave","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Champion Ave","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Conger Ave":{"name":"Conger Ave","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Conger Ave","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Grant Ave":{"name":"Grant Ave","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Grant Ave","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Atlantic Ave (Collings Ave – W Cuthbert Blvd)":{"name":"Atlantic Ave (Collings Ave – W Cuthbert Blvd)","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Atlantic Ave (Collings Ave – W Cuthbert Blvd)","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"N Atlantic Ave (W Homestead Ave – W Cuthbert Blvd)":{"name":"N Atlantic Ave (W Homestead Ave – W Cuthbert Blvd)","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"N Atlantic Ave (W Homestead Ave – W Cuthbert Blvd)","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Taylor Ave":{"name":"Taylor Ave","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Taylor Ave","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Maple Ter":{"name":"Maple Terrace","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Maple Terrace","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Maple Terrace":{"name":"Maple Terrace","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Maple Terrace","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Center St":{"name":"Center Street","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Center Street","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Center Street":{"name":"Center Street","pci":96.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Center Street","PCI":96.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Ardmore Ter":{"name":"Ardmore Terrace","pci":97.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Ardmore Terrace","PCI":97.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Ardmore Terrace":{"name":"Ardmore Terrace","pci":97.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Ardmore Terrace","PCI":97.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Dayton Ave":{"name":"Dayton Ave","pci":97.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Dayton Ave","PCI":97.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Irwin Ave":{"name":"Irwin Ave","pci":97.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Irwin Ave","PCI":97.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"N Atlantic Ave (Billson Ave – W Homestead Ave)":{"name":"N Atlantic Ave (Billson Ave – W Homestead Ave)","pci":97.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"N Atlantic Ave (Billson Ave – W Homestead Ave)","PCI":97.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Highland Ave":{"name":"Highland Ave","pci":98.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Highland Ave","PCI":98.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Lawnside Ave":{"name":"Lawnside Ave","pci":98.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Lawnside Ave","PCI":98.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Gorman Ave":{"name":"W Gorman Ave","pci":98.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"W Gorman Ave","PCI":98.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Everett Ave":{"name":"Everett Ave","pci":98.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Everett Ave","PCI":98.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E Homestead Ave":{"name":"E Homestead Ave","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Homestead Ave","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E Palmer Ave":{"name":"E Palmer Ave","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Palmer Ave","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E Stiles Ave":{"name":"E Stiles Ave","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"E Stiles Ave","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Crestmont Ln":{"name":"Crestmont Ln","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Crestmont Ln","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Wayne Ter":{"name":"W Wayne Terrace","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"W Wayne Terrace","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Wayne Terrace":{"name":"W Wayne Terrace","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"W Wayne Terrace","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E W Wayne Ter":{"name":"W Wayne Terrace (E)","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"W Wayne Terrace (E)","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"E W Wayne Terrace":{"name":"W Wayne Terrace (E)","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"W Wayne Terrace (E)","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Wayne Ter (E)":{"name":"W Wayne Terrace (E)","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"W Wayne Terrace (E)","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"W Wayne Terrace (E)":{"name":"W Wayne Terrace (E)","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"W Wayne Terrace (E)","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]},"Powell Ln":{"name":"Powell Ln","pci":99.0,"condition":"Good","treatment":"No maintenance needed","records":[{"Road Name":"Powell Ln","PCI":99.0,"Maintenance Treatment Suggestion":"No maintenance needed"}]}};
-    // Build-time generated from the same OSM geometry used by /api/pci-roads.
-    // The build step replaces this empty collection with the prepared PCI GeoJSON,
-    // so the dashboard does not wait for Overpass or a runtime API request.
-    const STREETLENS_PRELOADED_PCI = {"type":"FeatureCollection","features":[]};
-    const BOUNDS = [[-75.091,39.910],[-75.062,39.928]];
-    const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
-    const SATELLITE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-    const maps = {};
+STREETLENS_REGISTRY_READY=loadStreetLensRegistry();
 
-    const COLORS = {
-        Good: '#84cc16',
-        Fair: '#d1a13c',
-        Poor: '#ef4444'
-    };
+const STREETLENS_COLORS={
+  failed:'#5b1136', serious:'#a31631', vpoor:'#dc4a2c', poor:'#f39a32', fair:'#f1d451', sat:'#62b8a5', good:'#1f6f9c'
+};
+const STREETLENS_PCI_CLASSES=[[85,'Good','good','85–100'],[70,'Satisfactory','sat','70–85'],[55,'Fair','fair','55–70'],[40,'Poor','poor','40–55'],[25,'Very Poor','vpoor','25–40'],[10,'Serious','serious','10–25'],[-1,'Failed','failed','0–10']];
+const STREETLENS_SDI_CLASSES=[[4.5,'4.5 and up','good',''],[4.0,'4.0 – 4.5','sat',''],[3.5,'3.5 – 4.0','fair',''],[3.0,'3.0 – 3.5','poor',''],[-1,'Under 3.0','serious','']];
 
-    // Normalize road names so Excel names such as "Franklin Ave (E)" and
-    // OSM names such as "E Franklin Ave" can still be matched.
-    function normalizeRoadName(value) {
-        return String(value || '')
-            .toLowerCase()
-            .replace(/[\[\]\(\),.\-–—]/g, ' ')
-            .replace(/\bavenue\b/g, 'ave')
-            .replace(/\bstreet\b/g, 'st')
-            .replace(/\broad\b/g, 'rd')
-            .replace(/\bboulevard\b/g, 'blvd')
-            .replace(/\blane\b/g, 'ln')
-            .replace(/\bterrace\b/g, 'ter')
-            .replace(/\bdrive\b/g, 'dr')
-            .replace(/\bcourt\b/g, 'ct')
-            .replace(/\bplace\b/g, 'pl')
-            .replace(/\bparkway\b/g, 'pkwy')
-            .replace(/\bhighway\b/g, 'hwy')
-            .replace(/\s+/g, ' ')
-            .trim();
-    }
+function classify(metric,value){
+  const v=Number(value); if(!Number.isFinite(v)) return null;
+  return (metric==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES).find(c=>v>=c[0])||null;
+}
+function conditionText(metric,value){const c=classify(metric,value);return c?c[1]:'No data';}
+function fmt1(v){return Number.isFinite(Number(v))?Number(v).toFixed(1):'–'}
+function fmt2(v){return Number.isFinite(Number(v))?Number(v).toFixed(2):'–'}
+function n0(v){return Number.isFinite(Number(v))?Math.round(Number(v)).toLocaleString():'–'}
+function animateOverallScore(value, condition){
+  const scoreEl=document.getElementById('streetLensScoreValue'), gaugeEl=document.getElementById('streetLensGaugeProgress'), conditionEl=document.getElementById('streetLensCondition');
+  const target=Number(value); if(!Number.isFinite(target)){if(scoreEl)scoreEl.textContent='—';if(gaugeEl)gaugeEl.setAttribute('stroke-dasharray','0 236');if(conditionEl)conditionEl.textContent='CONDITION: —';return;}
+  const clamped=Math.max(0,Math.min(100,target)); const c=classify('pci',clamped); const color=c?STREETLENS_COLORS[c[2]]:'#f59e0b';
+  if(gaugeEl)gaugeEl.setAttribute('stroke',color); if(conditionEl){conditionEl.textContent=`CONDITION: ${String(condition||c?.[1]||'').toUpperCase()}`;conditionEl.style.borderColor=color;conditionEl.style.color=color;}
+  const start=performance.now(); function tick(now){const t=Math.min(1,(now-start)/700),eased=1-Math.pow(1-t,3),current=clamped*eased;if(scoreEl)scoreEl.textContent=current.toFixed(1).replace(/\.0$/,'');if(gaugeEl)gaugeEl.setAttribute('stroke-dasharray',`${236*(current/100)} 236`);if(t<1)requestAnimationFrame(tick);} requestAnimationFrame(tick);
+}
+function sectionVisible(s){
+  const b1=document.getElementById('streetLensShowBatch1')?.checked!==false;
+  const end=document.getElementById('streetLensShowEndPieces')?.checked!==false;
+  if(s.run.batch==='Batch 1'&&!b1) return false;
+  if(s.len<200&&!end) return false;
+  return true;
+}
 
-    function stripDirection(name) {
-        return normalizeRoadName(name)
-            .replace(/^(n|s|e|w|ne|nw|se|sw)\s+/, '')
-            .replace(/\s+(n|s|e|w|ne|nw|se|sw)$/, '')
-            .trim();
-    }
-
-    const PCI_NAMES = Object.keys(PCI_BY_NAME);
-    const PCI_EXACT = {};
-    const PCI_BASE = {};
-    PCI_NAMES.forEach(key => {
-        const record = PCI_BY_NAME[key];
-        const exact = normalizeRoadName(key);
-        const base = stripDirection(key);
-        PCI_EXACT[exact] = record;
-        if (!PCI_BASE[base]) PCI_BASE[base] = record;
+function flattenSections(data){
+  const out=[];
+  (data?.runs||[]).forEach(run=>{
+    (run.secs||[]).forEach(sec=>{
+      if(!Array.isArray(sec.g)||sec.g.length<2) return;
+      sec.run=run; sec.ll=sec.g.map(p=>L.latLng(Number(p[0]),Number(p[1]))); out.push(sec);
     });
+  });
+  return out;
+}
 
-    function findPCIRecord(osmName) {
-        const exact = PCI_EXACT[normalizeRoadName(osmName)];
-        if (exact) return exact;
-        return PCI_BASE[stripDirection(osmName)] || null;
-    }
+function offsetSection(sec,map){
+  const z=map.getZoom(); const off=Math.max(1.2,Math.min(6,(z-13)*1.5));
+  const projected=sec.ll.map(ll=>map.project(ll,z)); const out=[];
+  for(let i=0;i<projected.length;i++){
+    const a=projected[Math.max(0,i-1)], b=projected[Math.min(projected.length-1,i+1)];
+    const dx=b.x-a.x,dy=b.y-a.y,n=Math.hypot(dx,dy)||1;
+    out.push(map.unproject(L.point(projected[i].x-dy/n*off,projected[i].y+dx/n*off),z));
+  }
+  return out;
+}
 
-    function firstSymbolLayer(map) {
-        const layers = map.getStyle().layers || [];
-        const symbol = layers.find(l => l.type === 'symbol');
-        return symbol ? symbol.id : undefined;
-    }
+function sectionWeight(sec,map,hover=false){
+  const z=map.getZoom(); let w=Math.max(2,Math.min(9,(z-12.4)*1.7));
+  if(sec.len<200) w*=.5;
+  return w+(hover?3:0);
+}
 
-    const PCSI_COLORS = {
-        'Good': '#1f6f9c',
-        'Satisfactory': '#62b8a5',
-        'Fair': '#f1d451',
-        'Poor': '#f39a32',
-        'Very Poor': '#dc4a2c',
-        'Serious': '#a31631',
-        'Failed': '#5b1136',
-        'No data': '#6b7280'
-    };
-    const SDI_COLORS = {
-        '4.5 and up': '#1f6f9c',
-        '4.0 – 4.5': '#62b8a5',
-        '3.5 – 4.0': '#f1d451',
-        '3.0 – 3.5': '#f39a32',
-        'Under 3.0': '#a31631',
-        'No data': '#6b7280'
-    };
-    let STREETLENS_METRIC = 'pci';
-    let STREETLENS_SDI_BY_NAME = {};
-    let STREETLENS_PCI_GEOJSON = {type:'FeatureCollection',features:[]};
+function sectionColor(sec){
+  const c=classify(STREETLENS_METRIC,STREETLENS_METRIC==='sdi'?sec.sdi:sec.pci);
+  return c?STREETLENS_COLORS[c[2]]:'#6b7280';
+}
 
-    function pcsiCondition(value) {
-        const v = Number(value);
-        if (!Number.isFinite(v)) return 'No data';
-        if (v < 10) return 'Failed';
-        if (v < 25) return 'Serious';
-        if (v < 40) return 'Very Poor';
-        if (v < 55) return 'Poor';
-        if (v < 70) return 'Fair';
-        if (v < 85) return 'Satisfactory';
-        return 'Good';
-    }
+function buildHoverCard(sec){
+  const cp=classify('pci',sec.pci);
+  const units=(sec.units||[]).map(u=>fmt1(u.pci)).join(', ');
+  const flags=[]; if(sec.run.batch==='Batch 1')flags.push('Batch 1 labels not reviewed · dashed'); if(sec.len<200)flags.push('End piece under 200 ft · thin'); if(sec.est)flags.push(`${n0(sec.est)} of ${n0(sec.n)} frames have estimated position`);
+  return `<div class="hover-title">${escapeHtml(sec.run.name)}</div>
+    <div class="hover-sub">Section ${sec.bin} · ${n0(sec.f0)}–${n0(sec.f1)} ft · ${escapeHtml(sec.run.batch)}</div>
+    <div class="hover-metrics"><div><span>SDI</span><b>${fmt2(sec.sdi)}</b></div><div><span>PCI</span><b>${fmt1(sec.pci)}</b></div><div><span>Rating</span><b>${escapeHtml(cp?.[1]||'–')}</b></div></div>
+    <div class="hover-grid"><span>Length</span><b>${n0(sec.len)} ft</b><span>NDI / LDI</span><b>${fmt2(sec.ndi)} / ${fmt2(sec.ldi)}</b><span>Cracks</span><b>${n0(sec.cr)} · ${n0(sec.crft)} ft</b><span>Distressed area</span><b>${fmt1(sec.dpct)}%</b><span>Potholes / patches</span><b>${n0(sec.pot)} / ${n0(sec.pat)}</b><span>PCI sample units</span><b>${units||'–'}</b><span>Whole street</span><b>SDI ${fmt2(sec.run.sdi)} · PCI ${fmt1(sec.run.pci)}</b></div>${flags.map(f=>`<div class="hover-flag">${escapeHtml(f)}</div>`).join('')}`;
+}
+function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
 
-    function selectedRoadById(id) {
-        return STREETLENS_ROADS.find(r => r.road_id === id) || null;
-    }
+function showHover(sec,map,e){
+  const card=document.getElementById(map._streetlensCardId); if(!card)return;
+  card.innerHTML=buildHoverCard(sec); card.hidden=false;
+  positionHoverCard(card,map,e);
+}
+function positionHoverCard(card,map,e){
+  const p=e?.containerPoint||L.point(map.getSize().x/2,map.getSize().y/2);
+  const size=map.getSize(), rect=map.getContainer().getBoundingClientRect();
+  card.style.left=''; card.style.right=''; card.style.top=''; card.style.bottom='';
+  const w=card.offsetWidth||280,h=card.offsetHeight||210;
+  let x=p.x+16,y=p.y+16; if(x+w>size.x-10)x=p.x-w-16; if(y+h>size.y-10)y=p.y-h-16;
+  card.style.left=Math.max(10,x)+'px'; card.style.top=Math.max(10,y)+'px';
+}
+function hideHover(map){const card=document.getElementById(map._streetlensCardId); if(card) card.hidden=true;}
 
-    function sdiCondition(value) {
-        const v=Number(value);
-        if(!Number.isFinite(v)) return 'No data';
-        if(v>=4.5) return '4.5 and up';
-        if(v>=4.0) return '4.0 – 4.5';
-        if(v>=3.5) return '3.5 – 4.0';
-        if(v>=3.0) return '3.0 – 3.5';
-        return 'Under 3.0';
-    }
+function updateDashboardDetails(sec){
+  if(!sec)return;
+  const pci=Number(sec.pci), sdi=Number(sec.sdi);
+  if(typeof animateOverallScore==='function') animateOverallScore(pci,conditionText('pci',pci));
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val};
+  set('streetLensSelectedRoad',sec.run.name+` · Section ${sec.bin}`);
+  set('streetLensSelectedPci',fmt1(pci)); set('streetLensSelectedSdi',fmt2(sdi));
+  const lat=sec.g?.[0]?.[0],lon=sec.g?.[0]?.[1]; set('streetLensSelectedLatitude',Number.isFinite(lat)?lat.toFixed(6)+'°':'—'); set('streetLensSelectedLongitude',Number.isFinite(lon)?lon.toFixed(6)+'°':'—');
+  const matching=STREETLENS_ROADS.filter(r=>String(r.name||'').toLowerCase()===String(sec.run.name||'').toLowerCase());
+  const frames=matching.flatMap(r=>r.frames||[]);
+  if(window.streetLensLoadRoadFrames) window.streetLensLoadRoadFrames(frames);
+}
 
-    function roadRecordFromSection(props) {
-        const road = selectedRoadById(props.road_id);
-        const frames = road?.frames || [];
-        const pci = Number(props.pci);
-        const psci = Number(props.detector_psci);
-        const selected = Number.isFinite(psci) ? psci : (Number.isFinite(pci) ? pci : null);
-        const condition = Number.isFinite(pci) ? pcsiCondition(pci) : pcsiCondition(selected);
-        return {
-            road_id: props.road_id || `pci-${props.road_name || 'road'}`,
-            name: road?.name || props.road_name || 'Road',
-            pci: Number.isFinite(pci) ? pci : null,
-            sdi: Number.isFinite(Number(props.sdi)) ? Number(props.sdi) : findSDIRecord(road?.name || props.road_name),
-            condition,
-            treatment: props.treatment || (frames.length ? `${frames.length} ML inspection frames available` : 'Pending upload'),
-            detector_psci: Number.isFinite(psci) ? psci : (Number.isFinite(pci) ? pci : null),
-            latitude: Number(props.latitude),
-            longitude: Number(props.longitude),
-            frame: props.frame || '',
-            station_start: Number(props.station_start),
-            station_end: Number(props.station_end),
-            frames,
-            image_available: frames.length > 0
-        };
-    }
+function drawSection(sec,map){
+  const layers=sec._streetlensLayers?.get(map._leaflet_id); if(!layers)return;
+  const visible=sectionVisible(sec), hover=sec===map._streetlensHover; const w=sectionWeight(sec,map,hover)+(STREETLENS_PINNED===sec?2:0);
+  const ll=offsetSection(sec,map); layers.case.setLatLngs(ll); layers.line.setLatLngs(ll);
+  layers.case.setStyle({color:'#050707',weight:w+Math.min(2.2,w*.5),opacity:visible?0.82:0});
+  layers.line.setStyle({color:sectionColor(sec),weight:w,opacity:visible?1:0,dashArray:sec.run.batch==='Batch 1'?'7 4':null});
+}
 
-    function animateOverallScore(value, condition) {
-        const scoreEl = document.getElementById('streetLensScoreValue');
-        const gaugeEl = document.getElementById('streetLensGaugeProgress');
-        const conditionEl = document.getElementById('streetLensCondition');
-        const target = Number(value);
-        if (!Number.isFinite(target)) {
-            if (scoreEl) scoreEl.textContent = '—';
-            if (gaugeEl) gaugeEl.setAttribute('stroke-dasharray', '0 236');
-            if (conditionEl) conditionEl.textContent = 'CONDITION: —';
-            return;
-        }
-        const clamped = Math.max(0, Math.min(100, target));
-        const color = PCSI_COLORS[condition] || '#f59e0b';
-        if (gaugeEl) gaugeEl.setAttribute('stroke', color);
-        if (conditionEl) {
-            conditionEl.textContent = `CONDITION: ${String(condition || pcsiCondition(clamped)).toUpperCase()}`;
-            conditionEl.style.borderColor = color;
-            conditionEl.style.color = color;
-        }
-        const start = performance.now();
-        const duration = 700;
-        function tick(now) {
-            const t = Math.min(1, (now - start) / duration);
-            const eased = 1 - Math.pow(1 - t, 3);
-            const current = clamped * eased;
-            if (scoreEl) scoreEl.textContent = current.toFixed(1).replace(/\.0$/, '');
-            if (gaugeEl) {
-                const arc = 236 * (current / 100);
-                gaugeEl.setAttribute('stroke-dasharray', `${arc} 236`);
-            }
-            if (t < 1) requestAnimationFrame(tick);
-        }
-        requestAnimationFrame(tick);
-    }
+function setupLabels(map){
+  map._streetlensLabels=[];
+  const grouped=new Map();
+  STREETLENS_SECTION_DATA.sections.forEach(s=>{if(!grouped.has(s.run.key))grouped.set(s.run.key,[]);grouped.get(s.run.key).push(s)});
+  grouped.forEach(secs=>{
+    const mid=secs[Math.floor(secs.length/2)]; const pts=mid.ll; if(!pts?.length)return;
+    const ll=pts[Math.floor(pts.length/2)];
+    const label=L.tooltip({permanent:true,direction:'center',className:'streetlens-street-label',interactive:false}).setLatLng(ll).setContent(escapeHtml(mid.run.name));
+    label._streetlensRun=mid.run; map._streetlensLabels.push(label);
+  });
+}
+function refreshLabels(map){
+  const on=map.getZoom()>=16.5; const b1=document.getElementById('streetLensShowBatch1')?.checked!==false;
+  map._streetlensLabels.forEach(t=>{const ok=on&&(t._streetlensRun.batch!=='Batch 1'||b1);if(ok&&!map.hasLayer(t))t.addTo(map);if(!ok&&map.hasLayer(t))map.removeLayer(t)});
+}
 
-    function updateSelectedRoad(record) {
-        const roadEl = document.getElementById('streetLensSelectedRoad');
-        const treatmentEl = document.getElementById('streetLensSelectedTreatment');
-        const psciEl = document.getElementById('streetLensSelectedPsci');
-        const pciSummaryEl = document.getElementById('streetLensSelectedPci');
-        const sdiSummaryEl = document.getElementById('streetLensSelectedSdi');
-        const stationEl = document.getElementById('streetLensSelectedStation');
-        const footerEl = document.getElementById('streetLensMapCoords');
-        const latEl = document.getElementById('streetLensSelectedLatitude');
-        const lonEl = document.getElementById('streetLensSelectedLongitude');
+function legendHtml(){
+  const rows=STREETLENS_METRIC==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES;
+  return rows.map(c=>`<div class="sheet-lg-row"><i style="background:${STREETLENS_COLORS[c[2]]}"></i><span>${c[1]}</span><small>${c[3]}</small></div>`).join('');
+}
+function updateLegendAndRanking(){
+  const legend=document.getElementById('streetLensModalLegend'); if(legend)legend.innerHTML=legendHtml();
+  const label=document.getElementById('streetLensModalLegendLabel'); if(label)label.textContent=STREETLENS_METRIC==='sdi'?'SDI of the section':'PCI rating (ASTM D6433)';
+  const rankLabel=document.getElementById('streetLensRankingLabel'); if(rankLabel)rankLabel.textContent=`Lowest ten sections by ${STREETLENS_METRIC.toUpperCase()}`;
+  const box=document.getElementById('streetLensRoadRanking'); if(!box)return;
+  const vals=STREETLENS_SECTION_DATA.sections.filter(sectionVisible).filter(s=>s.run.batch!=='Batch 1'||document.getElementById('streetLensShowBatch1')?.checked!==false).filter(s=>s.len>=200||document.getElementById('streetLensShowEndPieces')?.checked!==false);
+  const sorted=[...vals].sort((a,b)=>(STREETLENS_METRIC==='sdi'?a.sdi-b.sdi:a.pci-b.pci)).slice(0,10);
+  box.innerHTML=sorted.map((s,i)=>`<button class="streetlens-ranking-row" data-section-key="${escapeHtml(s.run.key)}::${s.bin}"><span>${i+1}</span><span>${escapeHtml(s.run.name)}<small>Section ${s.bin} · ${n0(s.f0)}–${n0(s.f1)} ft</small></span><b>${STREETLENS_METRIC==='sdi'?fmt2(s.sdi):fmt1(s.pci)}</b></button>`).join('');
+  box.querySelectorAll('[data-section-key]').forEach(btn=>btn.onclick=()=>{const s=STREETLENS_SECTION_DATA.sections.find(x=>`${x.run.key}::${x.bin}`===btn.dataset.sectionKey);if(s){STREETLENS_PINNED=s; focusSection(s);}});
+  const count=document.getElementById('streetLensRoadCount'); if(count)count.textContent=`${STREETLENS_SECTION_DATA.sections.length} mapped sections · ${STREETLENS_SECTION_DATA.runs.length} street runs`;
+}
 
-        if (!record) return;
+function focusSection(sec){
+  STREETLENS_PINNED=sec;
+  Object.values(STREETLENS_MAPS).forEach(map=>{if(!map)return;map.fitBounds(L.latLngBounds(sec.ll).pad(1.2),{maxZoom:18,animate:true,duration:.6});refreshMap(map);});
+}
 
-        animateOverallScore(record.detector_psci ?? record.pci, record.condition);
+function refreshMap(map){
+  map._streetlensSections.forEach(s=>drawSection(s,map));
+  refreshLabels(map);
+}
 
-        // The right-side Overall Distress Score now reflects the selected map section.
-        // summary. Detector PSCI is deliberately shown only at map-section level.
-        if (roadEl) {
-            roadEl.textContent = record.name || 'Road';
-            roadEl.title = record.name || 'Road';
-        }
-        if (latEl) latEl.textContent = Number.isFinite(Number(record.latitude)) ? Number(record.latitude).toFixed(6) + '°' : '—';
-        if (lonEl) lonEl.textContent = Number.isFinite(Number(record.longitude)) ? Number(record.longitude).toFixed(6) + '°' : '—';
-        if (pciSummaryEl) pciSummaryEl.textContent = Number.isFinite(Number(record.pci)) ? Number(record.pci).toFixed(1) : '—';
-        if (sdiSummaryEl) sdiSummaryEl.textContent = Number.isFinite(Number(record.sdi)) ? Number(record.sdi).toFixed(2) : '—';
-        if (psciEl) {
-            psciEl.textContent = Number.isFinite(Number(record.pci)) ? Number(record.pci).toFixed(1) : (Number.isFinite(Number(record.detector_psci)) ? Number(record.detector_psci).toFixed(1) : '—');
-        }
-        if (treatmentEl) {
-            treatmentEl.textContent = record.image_available
-                ? 'Uploaded'
-                : 'Pending upload';
-            treatmentEl.title = record.image_available
-                ? `${record.frames.length} inspection frames uploaded`
-                : 'Inspection imagery is not uploaded yet';
-        }
-        if (stationEl) {
-            const first = record.frames && record.frames.length ? Number(record.frames[0].station_start) : null;
-            const last = record.frames && record.frames.length ? Number(record.frames[record.frames.length - 1].station_end) : null;
-            stationEl.textContent = Number.isFinite(first) && Number.isFinite(last) ? `${first.toFixed(1)}–${last.toFixed(1)} ft` : '—';
-        }
-        if (footerEl) {
-            const suffix = record.detector_psci == null ? 'No detector PSCI' :
-                `Detector PSCI ${Number(record.detector_psci).toFixed(1)} · ${record.condition}`;
-            footerEl.textContent = `${record.name || 'Road'} · ${suffix}`;
-        }
+function addSectionLayers(map,cardId){
+  map._streetlensCardId=cardId; map._streetlensHover=null; map._streetlensSections=[];
+  STREETLENS_SECTION_DATA.sections.forEach(sec=>{
+    if(!sec._streetlensLayers)sec._streetlensLayers=new Map();
+    const ll=offsetSection(sec,map);
+    const casing=L.polyline(ll,{interactive:false,lineCap:'butt',lineJoin:'round'}).addTo(map);
+    const line=L.polyline(ll,{lineCap:'butt',lineJoin:'round',bubblingMouseEvents:false}).addTo(map);
+    sec._streetlensLayers.set(map._leaflet_id,{case:casing,line}); map._streetlensSections.push(sec);
+    line.on('mouseover',e=>{map._streetlensHover=sec;drawSection(sec,map);showHover(sec,map,e);});
+    line.on('mousemove',e=>{const card=document.getElementById(cardId);if(card&&!card.hidden)positionHoverCard(card,map,e);});
+    line.on('mouseout',()=>{map._streetlensHover=null;hideHover(map);drawSection(sec,map);});
+    line.on('click',()=>{updateDashboardDetails(sec);STREETLENS_PINNED=sec;refreshMap(map);});
+  });
+  setupLabels(map); refreshMap(map);
+  map.on('zoomend',()=>refreshMap(map));
+  map.on('move',()=>{const card=document.getElementById(cardId);if(card&&!card.hidden)positionHoverCard(card,map);});
+  map.on('click',e=>{if(!e.originalEvent?.target?.closest('.leaflet-interactive')){STREETLENS_PINNED=null;refreshMap(map);}});
+}
 
-        window.streetLensSelectedRoad = record;
-        if (window.streetLensLoadRoadFrames) {
-            window.streetLensLoadRoadFrames(record.frames || []);
-        }
-    }
+function addBasemap(map){
+  const street=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:20,maxNativeZoom:19,attribution:'Basemap: Esri, HERE, Garmin, OpenStreetMap contributors'});
+  const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:20,maxNativeZoom:19,attribution:'Imagery © Esri'});
+  street.addTo(map); map._streetlensStreet=street; map._streetlensSatellite=satellite; map._streetlensSatelliteOn=false;
+}
+function toggleSatellite(map){
+  if(!map)return;
+  if(map._streetlensSatelliteOn){map.removeLayer(map._streetlensSatellite);map._streetlensStreet.addTo(map);map._streetlensSatelliteOn=false;}
+  else {map.removeLayer(map._streetlensStreet);map._streetlensSatellite.addTo(map);map._streetlensSatelliteOn=true;}
+}
+function resetMap(map){if(map&&STREETLENS_SECTION_DATA)map.fitBounds(L.latLngBounds(STREETLENS_SECTION_DATA.ring.map(p=>[p[1],p[0]])),{padding:[18,18],maxZoom:16,animate:true,duration:.5});}
 
-    function popupHTML(record) {
-        const psci = record.detector_psci == null ? '—' : Number(record.detector_psci).toFixed(1);
-        const upload = record.image_available
-            ? `${record.frames.length} ML frames available`
-            : 'ML imagery pending upload';
-        return `<div class="streetlens-map-popup">
-            <strong>${record.name}</strong>
-            <div style="margin-top:5px"><b>Detector PSCI:</b> ${psci}</div>
-            <div><b>PCI:</b> ${record.pci == null ? '—' : Number(record.pci).toFixed(1)}</div><div><b>SDI:</b> ${record.sdi == null ? '—' : Number(record.sdi).toFixed(2)}</div><div><b>Condition:</b> <span style="color:${PCSI_COLORS[record.condition]};font-weight:700">${record.condition}</span></div>
-            <div><b>Station:</b> ${Number.isFinite(Number(record.station_start)) ? Number(record.station_start).toFixed(1)+'–'+Number(record.station_end).toFixed(1)+' ft' : '—'}</div>
-            <div><b>Latitude:</b> ${Number(record.latitude).toFixed(6)}°</div>
-            <div><b>Longitude:</b> ${Number(record.longitude).toFixed(6)}°</div>
-            <div><b>Imagery:</b> ${upload}</div>
-        </div>`;
-    }
+function createStreetLensMap(id,cardId){
+  const map=L.map(id,{zoomControl:true,preferCanvas:false,attributionControl:true});
+  addBasemap(map); addSectionLayers(map,cardId);
+  const ring=L.polygon(STREETLENS_SECTION_DATA.ring.map(p=>[p[1],p[0]]),{fill:false,weight:1.5,dashArray:'6 5',color:'#3b4744',interactive:false}).addTo(map);
+  map.fitBounds(ring.getBounds(),{padding:[18,18],maxZoom:16});
+  L.control.scale({imperial:true,metric:false}).addTo(map);
+  return map;
+}
 
-    function roadDataBounds() {
-        const coords = [];
-        STREETLENS_ROADS.forEach(road => (road.frames || []).forEach(f => {
-            if (Number.isFinite(Number(f.longitude)) && Number.isFinite(Number(f.latitude))) {
-                coords.push([Number(f.longitude), Number(f.latitude)]);
-            }
-        }));
-        if (!coords.length) return BOUNDS;
-        let west=coords[0][0], east=coords[0][0], south=coords[0][1], north=coords[0][1];
-        coords.forEach(([lon,lat])=>{west=Math.min(west,lon);east=Math.max(east,lon);south=Math.min(south,lat);north=Math.max(north,lat);});
-        const dx=Math.max((east-west)*0.20,0.002);
-        const dy=Math.max((north-south)*0.20,0.002);
-        return [[west-dx,south-dy],[east+dx,north+dy]];
-    }
+function populateStreetSearch(){
+  const list=document.getElementById('streetLensStreetList'); if(!list)return;
+  const names=[...new Set(STREETLENS_SECTION_DATA.runs.map(r=>r.name))].sort((a,b)=>a.localeCompare(b));
+  list.innerHTML=names.map(n=>`<option value="${escapeHtml(n)}"></option>`).join('');
+  const input=document.getElementById('streetLensFindStreet');
+  input?.addEventListener('input',()=>{const q=input.value.trim().toLowerCase();if(!q)return;const hits=STREETLENS_SECTION_DATA.sections.filter(s=>s.run.name.toLowerCase()===q);if(!hits.length)return;const bounds=L.latLngBounds([].concat(...hits.map(s=>s.ll)));Object.values(STREETLENS_MAPS).forEach(m=>m&&m.fitBounds(bounds.pad(.4),{maxZoom:18}));});
+}
 
-    let ROAD_DATA_BOUNDS = BOUNDS;
+function setMetric(metric){
+  STREETLENS_METRIC=metric==='pci'?'pci':'sdi';
+  document.getElementById('streetLensModalMetricSDI')?.classList.toggle('active',STREETLENS_METRIC==='sdi');
+  document.getElementById('streetLensModalMetricPCI')?.classList.toggle('active',STREETLENS_METRIC==='pci');
+  document.getElementById('streetLensModalMetricSDI')?.setAttribute('aria-pressed',String(STREETLENS_METRIC==='sdi'));
+  document.getElementById('streetLensModalMetricPCI')?.setAttribute('aria-pressed',String(STREETLENS_METRIC==='pci'));
+  Object.values(STREETLENS_MAPS).forEach(refreshMap); updateLegendAndRanking();
+}
 
-    function buildRoadSectionGeoJSON() {
-        const features=[];
-        STREETLENS_ROADS.forEach(road=>{
-            const frames=road.frames||[];
-            for(let i=0;i<frames.length-1;i++){
-                const a=frames[i], b=frames[i+1];
-                if(!Number.isFinite(Number(a.longitude))||!Number.isFinite(Number(a.latitude))||!Number.isFinite(Number(b.longitude))||!Number.isFinite(Number(b.latitude))) continue;
-                features.push({type:'Feature',geometry:{type:'LineString',coordinates:[[Number(a.longitude),Number(a.latitude)],[Number(b.longitude),Number(b.latitude)]]},properties:{road_id:road.road_id,road_name:road.name,frame:a.frame,source_frame:a.source_frame,station_start:a.station_start,station_end:a.station_end,detector_psci:a.detector_psci,latitude:a.latitude,longitude:a.longitude,condition:pcsiCondition(a.detector_psci),pci:a.detector_psci}});
-            }
-        });
-        return {type:'FeatureCollection',features};
-    }
+function openMap(fullscreen=false){
+  const modal=document.getElementById('mapModal'); if(!modal)return; modal.classList.remove('hidden');
+  if(!STREETLENS_MAPS.modal){STREETLENS_MAPS.modal=createStreetLensMap('streetLensModalMap','streetLensModalHoverCard');}
+  setTimeout(()=>{STREETLENS_MAPS.modal.invalidateSize();resetMap(STREETLENS_MAPS.modal);},80);
+  if(fullscreen)toggleMapFullscreen();
+}
+async function toggleMapFullscreen(){
+  const modal=document.getElementById('mapModal'); if(!modal)return;
+  try{if(!document.fullscreenElement)await modal.requestFullscreen();else await document.exitFullscreen();}catch(e){console.warn('StreetLens fullscreen:',e)}
+  setTimeout(()=>STREETLENS_MAPS.modal?.invalidateSize(),150);
+}
+function closeMap(e){if(e&&e.target!==e.currentTarget)return;const modal=document.getElementById('mapModal');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});modal?.classList.add('hidden');}
 
-    function normalizeRoadName(name) {
-        return String(name||'').toLowerCase().replace(/&/g,'and').replace(/[()\[\],.'’]/g,' ').replace(/\b(road|rd|street|st|avenue|ave|lane|ln|drive|dr|court|ct|place|pl|terrace|ter|parkway|pkwy|highway|hwy)\b/g,' ').replace(/\s+/g,' ').trim();
-    }
+window.openMap=openMap; window.closeMap=closeMap;
 
-    function roadBaseKey(name) {
-        return String(name||'').toLowerCase().replace(/[()\[\],.'’]/g,' ').replace(/\b(n|s|e|w|ne|nw|se|sw)\b/g,' ').replace(/\s+/g,' ').replace(/\b(road|rd|street|st|avenue|ave|lane|ln|drive|dr|court|ct|place|pl|terrace|ter|parkway|pkwy|highway|hwy)\b/g,' ').replace(/[^a-z0-9]/g,'');
-    }
+document.addEventListener('fullscreenchange',()=>setTimeout(()=>STREETLENS_MAPS.modal?.invalidateSize(),150));
 
-    function findSDIRecord(name) {
-        const key=roadBaseKey(name);
-        const value=STREETLENS_SDI_BY_NAME[key];
-        return Number.isFinite(Number(value)) ? Number(value) : null;
-    }
-
-    function pciFeatureCollectionFromOSM(data) {
-        const features=[];
-        const elements=Array.isArray(data?.elements)?data.elements:[];
-        elements.forEach(el=>{
-            const name=el?.tags?.name;
-            const rec=name ? findPCIRecord(name) : null;
-            if(!rec || !Array.isArray(el.geometry) || el.geometry.length<2) return;
-            const coords=el.geometry.map(p=>[Number(p.lon),Number(p.lat)]).filter(p=>Number.isFinite(p[0])&&Number.isFinite(p[1]));
-            if(coords.length<2) return;
-            features.push({type:'Feature',geometry:{type:'LineString',coordinates:coords},properties:{road_id:`pci-${normalizeRoadName(rec.name)}`,road_name:rec.name,pci:Number(rec.pci),condition:pcsiCondition(rec.pci),treatment:rec.treatment||'—',latitude:coords[Math.floor(coords.length/2)][1],longitude:coords[Math.floor(coords.length/2)][0],sdi:findSDIRecord(rec.name)}});
-        });
-        return {type:'FeatureCollection',features};
-    }
-
-    async function loadAllPCIRoadGeometry() {
-        try {
-            try {
-                const sdiResponse=await fetch('{{ url_for('static', filename='data/sdi_by_name.json') }}',{cache:'no-store'});
-                if(sdiResponse.ok) STREETLENS_SDI_BY_NAME=await sdiResponse.json();
-            } catch(_) {}
-            const response=await fetch('{{ url_for("pci_roads") }}',{cache:'no-store'});
-            if(!response.ok) throw new Error(`PCI geometry request failed: ${response.status}`);
-            const data=await response.json();
-            STREETLENS_PCI_GEOJSON=pciFeatureCollectionFromOSM(data);
-            STREETLENS_ROAD_SECTIONS={type:'FeatureCollection',features:[...STREETLENS_PCI_GEOJSON.features,...STREETLENS_ROAD_SECTIONS.features]};
-            ['dashboard','modal'].forEach(k=>{const m=maps[k]; const src=m?.getSource('streetlens-road-sections'); if(src) src.setData(STREETLENS_ROAD_SECTIONS);});
-            renderRoadRanking();
-            updateDashboardLegend();
-        } catch(err) {
-            console.warn('StreetLens PCI road geometry:',err);
-            renderRoadRanking();
-        }
-    }
-
-    let STREETLENS_ROAD_SECTIONS = {type:'FeatureCollection',features:[]};
-
-    function firstSymbolLayer(map) {
-        const layers = map.getStyle().layers || [];
-        const symbol = layers.find(l => l.type === 'symbol');
-        return symbol ? symbol.id : undefined;
-    }
-
-    function mapColorExpression() {
-        if(STREETLENS_METRIC==='sdi') return ['case',['has','sdi'],['step',['get','sdi'],'#a31631',3.0,'#f39a32',3.5,'#f1d451',4.0,'#62b8a5',4.5,'#1f6f9c'],'#6b7280'];
-        return ['step',['coalesce',['get','pci'],-1],'#5b1136',10,'#a31631',25,'#dc4a2c',40,'#f39a32',55,'#f1d451',70,'#62b8a5',85,'#1f6f9c'];
-    }
-
-    function updateMapColors(map) {
-        ['streetlens-road-main','streetlens-road-main-casing','streetlens-road-hit'].forEach(id=>{if(!map.getLayer(id)) return;});
-        if(map.getLayer('streetlens-road-main')) map.setPaintProperty('streetlens-road-main','line-color',mapColorExpression());
-        if(map.getLayer('streetlens-road-points')) map.setPaintProperty('streetlens-road-points','circle-color',mapColorExpression());
-    }
-
-    function addStreetLensLayers(map) {
-        const beforeId=firstSymbolLayer(map);
-        if(!map.getSource('streetlens-satellite-source')) { map.addSource('streetlens-satellite-source',{type:'raster',tiles:[SATELLITE_URL],tileSize:256,attribution:'Tiles © Esri'}); map.addLayer({id:'streetlens-satellite',type:'raster',source:'streetlens-satellite-source',layout:{visibility:'none'}},beforeId); }
-        if(!map.getSource('streetlens-road-sections')) map.addSource('streetlens-road-sections',{type:'geojson',data:STREETLENS_ROAD_SECTIONS});
-        const source='streetlens-road-sections';
-        map.addLayer({id:'streetlens-road-main-casing',type:'line',source,filter:['==',['geometry-type'],'LineString'],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#111827','line-width':['interpolate',['linear'],['zoom'],10,7,12,9,14,12,16,15,18,19]}} ,beforeId);
-        map.addLayer({id:'streetlens-road-main',type:'line',source,filter:['==',['geometry-type'],'LineString'],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':mapColorExpression(),'line-width':['interpolate',['linear'],['zoom'],10,4,12,5,14,7,16,9,18,12],'line-opacity':.95}},beforeId);
-        map.addLayer({id:'streetlens-road-points',type:'circle',source,filter:['==',['geometry-type'],'Point'],paint:{'circle-radius':['interpolate',['linear'],['zoom'],12,3,14,4,16,5],'circle-color':mapColorExpression(),'circle-stroke-color':'#111827','circle-stroke-width':1.5}},beforeId);
-        map.addLayer({id:'streetlens-road-hit',type:'line',source,filter:['==',['geometry-type'],'LineString'],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#fff','line-width':['interpolate',['linear'],['zoom'],10,14,12,18,14,24,16,30,18,38],'line-opacity':0}},beforeId);
-        ['streetlens-road-hit','streetlens-road-points'].forEach(layer=>{
-            map.on('mouseenter',layer,()=>map.getCanvas().style.cursor='pointer');
-            map.on('mouseleave',layer,()=>map.getCanvas().style.cursor='');
-            map.on('click',layer,e=>{ const props=e.features?.[0]?.properties||{}; const record=roadRecordFromSection(props); updateSelectedRoad(record); new maplibregl.Popup({offset:10,maxWidth:'300px'}).setLngLat(e.lngLat).setHTML(popupHTML(record)).addTo(map); });
-        });
-    }
-
-    function updateDashboardLegend() {
-        const el=document.getElementById('streetLensDashboardLegend'); const modalEl=document.getElementById('streetLensModalLegend'); if(!el && !modalEl) return;
-        const rows=STREETLENS_METRIC==='sdi' ? [['#1f6f9c','4.5 and up'],['#62b8a5','4.0 – 4.5'],['#f1d451','3.5 – 4.0'],['#f39a32','3.0 – 3.5'],['#a31631','Under 3.0']] : [['#1f6f9c','Good · 85–100'],['#62b8a5','Satisfactory · 70–85'],['#f1d451','Fair · 55–70'],['#f39a32','Poor · 40–55'],['#dc4a2c','Very Poor · 25–40'],['#a31631','Serious · 10–25'],['#5b1136','Failed · 0–10']];
-        const html=rows.map(r=>`<div class="lg-row"><span><i style="background:${r[0]}"></i>${r[1]}</span></div>`).join(''); if(el) el.innerHTML=html; if(modalEl) modalEl.innerHTML=html;
-    }
-
-    function roadRankingRecords() {
-        const seen=new Set(); const out=[];
-        Object.values(PCI_BY_NAME).forEach(r=>{
-            const key=normalizeRoadName(r.name); if(seen.has(key)) return; seen.add(key);
-            const sdi=findSDIRecord(r.name);
-            out.push({name:r.name,pci:Number(r.pci),sdi,condition:pcsiCondition(r.pci),treatment:r.treatment||'—'});
-        });
-        return out;
-    }
-
-    function renderRoadRanking() {
-        const box=document.getElementById('streetLensRoadRanking'); if(!box) return;
-        const records=roadRankingRecords();
-        const available=STREETLENS_METRIC==='sdi' ? records.filter(r=>Number.isFinite(r.sdi)) : records;
-        const sorted=[...available].sort((a,b)=>(STREETLENS_METRIC==='sdi'?a.sdi-b.sdi:a.pci-b.pci)).slice(0,10);
-        const count=document.getElementById('streetLensRoadCount'); if(count) count.textContent=STREETLENS_METRIC==='sdi'?`${available.length} SDI available`:`${records.length} evaluated`;
-        const label=document.getElementById('streetLensRankingLabel'); if(label) label.textContent=STREETLENS_METRIC==='sdi'?'Worst → best by SDI':'Worst → best by PCI';
-        box.innerHTML=sorted.map((r,i)=>{ const score=STREETLENS_METRIC==='sdi'?r.sdi.toFixed(2):r.pci.toFixed(1); const rating=STREETLENS_METRIC==='sdi'?sdiCondition(r.sdi):r.condition; return `<button class="streetlens-ranking-row" type="button" data-road="${r.name.replace(/"/g,'&quot;')}"><span class="streetlens-ranking-rank">${i+1}</span><span class="streetlens-ranking-name">${r.name}<small class="streetlens-ranking-condition">${rating} · PCI ${r.pci.toFixed(1)}</small></span><span class="streetlens-ranking-score">${score}</span></button>`; }).join('');
-        box.querySelectorAll('[data-road]').forEach(btn=>btn.addEventListener('click',()=>selectPCIRecord(btn.dataset.road)));
-    }
-
-    function selectPCIRecord(name) {
-        const rec=findPCIRecord(name); if(!rec) return;
-        const roadFeature=STREETLENS_PCI_GEOJSON.features.find(f=>normalizeRoadName(f.properties?.road_name)===normalizeRoadName(rec.name));
-        const p=roadFeature?.properties||{};
-        updateSelectedRoad({road_id:`pci-${normalizeRoadName(rec.name)}`,name:rec.name,pci:Number(rec.pci),detector_psci:null,condition:pcsiCondition(rec.pci),sdi:findSDIRecord(rec.name),treatment:rec.treatment||'Pending upload',frames:[],image_available:false,latitude:Number(p.latitude),longitude:Number(p.longitude)});
-        if(roadFeature) { Object.values(maps).forEach(m=>{ if(!m) return; const geom=roadFeature.geometry; if(geom?.coordinates?.length){ const mid=geom.coordinates[Math.floor(geom.coordinates.length/2)]; m.flyTo({center:mid,zoom:16,duration:700}); } }); }
-    }
-
-    function createMap(containerId, loadingId, mini) {
-        const map=new maplibregl.Map({container:containerId,style:STYLE_URL,center:[-75.076,39.918],zoom:14,attributionControl:true});
-        map.addControl(new maplibregl.NavigationControl({showCompass:true}),'top-left');
-        map.addControl(new maplibregl.ScaleControl({unit:'imperial'}),'bottom-right');
-        map.on('load',()=>{ try{addStreetLensLayers(map); updateMapColors(map); updateDashboardLegend();}catch(err){console.error('StreetLens map:',err);} map.fitBounds(BOUNDS,{padding:mini?18:45,duration:0,maxZoom:17}); const loading=document.getElementById(loadingId); if(loading) loading.classList.add('hidden-map-loading'); });
-        map.on('error',e=>console.warn('StreetLens map:',e.error||e));
-        return map;
-    }
-
-    window.openMap = openMap;
-    window.closeMap = closeMap;
-
-    function setStreetLensMetric(metric) {
-        STREETLENS_METRIC = metric === 'sdi' ? 'sdi' : 'pci';
-        document.getElementById('streetLensMetricPCI')?.classList.toggle('active', STREETLENS_METRIC==='pci');
-        document.getElementById('streetLensMetricSDI')?.classList.toggle('active', STREETLENS_METRIC==='sdi');
-        document.getElementById('streetLensModalMetricPCI')?.classList.toggle('active', STREETLENS_METRIC==='pci');
-        document.getElementById('streetLensModalMetricSDI')?.classList.toggle('active', STREETLENS_METRIC==='sdi');
-        Object.values(maps).forEach(m=>m && updateMapColors(m));
-        updateDashboardLegend();
-        renderRoadRanking();
-    }
-
-    document.getElementById('streetLensMetricPCI')?.addEventListener('click',()=>setStreetLensMetric('pci'));
-    document.getElementById('streetLensMetricSDI')?.addEventListener('click',()=>setStreetLensMetric('sdi'));
-    document.getElementById('streetLensModalMetricPCI')?.addEventListener('click',()=>setStreetLensMetric('pci'));
-    document.getElementById('streetLensModalMetricSDI')?.addEventListener('click',()=>setStreetLensMetric('sdi'));
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        if (!window.maplibregl) return;
-        await STREETLENS_REGISTRY_READY;
-        STREETLENS_ROAD_SECTIONS = buildRoadSectionGeoJSON();
-        renderRoadRanking();
-        updateDashboardLegend();
-        maps.dashboard = createMap('streetLensDashboardMap', 'streetLensDashboardMapLoading', true);
-        loadAllPCIRoadGeometry();
-        let satellite = false;
-        const sat = document.getElementById('streetLensDashboardSatellite');
-        const reset = document.getElementById('streetLensDashboardReset');
-        const expand = document.getElementById('streetLensDashboardExpand');
-        const dashboardFullscreen = document.getElementById('streetLensDashboardFullscreen');
-        if (sat) sat.onclick = e => { e.stopPropagation(); satellite = !satellite; setSatellite(maps.dashboard, satellite); };
-        if (reset) reset.onclick = e => { e.stopPropagation(); resetMap(maps.dashboard, true); };
-        if (expand) expand.onclick = e => { e.stopPropagation(); openMap(); };
-        if (dashboardFullscreen) dashboardFullscreen.onclick = async e => {
-            e.stopPropagation();
-            await toggleDashboardMapFullscreen();
-        };
-
-        const samplePrev = document.getElementById('samplePrev');
-        const sampleNext = document.getElementById('sampleNext');
-        if (samplePrev) samplePrev.onclick = () => changeCrackFrame(-1);
-        if (sampleNext) sampleNext.onclick = () => changeCrackFrame(1);
-        renderCrackFrame();
-    });
-})();
+document.addEventListener('DOMContentLoaded',async()=>{
+  try{
+    const response=await fetch("{{ url_for('static', filename='data/collingswood_sections.json') }}",{cache:'no-store'});
+    if(!response.ok)throw new Error('section data '+response.status);
+    const data=await response.json();
+    STREETLENS_SECTION_DATA={...data,runs:data.runs||[],sections:flattenSections(data)};
+    populateStreetSearch(); updateLegendAndRanking();
+    STREETLENS_MAPS.dashboard=createStreetLensMap('streetLensDashboardMap','streetLensDashboardHoverCard');
+    const loading=document.getElementById('streetLensDashboardMapLoading');if(loading)loading.classList.add('hidden-map-loading');
+    document.getElementById('streetLensModalMetricSDI')?.addEventListener('click',()=>setMetric('sdi'));
+    document.getElementById('streetLensModalMetricPCI')?.addEventListener('click',()=>setMetric('pci'));
+    document.getElementById('streetLensShowBatch1')?.addEventListener('change',()=>{Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();});
+    document.getElementById('streetLensShowEndPieces')?.addEventListener('change',()=>{Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();});
+    document.getElementById('streetLensDashboardSatellite')?.addEventListener('click',e=>{e.stopPropagation();toggleSatellite(STREETLENS_MAPS.dashboard)});
+    document.getElementById('streetLensDashboardReset')?.addEventListener('click',e=>{e.stopPropagation();resetMap(STREETLENS_MAPS.dashboard)});
+    document.getElementById('streetLensDashboardExpand')?.addEventListener('click',e=>{e.stopPropagation();openMap(false)});
+    document.getElementById('streetLensDashboardFullscreen')?.addEventListener('click',e=>{e.stopPropagation();openMap(true)});
+    document.getElementById('streetLensModalSatellite')?.addEventListener('click',()=>toggleSatellite(STREETLENS_MAPS.modal));
+    document.getElementById('streetLensModalReset')?.addEventListener('click',()=>resetMap(STREETLENS_MAPS.modal));
+    document.getElementById('streetLensModalFullscreen')?.addEventListener('click',toggleMapFullscreen);
+    document.getElementById('streetLensModalClose')?.addEventListener('click',()=>closeMap());
+    setMetric('sdi');
+  }catch(e){console.error('StreetLens segmented map:',e);document.querySelectorAll('.streetlens-map-loading').forEach(x=>x.textContent='Unable to load inspection map');}
+});
 </script>
-
 </body>
 </html>
