@@ -118,10 +118,10 @@ def pci_roads():
 
 
 DISTRESS = [
-    {"label": "Alligator crack", "pct": 62, "color": "#3b82f6", "sub": "Avg width 5mm · high density"},
-    {"label": "Longitudinal", "pct": 21, "color": "#f97316", "sub": "Total length 8.5m · stable"},
-    {"label": "Transverse", "pct": 11, "color": "#eab308", "sub": "4 cracks · 10m avg spacing"},
-    {"label": "Pothole", "pct": 6, "color": "#a855f7", "sub": "1 count · 25mm depth"},
+    {"label": "Alligator crack", "pct": 62, "color": "#4a90c4", "sub": "Avg width 5mm · high density"},
+    {"label": "Longitudinal", "pct": 21, "color": "#c1543d", "sub": "Total length 8.5m · stable"},
+    {"label": "Transverse", "pct": 11, "color": "#d1a13c", "sub": "4 cracks · 10m avg spacing"},
+    {"label": "Pothole", "pct": 6, "color": "#9370c4", "sub": "1 count · 25mm depth"},
 ]
 PILLS = [
     {"label": "Longitudinal", "score": 78},

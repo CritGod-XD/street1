@@ -66,11 +66,19 @@ def main() -> None:
     if not re.search(r"const STREETLENS_PRELOADED_PCI\s*=", html):
         raise RuntimeError("STREETLENS_PRELOADED_PCI marker is missing")
 
+    pci_marker = re.search(r"const PCI_BY_NAME\s*=\s*(\{.*?\});", html, re.S)
+    pci_count = 0
+    if pci_marker:
+        try:
+            pci_count = len({str(v.get("name", "")) for v in json.loads(pci_marker.group(1)).values() if isinstance(v, dict) and v.get("name")})
+        except Exception:
+            pci_count = 0
     available = sum(1 for road in roads if road.get("status") == "available")
     print(
         "StreetLens build validation passed: "
-        f"{len(roads)} road(s), {frame_count} frame(s), "
-        f"{available} road(s) with uploaded imagery. No external map API required."
+        f"{pci_count} PCI records, {len(roads)} uploaded-road registry item(s), "
+        f"{frame_count} frame(s), {available} road(s) with uploaded imagery. "
+        "Map geometry is loaded from the existing OSM endpoint at runtime."
     )
 
 

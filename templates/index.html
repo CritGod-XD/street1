@@ -311,6 +311,25 @@
         .streetlens-road-pending span { color:#666; font:10px Inter,sans-serif; }
         .streetlens-road-pending.hidden { display:none !important; }
         .streetlens-road-strip.hidden { display:none !important; }
+
+        .streetlens-map-metric { position:absolute; top:12px; left:12px; z-index:20; display:flex; gap:3px; padding:3px; background:#101010e8; border:1px solid #2a2a2a; border-radius:7px; }
+        .streetlens-map-metric button { border:0; background:transparent; color:#aaa; padding:7px 12px; border-radius:5px; font:700 10px Inter,sans-serif; cursor:pointer; }
+        .streetlens-map-metric button.active { background:#f1f1f1; color:#111; }
+        .streetlens-dashboard-legend { left:12px; bottom:12px; max-width:240px; grid-template-columns:1fr; }
+        .streetlens-dashboard-legend .lg-row { display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap; }
+        .streetlens-dashboard-legend .lg-row span:last-child { color:#888; }
+        .streetlens-ranking-card { padding-bottom:10px; }
+        .streetlens-ranking-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+        .streetlens-ranking-head h2 { margin:0; }
+        .streetlens-ranking-head > span { font:700 10px JetBrains Mono,monospace; color:#888; }
+        .streetlens-ranking-sub { margin:5px 0 10px; color:#777; font-size:10px; }
+        .streetlens-road-ranking { display:grid; gap:5px; max-height:235px; overflow:auto; padding-right:2px; }
+        .streetlens-ranking-row { width:100%; border:1px solid #262626; background:#151515; color:#eee; border-radius:6px; display:grid; grid-template-columns:22px 1fr auto; align-items:center; gap:7px; padding:7px 8px; text-align:left; cursor:pointer; }
+        .streetlens-ranking-row:hover { background:#1c1c1c; border-color:#3a3a3a; }
+        .streetlens-ranking-rank { color:#666; font:700 10px JetBrains Mono,monospace; }
+        .streetlens-ranking-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; }
+        .streetlens-ranking-score { font:700 11px JetBrains Mono,monospace; }
+        .streetlens-ranking-condition { display:block; margin-top:2px; color:#777; font-size:9px; }
 </style>
 </head>
 <body>
@@ -347,7 +366,7 @@
     <main class="dashboard-body streetlens-dashboard-grid">
 <aside class="left-column streetlens-left-column">
 <section class="route-section">
-<div class="map-card streetlens-main-map-card" aria-label="Interactive StreetLens route map"><div id="streetLensDashboardMap"></div><div id="streetLensDashboardMapLoading" class="streetlens-map-loading">Loading StreetLens map…</div><div class="streetlens-map-mini-tools"><button id="streetLensDashboardSatellite" type="button" title="Satellite">🛰</button><button id="streetLensDashboardReset" type="button" title="Reset">↺</button><button id="streetLensDashboardExpand" type="button" title="Open map">⤢</button><button id="streetLensDashboardFullscreen" type="button" title="Full screen map">⛶</button></div></div></section>
+<div class="map-card streetlens-main-map-card" aria-label="Interactive StreetLens route map"><div id="streetLensDashboardMap"></div><div id="streetLensDashboardMapLoading" class="streetlens-map-loading">Loading 108 evaluated roads…</div><div class="streetlens-map-metric"><button id="streetLensMetricPCI" class="active" type="button">PCI</button><button id="streetLensMetricSDI" type="button">SDI</button></div><div class="streetlens-map-legend streetlens-dashboard-legend" id="streetLensDashboardLegend"></div><div class="streetlens-map-mini-tools"><button id="streetLensDashboardSatellite" type="button" title="Satellite">🛰</button><button id="streetLensDashboardReset" type="button" title="Reset">↺</button><button id="streetLensDashboardExpand" type="button" title="Open map">⤢</button><button id="streetLensDashboardFullscreen" type="button" title="Full screen map">⛶</button></div></div></section>
 <section class="route-details streetlens-left-details"><div class="details-header"><strong>Route details</strong><label>Show route details<button id="detailsToggle" class="toggle" type="button" onclick="toggleDetails()" aria-label="Toggle route details"><span></span></button></label></div><div id="detailsContent" class="details-content hidden">{% for l, v in [('Route','US-1'),('Mile post','52.1'),('Direction','Northbound'),('Captured','09/12/25'),('Coordinate','40.2143°, -74.759°')] %}<div><small>{{ l }}</small><strong>{{ v }}</strong></div>{% endfor %}</div></section>
 <section class="streetlens-left-preview" aria-label="Road image preview"><div class="streetlens-left-preview-head"><strong>Road image</strong><span>Preview</span></div><div class="streetlens-left-preview-frame"><img src="/static/images/road_preview.png" alt="Road inspection preview"></div></section>
 </aside>
@@ -365,9 +384,11 @@
     <span>The selected road does not have inspection frames uploaded yet.</span>
 </div>
 </div>
-<div class="sample-legend streetlens-ml-legend"><span><i style="background:#3b82f6"></i>Alligator crack</span><span><i style="background:#f97316"></i>Longitudinal crack</span><span><i style="background:#eab308"></i>Transverse crack</span><span><i style="background:#a855f7"></i>Pothole</span></div></section></section>
-<section class="right-column streetlens-right-column"><div class="analytics-card score streetlens-score-card"><h2>Overall distress score</h2><div class="gauge"><svg viewBox="0 0 220 130"><path d="M35 105 A75 75 0 0 1 185 105" fill="none" stroke="#2a2a2a" stroke-width="14" stroke-linecap="round"/><path d="M35 105 A75 75 0 0 1 185 105" fill="none" id="streetLensGaugeProgress" stroke="#f97316" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 236"/><text id="streetLensScoreValue" x="110" y="95" text-anchor="middle" fill="#f1f1f1" font-size="36" font-weight="700" font-family="Outfit">—</text><text x="110" y="113" text-anchor="middle" fill="#777" font-size="9" font-family="Inter">PCI: 100 = best condition</text></svg></div><div id="streetLensCondition" class="condition">CONDITION: —</div><div id="streetLensRoadSummary" class="pills road-summary">
+<div class="sample-legend streetlens-ml-legend"><span><i style="background:#4a90c4"></i>Alligator crack</span><span><i style="background:#c1543d"></i>Longitudinal crack</span><span><i style="background:#d1a13c"></i>Transverse crack</span><span><i style="background:#9370c4"></i>Pothole</span></div></section></section>
+<section class="right-column streetlens-right-column"><div class="analytics-card streetlens-ranking-card"><div class="streetlens-ranking-head"><h2>Road ranking</h2><span id="streetLensRoadCount">108 evaluated</span></div><p class="streetlens-ranking-sub" id="streetLensRankingLabel">Worst → best by PCI</p><div id="streetLensRoadRanking" class="streetlens-road-ranking"></div></div><div class="analytics-card score streetlens-score-card"><h2>Overall distress score</h2><div class="gauge"><svg viewBox="0 0 220 130"><path d="M35 105 A75 75 0 0 1 185 105" fill="none" stroke="#2a2a2a" stroke-width="14" stroke-linecap="round"/><path d="M35 105 A75 75 0 0 1 185 105" fill="none" id="streetLensGaugeProgress" stroke="#c1543d" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 236"/><text id="streetLensScoreValue" x="110" y="95" text-anchor="middle" fill="#f1f1f1" font-size="36" font-weight="700" font-family="Outfit">—</text><text x="110" y="113" text-anchor="middle" fill="#777" font-size="9" font-family="Inter">PCI: 100 = best condition</text></svg></div><div id="streetLensCondition" class="condition">CONDITION: —</div><div id="streetLensRoadSummary" class="pills road-summary">
 <div class="road-summary-wide"><span>Street name</span><b id="streetLensSelectedRoad">—</b></div>
+<div><span>PCI</span><b id="streetLensSelectedPci">—</b></div>
+<div><span>SDI</span><b id="streetLensSelectedSdi">—</b></div>
 <div><span>Latitude</span><b id="streetLensSelectedLatitude">—</b></div>
 <div><span>Longitude</span><b id="streetLensSelectedLongitude">—</b></div>
 </div></div>
@@ -473,7 +494,7 @@ STREETLENS_REGISTRY_READY = loadStreetLensRegistry();
 
     const COLORS = {
         Good: '#84cc16',
-        Fair: '#eab308',
+        Fair: '#d1a13c',
         Poor: '#ef4444'
     };
 
@@ -529,15 +550,26 @@ STREETLENS_REGISTRY_READY = loadStreetLensRegistry();
     }
 
     const PCSI_COLORS = {
-        'Good': '#65a30d',
-        'Satisfactory': '#a3d635',
-        'Fair': '#facc15',
-        'Poor': '#f59e0b',
-        'Very Poor': '#ef6c00',
-        'Serious': '#c63d2f',
-        'Failed': '#8f1d1d',
+        'Good': '#1f6f9c',
+        'Satisfactory': '#62b8a5',
+        'Fair': '#f1d451',
+        'Poor': '#f39a32',
+        'Very Poor': '#dc4a2c',
+        'Serious': '#a31631',
+        'Failed': '#5b1136',
         'No data': '#6b7280'
     };
+    const SDI_COLORS = {
+        '4.5 and up': '#1f6f9c',
+        '4.0 – 4.5': '#62b8a5',
+        '3.5 – 4.0': '#f1d451',
+        '3.0 – 3.5': '#f39a32',
+        'Under 3.0': '#a31631',
+        'No data': '#6b7280'
+    };
+    let STREETLENS_METRIC = 'pci';
+    let STREETLENS_SDI_BY_NAME = {};
+    let STREETLENS_PCI_GEOJSON = {type:'FeatureCollection',features:[]};
 
     function pcsiCondition(value) {
         const v = Number(value);
@@ -555,17 +587,31 @@ STREETLENS_REGISTRY_READY = loadStreetLensRegistry();
         return STREETLENS_ROADS.find(r => r.road_id === id) || null;
     }
 
+    function sdiCondition(value) {
+        const v=Number(value);
+        if(!Number.isFinite(v)) return 'No data';
+        if(v>=4.5) return '4.5 and up';
+        if(v>=4.0) return '4.0 – 4.5';
+        if(v>=3.5) return '3.5 – 4.0';
+        if(v>=3.0) return '3.0 – 3.5';
+        return 'Under 3.0';
+    }
+
     function roadRecordFromSection(props) {
-        const psci = Number(props.detector_psci);
         const road = selectedRoadById(props.road_id);
         const frames = road?.frames || [];
+        const pci = Number(props.pci);
+        const psci = Number(props.detector_psci);
+        const selected = Number.isFinite(psci) ? psci : (Number.isFinite(pci) ? pci : null);
+        const condition = Number.isFinite(pci) ? pcsiCondition(pci) : pcsiCondition(selected);
         return {
-            road_id: props.road_id,
+            road_id: props.road_id || `pci-${props.road_name || 'road'}`,
             name: road?.name || props.road_name || 'Road',
-            pci: Number.isFinite(psci) ? psci : null,
-            condition: pcsiCondition(psci),
-            treatment: frames.length ? `${frames.length} ML inspection frames available` : 'Pending upload',
-            detector_psci: Number.isFinite(psci) ? psci : null,
+            pci: Number.isFinite(pci) ? pci : null,
+            sdi: Number.isFinite(Number(props.sdi)) ? Number(props.sdi) : findSDIRecord(road?.name || props.road_name),
+            condition,
+            treatment: props.treatment || (frames.length ? `${frames.length} ML inspection frames available` : 'Pending upload'),
+            detector_psci: Number.isFinite(psci) ? psci : (Number.isFinite(pci) ? pci : null),
             latitude: Number(props.latitude),
             longitude: Number(props.longitude),
             frame: props.frame || '',
@@ -615,6 +661,8 @@ STREETLENS_REGISTRY_READY = loadStreetLensRegistry();
         const roadEl = document.getElementById('streetLensSelectedRoad');
         const treatmentEl = document.getElementById('streetLensSelectedTreatment');
         const psciEl = document.getElementById('streetLensSelectedPsci');
+        const pciSummaryEl = document.getElementById('streetLensSelectedPci');
+        const sdiSummaryEl = document.getElementById('streetLensSelectedSdi');
         const stationEl = document.getElementById('streetLensSelectedStation');
         const footerEl = document.getElementById('streetLensMapCoords');
         const latEl = document.getElementById('streetLensSelectedLatitude');
@@ -632,8 +680,10 @@ STREETLENS_REGISTRY_READY = loadStreetLensRegistry();
         }
         if (latEl) latEl.textContent = Number.isFinite(Number(record.latitude)) ? Number(record.latitude).toFixed(6) + '°' : '—';
         if (lonEl) lonEl.textContent = Number.isFinite(Number(record.longitude)) ? Number(record.longitude).toFixed(6) + '°' : '—';
+        if (pciSummaryEl) pciSummaryEl.textContent = Number.isFinite(Number(record.pci)) ? Number(record.pci).toFixed(1) : '—';
+        if (sdiSummaryEl) sdiSummaryEl.textContent = Number.isFinite(Number(record.sdi)) ? Number(record.sdi).toFixed(2) : '—';
         if (psciEl) {
-            psciEl.textContent = Number.isFinite(Number(record.detector_psci)) ? Number(record.detector_psci).toFixed(1) : '—';
+            psciEl.textContent = Number.isFinite(Number(record.pci)) ? Number(record.pci).toFixed(1) : (Number.isFinite(Number(record.detector_psci)) ? Number(record.detector_psci).toFixed(1) : '—');
         }
         if (treatmentEl) {
             treatmentEl.textContent = record.image_available
@@ -668,8 +718,8 @@ STREETLENS_REGISTRY_READY = loadStreetLensRegistry();
         return `<div class="streetlens-map-popup">
             <strong>${record.name}</strong>
             <div style="margin-top:5px"><b>Detector PSCI:</b> ${psci}</div>
-            <div><b>Condition:</b> <span style="color:${PCSI_COLORS[record.condition]};font-weight:700">${record.condition}</span></div>
-            <div><b>Station:</b> ${Number(record.station_start).toFixed(1)}–${Number(record.station_end).toFixed(1)} ft</div>
+            <div><b>PCI:</b> ${record.pci == null ? '—' : Number(record.pci).toFixed(1)}</div><div><b>SDI:</b> ${record.sdi == null ? '—' : Number(record.sdi).toFixed(2)}</div><div><b>Condition:</b> <span style="color:${PCSI_COLORS[record.condition]};font-weight:700">${record.condition}</span></div>
+            <div><b>Station:</b> ${Number.isFinite(Number(record.station_start)) ? Number(record.station_start).toFixed(1)+'–'+Number(record.station_end).toFixed(1)+' ft' : '—'}</div>
             <div><b>Latitude:</b> ${Number(record.latitude).toFixed(6)}°</div>
             <div><b>Longitude:</b> ${Number(record.longitude).toFixed(6)}°</div>
             <div><b>Imagery:</b> ${upload}</div>
@@ -699,38 +749,59 @@ STREETLENS_REGISTRY_READY = loadStreetLensRegistry();
             const frames=road.frames||[];
             for(let i=0;i<frames.length-1;i++){
                 const a=frames[i], b=frames[i+1];
-                if(!Number.isFinite(Number(a.longitude))||!Number.isFinite(Number(a.latitude))||
-                   !Number.isFinite(Number(b.longitude))||!Number.isFinite(Number(b.latitude))) continue;
-                features.push({
-                    type:'Feature',
-                    geometry:{type:'LineString',coordinates:[[Number(a.longitude),Number(a.latitude)],[Number(b.longitude),Number(b.latitude)]]},
-                    properties:{
-                        road_id:road.road_id, road_name:road.name,
-                        frame:a.frame, source_frame:a.source_frame,
-                        station_start:a.station_start, station_end:a.station_end,
-                        detector_psci:a.detector_psci,
-                        latitude:a.latitude, longitude:a.longitude,
-                        condition:pcsiCondition(a.detector_psci)
-                    }
-                });
-            }
-            if(frames.length){
-                const last=frames[frames.length-1];
-                features.push({
-                    type:'Feature',
-                    geometry:{type:'Point',coordinates:[Number(last.longitude),Number(last.latitude)]},
-                    properties:{
-                        road_id:road.road_id, road_name:road.name,
-                        frame:last.frame, source_frame:last.source_frame,
-                        station_start:last.station_start, station_end:last.station_end,
-                        detector_psci:last.detector_psci,
-                        latitude:last.latitude, longitude:last.longitude,
-                        condition:pcsiCondition(last.detector_psci)
-                    }
-                });
+                if(!Number.isFinite(Number(a.longitude))||!Number.isFinite(Number(a.latitude))||!Number.isFinite(Number(b.longitude))||!Number.isFinite(Number(b.latitude))) continue;
+                features.push({type:'Feature',geometry:{type:'LineString',coordinates:[[Number(a.longitude),Number(a.latitude)],[Number(b.longitude),Number(b.latitude)]]},properties:{road_id:road.road_id,road_name:road.name,frame:a.frame,source_frame:a.source_frame,station_start:a.station_start,station_end:a.station_end,detector_psci:a.detector_psci,latitude:a.latitude,longitude:a.longitude,condition:pcsiCondition(a.detector_psci),pci:a.detector_psci}});
             }
         });
         return {type:'FeatureCollection',features};
+    }
+
+    function normalizeRoadName(name) {
+        return String(name||'').toLowerCase().replace(/&/g,'and').replace(/[()\[\],.'’]/g,' ').replace(/\b(road|rd|street|st|avenue|ave|lane|ln|drive|dr|court|ct|place|pl|terrace|ter|parkway|pkwy|highway|hwy)\b/g,' ').replace(/\s+/g,' ').trim();
+    }
+
+    function roadBaseKey(name) {
+        return String(name||'').toLowerCase().replace(/[()\[\],.'’]/g,' ').replace(/\b(n|s|e|w|ne|nw|se|sw)\b/g,' ').replace(/\s+/g,' ').replace(/\b(road|rd|street|st|avenue|ave|lane|ln|drive|dr|court|ct|place|pl|terrace|ter|parkway|pkwy|highway|hwy)\b/g,' ').replace(/[^a-z0-9]/g,'');
+    }
+
+    function findSDIRecord(name) {
+        const key=roadBaseKey(name);
+        const value=STREETLENS_SDI_BY_NAME[key];
+        return Number.isFinite(Number(value)) ? Number(value) : null;
+    }
+
+    function pciFeatureCollectionFromOSM(data) {
+        const features=[];
+        const elements=Array.isArray(data?.elements)?data.elements:[];
+        elements.forEach(el=>{
+            const name=el?.tags?.name;
+            const rec=name ? findPCIRecord(name) : null;
+            if(!rec || !Array.isArray(el.geometry) || el.geometry.length<2) return;
+            const coords=el.geometry.map(p=>[Number(p.lon),Number(p.lat)]).filter(p=>Number.isFinite(p[0])&&Number.isFinite(p[1]));
+            if(coords.length<2) return;
+            features.push({type:'Feature',geometry:{type:'LineString',coordinates:coords},properties:{road_id:`pci-${normalizeRoadName(rec.name)}`,road_name:rec.name,pci:Number(rec.pci),condition:pcsiCondition(rec.pci),treatment:rec.treatment||'—',latitude:coords[Math.floor(coords.length/2)][1],longitude:coords[Math.floor(coords.length/2)][0],sdi:findSDIRecord(rec.name)}});
+        });
+        return {type:'FeatureCollection',features};
+    }
+
+    async function loadAllPCIRoadGeometry() {
+        try {
+            try {
+                const sdiResponse=await fetch('{{ url_for('static', filename='data/sdi_by_name.json') }}',{cache:'no-store'});
+                if(sdiResponse.ok) STREETLENS_SDI_BY_NAME=await sdiResponse.json();
+            } catch(_) {}
+            const response=await fetch('{{ url_for("pci_roads") }}',{cache:'no-store'});
+            if(!response.ok) throw new Error(`PCI geometry request failed: ${response.status}`);
+            const data=await response.json();
+            STREETLENS_PCI_GEOJSON=pciFeatureCollectionFromOSM(data);
+            STREETLENS_ROAD_SECTIONS={type:'FeatureCollection',features:[...STREETLENS_PCI_GEOJSON.features,...STREETLENS_ROAD_SECTIONS.features]};
+            ['dashboard','modal'].forEach(k=>{const m=maps[k]; const src=m?.getSource('streetlens-road-sections'); if(src) src.setData(STREETLENS_ROAD_SECTIONS);});
+            renderRoadRanking();
+            updateDashboardLegend();
+        } catch(err) {
+            console.warn('StreetLens PCI road geometry:',err);
+            renderRoadRanking();
+        }
     }
 
     let STREETLENS_ROAD_SECTIONS = {type:'FeatureCollection',features:[]};
@@ -741,240 +812,104 @@ STREETLENS_REGISTRY_READY = loadStreetLensRegistry();
         return symbol ? symbol.id : undefined;
     }
 
+    function mapColorExpression() {
+        if(STREETLENS_METRIC==='sdi') return ['case',['has','sdi'],['step',['get','sdi'],'#a31631',3.0,'#f39a32',3.5,'#f1d451',4.0,'#62b8a5',4.5,'#1f6f9c'],'#6b7280'];
+        return ['step',['coalesce',['get','pci'],-1],'#5b1136',10,'#a31631',25,'#dc4a2c',40,'#f39a32',55,'#f1d451',70,'#62b8a5',85,'#1f6f9c'];
+    }
+
+    function updateMapColors(map) {
+        ['streetlens-road-main','streetlens-road-main-casing','streetlens-road-hit'].forEach(id=>{if(!map.getLayer(id)) return;});
+        if(map.getLayer('streetlens-road-main')) map.setPaintProperty('streetlens-road-main','line-color',mapColorExpression());
+        if(map.getLayer('streetlens-road-points')) map.setPaintProperty('streetlens-road-points','circle-color',mapColorExpression());
+    }
+
     function addStreetLensLayers(map) {
-        const beforeId = firstSymbolLayer(map);
-
-        if (!map.getSource('streetlens-satellite-source')) {
-            map.addSource('streetlens-satellite-source', {
-                type:'raster',
-                tiles:[SATELLITE_URL],
-                tileSize:256,
-                attribution:'Tiles © Esri'
-            });
-            map.addLayer({
-                id:'streetlens-satellite',
-                type:'raster',
-                source:'streetlens-satellite-source',
-                layout:{visibility:'none'}
-            }, beforeId);
-        }
-
-        if (!map.getSource('streetlens-road-sections')) {
-            map.addSource('streetlens-road-sections',{
-                type:'geojson',
-                data:STREETLENS_ROAD_SECTIONS
-            });
-        }
-
+        const beforeId=firstSymbolLayer(map);
+        if(!map.getSource('streetlens-satellite-source')) { map.addSource('streetlens-satellite-source',{type:'raster',tiles:[SATELLITE_URL],tileSize:256,attribution:'Tiles © Esri'}); map.addLayer({id:'streetlens-satellite',type:'raster',source:'streetlens-satellite-source',layout:{visibility:'none'}},beforeId); }
+        if(!map.getSource('streetlens-road-sections')) map.addSource('streetlens-road-sections',{type:'geojson',data:STREETLENS_ROAD_SECTIONS});
         const source='streetlens-road-sections';
-        const conditions=Object.keys(PCSI_COLORS).filter(c=>c!=='No data');
-
-        conditions.forEach(condition=>{
-            const safe=condition.toLowerCase().replace(/\s+/g,'-');
-            map.addLayer({
-                id:`streetlens-pcsi-${safe}-casing`,
-                type:'line',
-                source,
-                filter:['==',['get','condition'],condition],
-                layout:{'line-cap':'round','line-join':'round'},
-                paint:{
-                    'line-color':'#111827',
-                    'line-width':['interpolate',['linear'],['zoom'],12,6,14,9,16,13,18,17],
-                    'line-opacity':1
-                }
-            },beforeId);
-
-            map.addLayer({
-                id:`streetlens-pcsi-${safe}`,
-                type:'line',
-                source,
-                filter:['==',['get','condition'],condition],
-                layout:{'line-cap':'round','line-join':'round'},
-                paint:{
-                    'line-color':PCSI_COLORS[condition],
-                    'line-width':['interpolate',['linear'],['zoom'],12,3.5,14,5.5,16,8,18,10],
-                    'line-opacity':1
-                }
-            },beforeId);
+        map.addLayer({id:'streetlens-road-main-casing',type:'line',source,filter:['==',['geometry-type'],'LineString'],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#111827','line-width':['interpolate',['linear'],['zoom'],10,7,12,9,14,12,16,15,18,19]}} ,beforeId);
+        map.addLayer({id:'streetlens-road-main',type:'line',source,filter:['==',['geometry-type'],'LineString'],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':mapColorExpression(),'line-width':['interpolate',['linear'],['zoom'],10,4,12,5,14,7,16,9,18,12],'line-opacity':.95}},beforeId);
+        map.addLayer({id:'streetlens-road-points',type:'circle',source,filter:['==',['geometry-type'],'Point'],paint:{'circle-radius':['interpolate',['linear'],['zoom'],12,3,14,4,16,5],'circle-color':mapColorExpression(),'circle-stroke-color':'#111827','circle-stroke-width':1.5}},beforeId);
+        map.addLayer({id:'streetlens-road-hit',type:'line',source,filter:['==',['geometry-type'],'LineString'],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#fff','line-width':['interpolate',['linear'],['zoom'],10,14,12,18,14,24,16,30,18,38],'line-opacity':0}},beforeId);
+        ['streetlens-road-hit','streetlens-road-points'].forEach(layer=>{
+            map.on('mouseenter',layer,()=>map.getCanvas().style.cursor='pointer');
+            map.on('mouseleave',layer,()=>map.getCanvas().style.cursor='');
+            map.on('click',layer,e=>{ const props=e.features?.[0]?.properties||{}; const record=roadRecordFromSection(props); updateSelectedRoad(record); new maplibregl.Popup({offset:10,maxWidth:'300px'}).setLngLat(e.lngLat).setHTML(popupHTML(record)).addTo(map); });
         });
+    }
 
-        map.addLayer({
-            id:'streetlens-pcsi-points',
-            type:'circle',
-            source,
-            filter:['==',['geometry-type'],'Point'],
-            paint:{
-                'circle-radius':['interpolate',['linear'],['zoom'],12,3,14,4,16,5],
-                'circle-color':['match',['get','condition'],
-                    'Good',PCSI_COLORS['Good'],
-                    'Satisfactory',PCSI_COLORS['Satisfactory'],
-                    'Fair',PCSI_COLORS['Fair'],
-                    'Poor',PCSI_COLORS['Poor'],
-                    'Very Poor',PCSI_COLORS['Very Poor'],
-                    'Serious',PCSI_COLORS['Serious'],
-                    'Failed',PCSI_COLORS['Failed'],
-                    '#6b7280'
-                ],
-                'circle-stroke-color':'#111827',
-                'circle-stroke-width':1.5
-            }
-        },beforeId);
+    function updateDashboardLegend() {
+        const el=document.getElementById('streetLensDashboardLegend'); const modalEl=document.getElementById('streetLensModalLegend'); if(!el && !modalEl) return;
+        const rows=STREETLENS_METRIC==='sdi' ? [['#1f6f9c','4.5 and up'],['#62b8a5','4.0 – 4.5'],['#f1d451','3.5 – 4.0'],['#f39a32','3.0 – 3.5'],['#a31631','Under 3.0']] : [['#1f6f9c','Good · 85–100'],['#62b8a5','Satisfactory · 70–85'],['#f1d451','Fair · 55–70'],['#f39a32','Poor · 40–55'],['#dc4a2c','Very Poor · 25–40'],['#a31631','Serious · 10–25'],['#5b1136','Failed · 0–10']];
+        const html=rows.map(r=>`<div class="lg-row"><span><i style="background:${r[0]}"></i>${r[1]}</span></div>`).join(''); if(el) el.innerHTML=html; if(modalEl) modalEl.innerHTML=html;
+    }
 
-        map.addLayer({
-            id:'streetlens-pcsi-hit',
-            type:'line',
-            source,
-            filter:['==',['geometry-type'],'LineString'],
-            layout:{'line-cap':'round','line-join':'round'},
-            paint:{
-                'line-color':'#ffffff',
-                'line-width':['interpolate',['linear'],['zoom'],12,16,14,22,16,30,18,38],
-                'line-opacity':0
-            }
-        },beforeId);
-
-        const clickLayers=['streetlens-pcsi-hit','streetlens-pcsi-points'];
-        clickLayers.forEach(layer=>{
-            map.on('mouseenter',layer,()=>{map.getCanvas().style.cursor='pointer';});
-            map.on('mouseleave',layer,()=>{map.getCanvas().style.cursor='';});
-            map.on('click',layer,e=>{
-                const props=e.features?.[0]?.properties||{};
-                const record=roadRecordFromSection(props);
-                updateSelectedRoad(record);
-                new maplibregl.Popup({offset:10,maxWidth:'290px'})
-                    .setLngLat(e.lngLat)
-                    .setHTML(popupHTML(record))
-                    .addTo(map);
-            });
+    function roadRankingRecords() {
+        const seen=new Set(); const out=[];
+        Object.values(PCI_BY_NAME).forEach(r=>{
+            const key=normalizeRoadName(r.name); if(seen.has(key)) return; seen.add(key);
+            const sdi=findSDIRecord(r.name);
+            out.push({name:r.name,pci:Number(r.pci),sdi,condition:pcsiCondition(r.pci),treatment:r.treatment||'—'});
         });
+        return out;
+    }
 
-        // Select the first uploaded road on initial load.
-        const firstRoad=STREETLENS_ROADS.find(r=>r.status==='available') || STREETLENS_ROADS[0];
-        if(firstRoad && firstRoad.frames?.length){
-            const firstFrame=firstRoad.frames[0];
-            updateSelectedRoad({
-                road_id:firstRoad.road_id,
-                name:firstRoad.name,
-                pci:firstFrame.detector_psci,
-                detector_psci:firstFrame.detector_psci,
-                condition:pcsiCondition(firstFrame.detector_psci),
-                treatment:`${firstRoad.frames.length} ML inspection frames available`,
-                frames:firstRoad.frames,
-                image_available:true,
-                station_start:firstFrame.station_start,
-                station_end:firstFrame.station_end,
-                latitude:firstFrame.latitude,
-                longitude:firstFrame.longitude
-            });
-        }
+    function renderRoadRanking() {
+        const box=document.getElementById('streetLensRoadRanking'); if(!box) return;
+        const records=roadRankingRecords();
+        const available=STREETLENS_METRIC==='sdi' ? records.filter(r=>Number.isFinite(r.sdi)) : records;
+        const sorted=[...available].sort((a,b)=>(STREETLENS_METRIC==='sdi'?a.sdi-b.sdi:a.pci-b.pci)).slice(0,10);
+        const count=document.getElementById('streetLensRoadCount'); if(count) count.textContent=STREETLENS_METRIC==='sdi'?`${available.length} SDI available`:`${records.length} evaluated`;
+        const label=document.getElementById('streetLensRankingLabel'); if(label) label.textContent=STREETLENS_METRIC==='sdi'?'Worst → best by SDI':'Worst → best by PCI';
+        box.innerHTML=sorted.map((r,i)=>{ const score=STREETLENS_METRIC==='sdi'?r.sdi.toFixed(2):r.pci.toFixed(1); const rating=STREETLENS_METRIC==='sdi'?sdiCondition(r.sdi):r.condition; return `<button class="streetlens-ranking-row" type="button" data-road="${r.name.replace(/"/g,'&quot;')}"><span class="streetlens-ranking-rank">${i+1}</span><span class="streetlens-ranking-name">${r.name}<small class="streetlens-ranking-condition">${rating} · PCI ${r.pci.toFixed(1)}</small></span><span class="streetlens-ranking-score">${score}</span></button>`; }).join('');
+        box.querySelectorAll('[data-road]').forEach(btn=>btn.addEventListener('click',()=>selectPCIRecord(btn.dataset.road)));
+    }
+
+    function selectPCIRecord(name) {
+        const rec=findPCIRecord(name); if(!rec) return;
+        const roadFeature=STREETLENS_PCI_GEOJSON.features.find(f=>normalizeRoadName(f.properties?.road_name)===normalizeRoadName(rec.name));
+        const p=roadFeature?.properties||{};
+        updateSelectedRoad({road_id:`pci-${normalizeRoadName(rec.name)}`,name:rec.name,pci:Number(rec.pci),detector_psci:null,condition:pcsiCondition(rec.pci),sdi:findSDIRecord(rec.name),treatment:rec.treatment||'Pending upload',frames:[],image_available:false,latitude:Number(p.latitude),longitude:Number(p.longitude)});
+        if(roadFeature) { Object.values(maps).forEach(m=>{ if(!m) return; const geom=roadFeature.geometry; if(geom?.coordinates?.length){ const mid=geom.coordinates[Math.floor(geom.coordinates.length/2)]; m.flyTo({center:mid,zoom:16,duration:700}); } }); }
     }
 
     function createMap(containerId, loadingId, mini) {
-        const map = new maplibregl.Map({
-            container: containerId,
-            style: STYLE_URL,
-            center: [-75.1446, 39.7187],
-            zoom: 15,
-            attributionControl: true
-        });
-        map.addControl(new maplibregl.NavigationControl({showCompass:true}), 'top-left');
-        map.addControl(new maplibregl.ScaleControl({unit:'imperial'}), 'bottom-right');
-        map.on('load', () => {
-            try { addStreetLensLayers(map); } catch (err) { console.error('StreetLens PCI overlay:', err); }
-            map.fitBounds(ROAD_DATA_BOUNDS, {padding: mini ? 18 : 45, duration:0, maxZoom:17});
-            const loading = document.getElementById(loadingId);
-            if (loading) loading.classList.add('hidden-map-loading');
-        });
-        map.on('error', e => console.warn('StreetLens map:', e.error || e));
+        const map=new maplibregl.Map({container:containerId,style:STYLE_URL,center:[-75.076,39.918],zoom:14,attributionControl:true});
+        map.addControl(new maplibregl.NavigationControl({showCompass:true}),'top-left');
+        map.addControl(new maplibregl.ScaleControl({unit:'imperial'}),'bottom-right');
+        map.on('load',()=>{ try{addStreetLensLayers(map); updateMapColors(map); updateDashboardLegend();}catch(err){console.error('StreetLens map:',err);} map.fitBounds(BOUNDS,{padding:mini?18:45,duration:0,maxZoom:17}); const loading=document.getElementById(loadingId); if(loading) loading.classList.add('hidden-map-loading'); });
+        map.on('error',e=>console.warn('StreetLens map:',e.error||e));
         return map;
     }
-
-    function setSatellite(map, active) {
-        if (!map || !map.getLayer('streetlens-satellite')) return;
-        map.setLayoutProperty('streetlens-satellite', 'visibility', active ? 'visible' : 'none');
-    }
-
-    function resetMap(map, mini) {
-        if (map) map.fitBounds(ROAD_DATA_BOUNDS, {padding: mini ? 18 : 45, duration:350, maxZoom:17});
-    }
-
-    function openMap() {
-        const modal = document.getElementById('mapModal');
-        if (!modal) return;
-        modal.classList.remove('hidden');
-        if (!maps.modal) {
-            STREETLENS_REGISTRY_READY.then(() => {
-                ROAD_DATA_BOUNDS = roadDataBounds();
-                STREETLENS_ROAD_SECTIONS = buildRoadSectionGeoJSON();
-                maps.modal = createMap('streetLensModalMap', 'streetLensModalMapLoading', false);
-            let satellite = false;
-            const sat = document.getElementById('streetLensModalSatellite');
-            const reset = document.getElementById('streetLensModalReset');
-            const fullscreen = document.getElementById('streetLensModalFullscreen');
-            if (sat) sat.onclick = () => { satellite = !satellite; setSatellite(maps.modal, satellite); };
-            if (reset) reset.onclick = () => resetMap(maps.modal, false);
-                if (fullscreen) fullscreen.onclick = toggleMapFullscreen;
-            });
-        }
-        setTimeout(() => maps.modal && maps.modal.resize(), 80);
-    }
-
-    async function toggleMapFullscreen() {
-        const modal = document.getElementById('mapModal');
-        if (!modal) return;
-        try {
-            if (!document.fullscreenElement) {
-                await modal.requestFullscreen();
-            } else {
-                await document.exitFullscreen();
-            }
-        } catch (error) {
-            console.warn('StreetLens map fullscreen:', error);
-        }
-        setTimeout(() => maps.modal && maps.modal.resize(), 100);
-    }
-
-    async function toggleDashboardMapFullscreen() {
-        const mapCard = document.querySelector('.map-card');
-        if (!mapCard) return;
-
-        try {
-            if (!document.fullscreenElement) {
-                await mapCard.requestFullscreen();
-            } else {
-                await document.exitFullscreen();
-            }
-        } catch (error) {
-            console.warn('StreetLens dashboard map fullscreen:', error);
-        }
-
-        setTimeout(() => maps.dashboard && maps.dashboard.resize(), 120);
-    }
-
-    function closeMap() {
-        const modal = document.getElementById('mapModal');
-        if (document.fullscreenElement) {
-            document.exitFullscreen().catch(() => {});
-        }
-        if (modal) modal.classList.add('hidden');
-    }
-
-    document.addEventListener('fullscreenchange', () => {
-        setTimeout(() => {
-            if (maps.modal) maps.modal.resize();
-            if (maps.dashboard) maps.dashboard.resize();
-        }, 120);
-    });
 
     window.openMap = openMap;
     window.closeMap = closeMap;
 
+    function setStreetLensMetric(metric) {
+        STREETLENS_METRIC = metric === 'sdi' ? 'sdi' : 'pci';
+        document.getElementById('streetLensMetricPCI')?.classList.toggle('active', STREETLENS_METRIC==='pci');
+        document.getElementById('streetLensMetricSDI')?.classList.toggle('active', STREETLENS_METRIC==='sdi');
+        document.getElementById('streetLensModalMetricPCI')?.classList.toggle('active', STREETLENS_METRIC==='pci');
+        document.getElementById('streetLensModalMetricSDI')?.classList.toggle('active', STREETLENS_METRIC==='sdi');
+        Object.values(maps).forEach(m=>m && updateMapColors(m));
+        updateDashboardLegend();
+        renderRoadRanking();
+    }
+
+    document.getElementById('streetLensMetricPCI')?.addEventListener('click',()=>setStreetLensMetric('pci'));
+    document.getElementById('streetLensMetricSDI')?.addEventListener('click',()=>setStreetLensMetric('sdi'));
+    document.getElementById('streetLensModalMetricPCI')?.addEventListener('click',()=>setStreetLensMetric('pci'));
+    document.getElementById('streetLensModalMetricSDI')?.addEventListener('click',()=>setStreetLensMetric('sdi'));
+
     document.addEventListener('DOMContentLoaded', async () => {
         if (!window.maplibregl) return;
         await STREETLENS_REGISTRY_READY;
-        ROAD_DATA_BOUNDS = roadDataBounds();
         STREETLENS_ROAD_SECTIONS = buildRoadSectionGeoJSON();
+        renderRoadRanking();
+        updateDashboardLegend();
         maps.dashboard = createMap('streetLensDashboardMap', 'streetLensDashboardMapLoading', true);
+        loadAllPCIRoadGeometry();
         let satellite = false;
         const sat = document.getElementById('streetLensDashboardSatellite');
         const reset = document.getElementById('streetLensDashboardReset');
