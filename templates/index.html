@@ -19,7 +19,7 @@
         href="{{ url_for('static', filename='css/style.css') }}"
     >
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
 
     <style>
         /* Authentication */
@@ -348,9 +348,31 @@
 .streetlens-fullmap-map-wrap{position:relative;min-width:0;min-height:0;background:#161c1b}.streetlens-fullmap-tools{position:absolute;right:12px;top:12px;z-index:900;display:flex;gap:6px}.streetlens-fullmap-tools button{border:1px solid #3b4744;background:#111817e8;color:#ddd;border-radius:5px;padding:7px 10px;font:11px Inter,sans-serif;cursor:pointer;backdrop-filter:blur(5px)}.streetlens-fullmap-tools button:hover{background:#222b29}
 .streetlens-section-hover-card{position:absolute;z-index:1200;width:280px;max-width:calc(100% - 20px);padding:11px 12px;background:#fbfbf9;color:#1c2422;border:1px solid #1c2422;border-radius:5px;box-shadow:0 8px 24px rgba(0,0,0,.3);font:12px Inter,sans-serif;pointer-events:none}.streetlens-section-hover-card .hover-title{font:700 18px/1.1 'Outfit',sans-serif}.streetlens-section-hover-card .hover-sub{color:#5d6966;font-size:10px;margin:3px 0 8px}.hover-metrics{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:6px;margin-bottom:8px}.hover-metrics>div{border:1px solid #d3d8d4;border-radius:4px;padding:6px}.hover-metrics span{display:block;color:#5d6966;font-size:9px}.hover-metrics b{display:block;font:700 19px/1 'Outfit',sans-serif;margin-top:3px}.hover-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:10px}.hover-grid span{color:#5d6966}.hover-grid b{text-align:right;font-weight:600}.hover-flag{margin-top:7px;padding:5px 7px;border-left:3px solid #f39a32;background:#eef0ee;color:#5d6966;font-size:9px}
 .streetlens-street-label{background:transparent;border:0;box-shadow:none;color:#e8ecea;font:600 12px/1 'Outfit',sans-serif;letter-spacing:.03em;padding:0;text-shadow:0 0 3px #161c1b,0 0 3px #161c1b,0 0 3px #161c1b}.streetlens-street-label:before{display:none}
-.leaflet-container{font:inherit;background:#161c1b}.leaflet-control-zoom a,.leaflet-control-attribution{background:#1a2120;color:#e8ecea;border-color:#313b39}.leaflet-control-zoom a:hover{background:#242d2b;color:#fff}.leaflet-control-attribution{background:rgba(26,33,32,.82)!important;font-size:8px!important;line-height:12px!important;white-space:nowrap!important;padding:2px 5px!important;border-radius:3px!important}.leaflet-control-attribution a{color:#9aa6a2!important}.leaflet-control-attribution a{color:#9aa6a2}.leaflet-control-scale-line{background:rgba(26,33,32,.8);border-color:#a9b5b1;color:#e8ecea;text-shadow:none}
 #mapModal:fullscreen{padding:0;background:#000}.modal:fullscreen .streetlens-fullmap-shell{width:100vw;height:100vh;border:0;border-radius:0;box-shadow:none}.modal:fullscreen .streetlens-map-sheet{border-radius:0}
 @media(max-width:850px){.streetlens-fullmap-shell{grid-template-columns:280px 1fr;width:100vw;height:100vh;border-radius:0}.streetlens-map-sheet{padding:12px}.streetlens-map-sheet-head strong{font-size:17px}}
+</style>
+<style>
+/* StreetLens MapLibre v19 layout fixes */
+.maplibregl-map{font-family:Inter,sans-serif;background:#111}
+.maplibregl-ctrl-group{background:#111817e8!important;border:1px solid #3b4744!important;box-shadow:0 3px 10px rgba(0,0,0,.28)!important}
+.maplibregl-ctrl-group button{background:transparent!important;color:#e8ecea!important}
+.maplibregl-ctrl-group button:hover{background:#242d2b!important}
+.maplibregl-ctrl-attrib{background:rgba(12,15,15,.82)!important;color:#b6bfbc!important;font-size:9px!important}
+.maplibregl-ctrl-attrib a{color:#d1d8d5!important}
+.streetlens-fullmap-shell{width:min(1500px,96vw);height:min(900px,94vh);display:grid;grid-template-columns:minmax(0,1fr) 360px;background:#161c1b;border:1px solid #313b39;border-radius:8px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+.streetlens-fullmap-map-wrap{grid-column:1;grid-row:1;position:relative;min-width:0;min-height:0;background:#111}
+.streetlens-map-sheet{grid-column:2;grid-row:1;background:#1a2120;color:#e8ecea;border-left:1px solid #313b39;border-right:0;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.streetlens-fullmap-tools{position:absolute;right:14px;top:14px;z-index:20;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.streetlens-fullmap-tools button{border:1px solid #3b4744;background:#111817ee;color:#ddd;border-radius:5px;padding:8px 10px;font:600 11px Inter,sans-serif;cursor:pointer;backdrop-filter:blur(5px)}
+.streetlens-fullmap-tools button:hover{background:#222b29;border-color:#5c6b67}
+.streetlens-section-hover-card{z-index:30}
+#mapModal{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.86);backdrop-filter:blur(4px);padding:18px;display:grid;place-items:center}
+#mapModal.hidden{display:none!important}
+#mapModal:fullscreen{padding:0;background:#000}
+#mapModal:fullscreen .streetlens-fullmap-shell{width:100vw;height:100vh;max-width:none;max-height:none;border:0;border-radius:0;box-shadow:none}
+#mapModal:fullscreen .streetlens-map-sheet{border-radius:0}
+.streetlens-main-map-card .streetlens-map-mini-tools{z-index:50}
+@media(max-width:850px){.streetlens-fullmap-shell{grid-template-columns:minmax(0,1fr) 300px;width:100vw;height:100vh;border-radius:0}.streetlens-map-sheet{padding:12px}.streetlens-fullmap-tools{right:8px;top:8px}.streetlens-fullmap-tools button{padding:7px 8px;font-size:10px}}
 </style>
 </head>
 <body>
@@ -422,15 +444,22 @@
 <!-- Full inspection map -->
 <div id="mapModal" class="modal hidden" onclick="closeMap(event)">
   <div class="streetlens-fullmap-shell" onclick="event.stopPropagation()">
+    <div class="streetlens-fullmap-map-wrap">
+      <div id="streetLensModalMap"></div>
+      <div id="streetLensModalMapLoading" class="streetlens-map-loading">Loading segmented inspection map…</div>
+      <div id="streetLensModalHoverCard" class="streetlens-section-hover-card" hidden></div>
+      <div class="streetlens-fullmap-tools">
+        <button id="streetLensModalSatellite" type="button" title="Toggle satellite basemap">🛰 Satellite</button>
+        <button id="streetLensModalReset" type="button" title="Reset map view">↺ Reset</button>
+        <button id="streetLensModalFullscreen" type="button" title="Browser fullscreen">⛶ Fullscreen</button>
+        <button id="streetLensModalClose" type="button" title="Close map">×</button>
+      </div>
+    </div>
     <aside class="streetlens-map-sheet">
       <div class="streetlens-map-sheet-head">
         <div>
           <strong>StreetLens Inspection Map</strong>
           <span>Collingswood, NJ · segmented pavement condition</span>
-        </div>
-        <div class="streetlens-map-sheet-actions">
-          <button id="streetLensModalFullscreen" type="button" title="Full screen map">⛶</button>
-          <button id="streetLensModalClose" type="button" title="Close map">×</button>
         </div>
       </div>
       <div>
@@ -459,311 +488,75 @@
       </div>
       <p class="streetlens-map-sheet-foot" id="streetLensRoadCount"></p>
     </aside>
-    <div class="streetlens-fullmap-map-wrap">
-      <div id="streetLensModalMap"></div>
-      <div id="streetLensModalMapLoading" class="streetlens-map-loading">Loading segmented inspection map…</div>
-      <div id="streetLensModalHoverCard" class="streetlens-section-hover-card" hidden></div>
-      <div class="streetlens-fullmap-tools">
-        <button id="streetLensModalSatellite" type="button">🛰 Satellite</button>
-        <button id="streetLensModalReset" type="button">↺ Reset</button>
-      </div>
-    </div>
   </div>
 </div>
 
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
-/* StreetLens segmented Collingswood map — section data comes from the supplied SDI/PCI sample map. */
-let STREETLENS_ROAD_REGISTRY = {version:1, section_length_ft:2500, roads:[]};
-let STREETLENS_ROADS = [];
-let STREETLENS_REGISTRY_READY = null;
-let STREETLENS_SECTION_DATA = null;
-let STREETLENS_METRIC = 'sdi';
-let STREETLENS_MAPS = {};
-let STREETLENS_PINNED = null;
-
-async function loadStreetLensRegistry(){
-  try{
-    const r=await fetch("{{ url_for('static', filename='data/road_registry.json') }}",{cache:'no-store'});
-    if(!r.ok) throw new Error('registry '+r.status);
-    const d=await r.json(); STREETLENS_ROAD_REGISTRY=d||STREETLENS_ROAD_REGISTRY; STREETLENS_ROADS=Array.isArray(d?.roads)?d.roads:[];
-  }catch(e){console.warn('StreetLens registry:',e);}
-}
-STREETLENS_REGISTRY_READY=loadStreetLensRegistry();
-
-const STREETLENS_COLORS={
-  failed:'#5b1136', serious:'#a31631', vpoor:'#dc4a2c', poor:'#f39a32', fair:'#f1d451', sat:'#62b8a5', good:'#1f6f9c'
-};
+/* StreetLens segmented Collingswood map — MapLibre implementation. */
+let STREETLENS_ROAD_REGISTRY={version:1,section_length_ft:2500,roads:[]};
+let STREETLENS_ROADS=[]; let STREETLENS_REGISTRY_READY=null;
+let STREETLENS_SECTION_DATA=null; let STREETLENS_METRIC='sdi';
+let STREETLENS_MAPS={}; let STREETLENS_PINNED=null;
+const STREETLENS_COLORS={failed:'#5b1136',serious:'#a31631',vpoor:'#dc4a2c',poor:'#f39a32',fair:'#f1d451',sat:'#62b8a5',good:'#1f6f9c'};
 const STREETLENS_PCI_CLASSES=[[85,'Good','good','85–100'],[70,'Satisfactory','sat','70–85'],[55,'Fair','fair','55–70'],[40,'Poor','poor','40–55'],[25,'Very Poor','vpoor','25–40'],[10,'Serious','serious','10–25'],[-1,'Failed','failed','0–10']];
 const STREETLENS_SDI_CLASSES=[[4.5,'4.5 and up','good',''],[4.0,'4.0 – 4.5','sat',''],[3.5,'3.5 – 4.0','fair',''],[3.0,'3.0 – 3.5','poor',''],[-1,'Under 3.0','serious','']];
-
-function classify(metric,value){
-  const v=Number(value); if(!Number.isFinite(v)) return null;
-  return (metric==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES).find(c=>v>=c[0])||null;
-}
+function classify(metric,value){const v=Number(value);if(!Number.isFinite(v))return null;return(metric==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES).find(c=>v>=c[0])||null;}
 function conditionText(metric,value){const c=classify(metric,value);return c?c[1]:'No data';}
 function fmt1(v){return Number.isFinite(Number(v))?Number(v).toFixed(1):'–'}
 function fmt2(v){return Number.isFinite(Number(v))?Number(v).toFixed(2):'–'}
 function n0(v){return Number.isFinite(Number(v))?Math.round(Number(v)).toLocaleString():'–'}
-function animateOverallScore(value, condition){
-  const scoreEl=document.getElementById('streetLensScoreValue'), gaugeEl=document.getElementById('streetLensGaugeProgress'), conditionEl=document.getElementById('streetLensCondition');
-  const target=Number(value); if(!Number.isFinite(target)){if(scoreEl)scoreEl.textContent='—';if(gaugeEl)gaugeEl.setAttribute('stroke-dasharray','0 236');if(conditionEl)conditionEl.textContent='CONDITION: —';return;}
-  const clamped=Math.max(0,Math.min(100,target)); const c=classify('pci',clamped); const color=c?STREETLENS_COLORS[c[2]]:'#f59e0b';
-  if(gaugeEl)gaugeEl.setAttribute('stroke',color); if(conditionEl){conditionEl.textContent=`CONDITION: ${String(condition||c?.[1]||'').toUpperCase()}`;conditionEl.style.borderColor=color;conditionEl.style.color=color;}
-  const start=performance.now(); function tick(now){const t=Math.min(1,(now-start)/700),eased=1-Math.pow(1-t,3),current=clamped*eased;if(scoreEl)scoreEl.textContent=current.toFixed(1).replace(/\.0$/,'');if(gaugeEl)gaugeEl.setAttribute('stroke-dasharray',`${236*(current/100)} 236`);if(t<1)requestAnimationFrame(tick);} requestAnimationFrame(tick);
-}
-function sectionVisible(s){
-  const b1=document.getElementById('streetLensShowBatch1')?.checked!==false;
-  const end=document.getElementById('streetLensShowEndPieces')?.checked!==false;
-  if(s.run.batch==='Batch 1'&&!b1) return false;
-  if(s.len<200&&!end) return false;
-  return true;
-}
-
-function flattenSections(data){
-  const out=[];
-  (data?.runs||[]).forEach(run=>{
-    (run.secs||[]).forEach(sec=>{
-      if(!Array.isArray(sec.g)||sec.g.length<2) return;
-      sec.run=run; sec.ll=sec.g.map(p=>L.latLng(Number(p[0]),Number(p[1]))); out.push(sec);
-    });
-  });
-  return out;
-}
-
-function offsetSection(sec,map){
-  const z=map.getZoom(); const off=Math.max(1.2,Math.min(6,(z-13)*1.5));
-  const projected=sec.ll.map(ll=>map.project(ll,z)); const out=[];
-  for(let i=0;i<projected.length;i++){
-    const a=projected[Math.max(0,i-1)], b=projected[Math.min(projected.length-1,i+1)];
-    const dx=b.x-a.x,dy=b.y-a.y,n=Math.hypot(dx,dy)||1;
-    out.push(map.unproject(L.point(projected[i].x-dy/n*off,projected[i].y+dx/n*off),z));
-  }
-  return out;
-}
-
-function sectionWeight(sec,map,hover=false){
-  const z=map.getZoom(); let w=Math.max(2,Math.min(9,(z-12.4)*1.7));
-  if(sec.len<200) w*=.5;
-  return w+(hover?3:0);
-}
-
-function sectionColor(sec){
-  const c=classify(STREETLENS_METRIC,STREETLENS_METRIC==='sdi'?sec.sdi:sec.pci);
-  return c?STREETLENS_COLORS[c[2]]:'#6b7280';
-}
-
-function buildHoverCard(sec){
-  const cp=classify('pci',sec.pci);
-  const units=(sec.units||[]).map(u=>fmt1(u.pci)).join(', ');
-  const flags=[]; if(sec.run.batch==='Batch 1')flags.push('Batch 1 labels not reviewed · dashed'); if(sec.len<200)flags.push('End piece under 200 ft · thin'); if(sec.est)flags.push(`${n0(sec.est)} of ${n0(sec.n)} frames have estimated position`);
-  return `<div class="hover-title">${escapeHtml(sec.run.name)}</div>
-    <div class="hover-sub">Section ${sec.bin} · ${n0(sec.f0)}–${n0(sec.f1)} ft · ${escapeHtml(sec.run.batch)}</div>
-    <div class="hover-metrics"><div><span>SDI</span><b>${fmt2(sec.sdi)}</b></div><div><span>PCI</span><b>${fmt1(sec.pci)}</b></div><div><span>Rating</span><b>${escapeHtml(cp?.[1]||'–')}</b></div></div>
-    <div class="hover-grid"><span>Length</span><b>${n0(sec.len)} ft</b><span>NDI / LDI</span><b>${fmt2(sec.ndi)} / ${fmt2(sec.ldi)}</b><span>Cracks</span><b>${n0(sec.cr)} · ${n0(sec.crft)} ft</b><span>Distressed area</span><b>${fmt1(sec.dpct)}%</b><span>Potholes / patches</span><b>${n0(sec.pot)} / ${n0(sec.pat)}</b><span>PCI sample units</span><b>${units||'–'}</b><span>Whole street</span><b>SDI ${fmt2(sec.run.sdi)} · PCI ${fmt1(sec.run.pci)}</b></div>${flags.map(f=>`<div class="hover-flag">${escapeHtml(f)}</div>`).join('')}`;
-}
 function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
-
-function showHover(sec,map,e){
-  const card=document.getElementById(map._streetlensCardId); if(!card)return;
-  card.innerHTML=buildHoverCard(sec); card.hidden=false;
-  positionHoverCard(card,map,e);
+function animateOverallScore(value,condition){const s=document.getElementById('streetLensScoreValue'),g=document.getElementById('streetLensGaugeProgress'),cEl=document.getElementById('streetLensCondition');const target=Number(value);if(!Number.isFinite(target)){if(s)s.textContent='—';return;}const clamped=Math.max(0,Math.min(100,target));const c=classify('pci',clamped),color=c?STREETLENS_COLORS[c[2]]:'#f59e0b';if(g){g.setAttribute('stroke',color)}if(cEl){cEl.textContent=`CONDITION: ${String(condition||c?.[1]||'').toUpperCase()}`;cEl.style.borderColor=color;cEl.style.color=color;}const start=performance.now();function tick(now){const t=Math.min(1,(now-start)/700),e=1-Math.pow(1-t,3),cur=clamped*e;if(s)s.textContent=cur.toFixed(1).replace(/\.0$/,'');if(g)g.setAttribute('stroke-dasharray',`${236*(cur/100)} 236`);if(t<1)requestAnimationFrame(tick)}requestAnimationFrame(tick)}
+function sectionVisible(sec){const b1=document.getElementById('streetLensShowBatch1')?.checked!==false;const end=document.getElementById('streetLensShowEndPieces')?.checked!==false;if(sec.run.batch==='Batch 1'&&!b1)return false;if(sec.len<200&&!end)return false;return true;}
+function flattenSections(data){const out=[];(data?.runs||[]).forEach(run=>(run.secs||[]).forEach(sec=>{if(!Array.isArray(sec.g)||sec.g.length<2)return;sec.run=run;sec.coords=sec.g.map(p=>[Number(p[1]),Number(p[0])]);out.push(sec)}));return out;}
+function sectionColor(sec){const c=classify(STREETLENS_METRIC,STREETLENS_METRIC==='sdi'?sec.sdi:sec.pci);return c?STREETLENS_COLORS[c[2]]:'#6b7280';}
+function buildGeoJSON(){return{type:'FeatureCollection',features:STREETLENS_SECTION_DATA.sections.map((s,i)=>({type:'Feature',id:i,properties:{sectionKey:`${s.run.key}::${s.bin}`,runKey:s.run.key,name:s.run.name,bin:s.bin,f0:s.f0,f1:s.f1,len:s.len,pci:Number(s.pci),sdi:Number(s.sdi),batch:s.run.batch||'',visible:sectionVisible(s)},geometry:{type:'LineString',coordinates:s.coords}}))};}
+function buildLabelsGeoJSON(){const seen=new Set(),features=[];for(const s of STREETLENS_SECTION_DATA.sections){if(seen.has(s.run.key))continue;seen.add(s.run.key);const secs=STREETLENS_SECTION_DATA.sections.filter(x=>x.run.key===s.run.key);const mid=secs[Math.floor(secs.length/2)],coords=mid.coords[Math.floor(mid.coords.length/2)];if(coords)features.push({type:'Feature',properties:{name:mid.run.name,batch:mid.run.batch||''},geometry:{type:'Point',coordinates:coords}})}return{type:'FeatureCollection',features};}
+function lineColorExpression(){if(STREETLENS_METRIC==='sdi')return['step',['get','sdi'],STREETLENS_COLORS.serious,3,STREETLENS_COLORS.poor,3.5,STREETLENS_COLORS.fair,4,STREETLENS_COLORS.sat,4.5,STREETLENS_COLORS.good];return['step',['get','pci'],STREETLENS_COLORS.failed,10,STREETLENS_COLORS.serious,25,STREETLENS_COLORS.vpoor,40,STREETLENS_COLORS.poor,55,STREETLENS_COLORS.fair,70,STREETLENS_COLORS.sat,85,STREETLENS_COLORS.good];}
+function visibilityExpression(){return['case',['get','visible'],1,0];}
+function addMapLayers(map){
+  map.addSource('streetlens-sections',{type:'geojson',data:buildGeoJSON()});
+  map.addSource('streetlens-labels',{type:'geojson',data:buildLabelsGeoJSON()});
+  map.addLayer({id:'streetlens-section-case',type:'line',source:'streetlens-sections',layout:{'line-cap':'butt','line-join':'round'},paint:{'line-color':'#050707','line-opacity':visibilityExpression(),'line-width':['case',['<',['get','len'],200],4.5,7.5]}});
+  map.addLayer({id:'streetlens-section-line',type:'line',source:'streetlens-sections',filter:['!=',['get','batch'],'Batch 1'],layout:{'line-cap':'butt','line-join':'round'},paint:{'line-color':lineColorExpression(),'line-opacity':visibilityExpression(),'line-width':['case',['<',['get','len'],200],2.2,4.2],'line-offset':1}});
+  map.addLayer({id:'streetlens-section-line-batch1',type:'line',source:'streetlens-sections',filter:['==',['get','batch'],'Batch 1'],layout:{'line-cap':'butt','line-join':'round','line-dasharray':['literal',[2,2]]},paint:{'line-color':lineColorExpression(),'line-opacity':visibilityExpression(),'line-width':['case',['<',['get','len'],200],2.2,4.2],'line-offset':1}});
+  map.addLayer({id:'streetlens-section-highlight',type:'line',source:'streetlens-sections',filter:['==',['get','sectionKey'],'__none__'],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#ffffff','line-width':9,'line-opacity':.9,'line-offset':1}});
+  map.addLayer({id:'streetlens-street-labels',type:'symbol',source:'streetlens-labels',minzoom:15.2,layout:{'text-field':['get','name'],'text-size':['interpolate',['linear'],['zoom'],15,10,18,14],'text-anchor':'center','text-allow-overlap':false},paint:{'text-color':'#18211f','text-halo-color':'#f5f2df','text-halo-width':1.4}});
+  updateMapPaint(map);
 }
-function positionHoverCard(card,map,e){
-  const p=e?.containerPoint||L.point(map.getSize().x/2,map.getSize().y/2);
-  const size=map.getSize(), rect=map.getContainer().getBoundingClientRect();
-  card.style.left=''; card.style.right=''; card.style.top=''; card.style.bottom='';
-  const w=card.offsetWidth||280,h=card.offsetHeight||210;
-  let x=p.x+16,y=p.y+16; if(x+w>size.x-10)x=p.x-w-16; if(y+h>size.y-10)y=p.y-h-16;
-  card.style.left=Math.max(10,x)+'px'; card.style.top=Math.max(10,y)+'px';
+function updateMapPaint(map){
+  if(!map?.getLayer('streetlens-section-line'))return;
+  const vis=visibilityExpression();
+  map.setPaintProperty('streetlens-section-line','line-color',lineColorExpression());
+  map.setPaintProperty('streetlens-section-line-batch1','line-color',lineColorExpression());
+  map.setPaintProperty('streetlens-section-case','line-opacity',vis);
+  map.setPaintProperty('streetlens-section-line','line-opacity',vis);
+  map.setPaintProperty('streetlens-section-line-batch1','line-opacity',vis);
 }
-function hideHover(map){const card=document.getElementById(map._streetlensCardId); if(card) card.hidden=true;}
-
-function updateDashboardDetails(sec){
-  if(!sec)return;
-  const pci=Number(sec.pci), sdi=Number(sec.sdi);
-  if(typeof animateOverallScore==='function') animateOverallScore(pci,conditionText('pci',pci));
-  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val};
-  set('streetLensSelectedRoad',sec.run.name+` · Section ${sec.bin}`);
-  set('streetLensSelectedPci',fmt1(pci)); set('streetLensSelectedSdi',fmt2(sdi));
-  const lat=sec.g?.[0]?.[0],lon=sec.g?.[0]?.[1]; set('streetLensSelectedLatitude',Number.isFinite(lat)?lat.toFixed(6)+'°':'—'); set('streetLensSelectedLongitude',Number.isFinite(lon)?lon.toFixed(6)+'°':'—');
-  const matching=STREETLENS_ROADS.filter(r=>String(r.name||'').toLowerCase()===String(sec.run.name||'').toLowerCase());
-  const frames=matching.flatMap(r=>r.frames||[]);
-  if(window.streetLensLoadRoadFrames) window.streetLensLoadRoadFrames(frames);
-}
-
-function drawSection(sec,map){
-  const layers=sec._streetlensLayers?.get(map._leaflet_id); if(!layers)return;
-  const visible=sectionVisible(sec), hover=sec===map._streetlensHover; const w=sectionWeight(sec,map,hover)+(STREETLENS_PINNED===sec?2:0);
-  const ll=offsetSection(sec,map); layers.case.setLatLngs(ll); layers.line.setLatLngs(ll);
-  layers.case.setStyle({color:'#050707',weight:w+Math.min(2.2,w*.5),opacity:visible?0.82:0});
-  layers.line.setStyle({color:sectionColor(sec),weight:w,opacity:visible?1:0,dashArray:sec.run.batch==='Batch 1'?'7 4':null});
-}
-
-function setupLabels(map){
-  map._streetlensLabels=[];
-  const grouped=new Map();
-  STREETLENS_SECTION_DATA.sections.forEach(s=>{if(!grouped.has(s.run.key))grouped.set(s.run.key,[]);grouped.get(s.run.key).push(s)});
-  grouped.forEach(secs=>{
-    const mid=secs[Math.floor(secs.length/2)]; const pts=mid.ll; if(!pts?.length)return;
-    const ll=pts[Math.floor(pts.length/2)];
-    const label=L.tooltip({permanent:true,direction:'center',className:'streetlens-street-label',interactive:false}).setLatLng(ll).setContent(escapeHtml(mid.run.name));
-    label._streetlensRun=mid.run; map._streetlensLabels.push(label);
-  });
-}
-function refreshLabels(map){
-  const on=map.getZoom()>=16.5; const b1=document.getElementById('streetLensShowBatch1')?.checked!==false;
-  map._streetlensLabels.forEach(t=>{const ok=on&&(t._streetlensRun.batch!=='Batch 1'||b1);if(ok&&!map.hasLayer(t))t.addTo(map);if(!ok&&map.hasLayer(t))map.removeLayer(t)});
-}
-
-function legendHtml(){
-  const rows=STREETLENS_METRIC==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES;
-  return rows.map(c=>`<div class="sheet-lg-row"><i style="background:${STREETLENS_COLORS[c[2]]}"></i><span>${c[1]}</span><small>${c[3]}</small></div>`).join('');
-}
-function updateLegendAndRanking(){
-  const legend=document.getElementById('streetLensModalLegend'); if(legend)legend.innerHTML=legendHtml();
-  const label=document.getElementById('streetLensModalLegendLabel'); if(label)label.textContent=STREETLENS_METRIC==='sdi'?'SDI of the section':'PCI rating (ASTM D6433)';
-  const rankLabel=document.getElementById('streetLensRankingLabel'); if(rankLabel)rankLabel.textContent=`Lowest ten sections by ${STREETLENS_METRIC.toUpperCase()}`;
-  const box=document.getElementById('streetLensRoadRanking'); if(!box)return;
-  const vals=STREETLENS_SECTION_DATA.sections.filter(sectionVisible).filter(s=>s.run.batch!=='Batch 1'||document.getElementById('streetLensShowBatch1')?.checked!==false).filter(s=>s.len>=200||document.getElementById('streetLensShowEndPieces')?.checked!==false);
-  const sorted=[...vals].sort((a,b)=>(STREETLENS_METRIC==='sdi'?a.sdi-b.sdi:a.pci-b.pci)).slice(0,10);
-  box.innerHTML=sorted.map((s,i)=>`<button class="streetlens-ranking-row" data-section-key="${escapeHtml(s.run.key)}::${s.bin}"><span>${i+1}</span><span>${escapeHtml(s.run.name)}<small>Section ${s.bin} · ${n0(s.f0)}–${n0(s.f1)} ft</small></span><b>${STREETLENS_METRIC==='sdi'?fmt2(s.sdi):fmt1(s.pci)}</b></button>`).join('');
-  box.querySelectorAll('[data-section-key]').forEach(btn=>btn.onclick=()=>{const s=STREETLENS_SECTION_DATA.sections.find(x=>`${x.run.key}::${x.bin}`===btn.dataset.sectionKey);if(s){STREETLENS_PINNED=s; focusSection(s);}});
-  const count=document.getElementById('streetLensRoadCount'); if(count)count.textContent=`${STREETLENS_SECTION_DATA.sections.length} mapped sections · ${STREETLENS_SECTION_DATA.runs.length} street runs`;
-}
-
-function focusSection(sec){
-  STREETLENS_PINNED=sec;
-  Object.values(STREETLENS_MAPS).forEach(map=>{if(!map)return;map.fitBounds(L.latLngBounds(sec.ll).pad(1.2),{maxZoom:18,animate:true,duration:.6});refreshMap(map);});
-}
-
-function refreshMap(map){
-  map._streetlensSections.forEach(s=>drawSection(s,map));
-  refreshLabels(map);
-}
-
-function addSectionLayers(map,cardId){
-  map._streetlensCardId=cardId; map._streetlensHover=null; map._streetlensSections=[];
-  STREETLENS_SECTION_DATA.sections.forEach(sec=>{
-    if(!sec._streetlensLayers)sec._streetlensLayers=new Map();
-    const ll=offsetSection(sec,map);
-    const casing=L.polyline(ll,{interactive:false,lineCap:'butt',lineJoin:'round'}).addTo(map);
-    const line=L.polyline(ll,{lineCap:'butt',lineJoin:'round',bubblingMouseEvents:false}).addTo(map);
-    sec._streetlensLayers.set(map._leaflet_id,{case:casing,line}); map._streetlensSections.push(sec);
-    line.on('mouseover',e=>{map._streetlensHover=sec;drawSection(sec,map);showHover(sec,map,e);});
-    line.on('mousemove',e=>{const card=document.getElementById(cardId);if(card&&!card.hidden)positionHoverCard(card,map,e);});
-    line.on('mouseout',()=>{map._streetlensHover=null;hideHover(map);drawSection(sec,map);});
-    line.on('click',()=>{updateDashboardDetails(sec);STREETLENS_PINNED=sec;refreshMap(map);});
-  });
-  setupLabels(map); refreshMap(map);
-  map.on('zoomend',()=>refreshMap(map));
-  map.on('move',()=>{const card=document.getElementById(cardId);if(card&&!card.hidden)positionHoverCard(card,map);});
-  map.on('click',e=>{if(!e.originalEvent?.target?.closest('.leaflet-interactive')){STREETLENS_PINNED=null;refreshMap(map);}});
-}
-
-function addBasemap(map){
-  const street=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:20,maxNativeZoom:19,attribution:'Basemap: Esri, HERE, Garmin, OpenStreetMap contributors'});
-  const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:20,maxNativeZoom:19,attribution:'Imagery © Esri'});
-  street.addTo(map); map._streetlensStreet=street; map._streetlensSatellite=satellite; map._streetlensSatelliteOn=false;
-}
-function toggleSatellite(map){
-  if(!map)return;
-  if(map._streetlensSatelliteOn){map.removeLayer(map._streetlensSatellite);map._streetlensStreet.addTo(map);map._streetlensSatelliteOn=false;}
-  else {map.removeLayer(map._streetlensStreet);map._streetlensSatellite.addTo(map);map._streetlensSatelliteOn=true;}
-}
-function resetMap(map){if(map&&STREETLENS_SECTION_DATA)map.fitBounds(L.latLngBounds(STREETLENS_SECTION_DATA.ring.map(p=>[p[1],p[0]])),{padding:[18,18],maxZoom:16,animate:true,duration:.5});}
-
-function createStreetLensMap(id,cardId){
-  const el=document.getElementById(id);
-  if(!el) throw new Error('Map container not found: '+id);
-  if(!window.L) throw new Error('Leaflet failed to load');
-  const map=L.map(el,{zoomControl:true,preferCanvas:false,attributionControl:true});
-  // Hide Leaflet's branding prefix while retaining the required basemap attribution.
-  map.attributionControl.setPrefix(false);
-  map._streetlensId=id+'-'+Date.now();
-  addBasemap(map);
-  // Section rendering is isolated so one malformed section cannot blank the map.
-  try{ addSectionLayers(map,cardId); }catch(err){ console.error('StreetLens section layer error:',err); }
-  const ringPoints=Array.isArray(STREETLENS_SECTION_DATA?.ring)&&STREETLENS_SECTION_DATA.ring.length
-    ? STREETLENS_SECTION_DATA.ring.map(p=>[Number(p[1]),Number(p[0])]).filter(p=>Number.isFinite(p[0])&&Number.isFinite(p[1]))
-    : STREETLENS_SECTION_DATA.sections.flatMap(s=>s.ll.map(ll=>[ll.lat,ll.lng]));
-  if(ringPoints.length>=2){
-    const ring=L.polygon(ringPoints,{fill:false,weight:1.5,dashArray:'6 5',color:'#3b4744',interactive:false}).addTo(map);
-    map.fitBounds(ring.getBounds(),{padding:[18,18],maxZoom:16});
-  }
-  L.control.scale({imperial:true,metric:false}).addTo(map);
-  setTimeout(()=>map.invalidateSize(),0);
-  return map;
-}
-
-function populateStreetSearch(){
-  const list=document.getElementById('streetLensStreetList'); if(!list)return;
-  const names=[...new Set(STREETLENS_SECTION_DATA.runs.map(r=>r.name))].sort((a,b)=>a.localeCompare(b));
-  list.innerHTML=names.map(n=>`<option value="${escapeHtml(n)}"></option>`).join('');
-  const input=document.getElementById('streetLensFindStreet');
-  input?.addEventListener('input',()=>{const q=input.value.trim().toLowerCase();if(!q)return;const hits=STREETLENS_SECTION_DATA.sections.filter(s=>s.run.name.toLowerCase()===q);if(!hits.length)return;const bounds=L.latLngBounds([].concat(...hits.map(s=>s.ll)));Object.values(STREETLENS_MAPS).forEach(m=>m&&m.fitBounds(bounds.pad(.4),{maxZoom:18}));});
-}
-
-function setMetric(metric){
-  STREETLENS_METRIC=metric==='pci'?'pci':'sdi';
-  document.getElementById('streetLensModalMetricSDI')?.classList.toggle('active',STREETLENS_METRIC==='sdi');
-  document.getElementById('streetLensModalMetricPCI')?.classList.toggle('active',STREETLENS_METRIC==='pci');
-  document.getElementById('streetLensModalMetricSDI')?.setAttribute('aria-pressed',String(STREETLENS_METRIC==='sdi'));
-  document.getElementById('streetLensModalMetricPCI')?.setAttribute('aria-pressed',String(STREETLENS_METRIC==='pci'));
-  Object.values(STREETLENS_MAPS).forEach(refreshMap); updateLegendAndRanking();
-}
-
-function openMap(fullscreen=false){
-  const modal=document.getElementById('mapModal'); if(!modal)return; modal.classList.remove('hidden');
-  if(!STREETLENS_MAPS.modal){STREETLENS_MAPS.modal=createStreetLensMap('streetLensModalMap','streetLensModalHoverCard');}
-  setTimeout(()=>{STREETLENS_MAPS.modal.invalidateSize();resetMap(STREETLENS_MAPS.modal);},80);
-  if(fullscreen)toggleMapFullscreen();
-}
-async function toggleMapFullscreen(){
-  const modal=document.getElementById('mapModal'); if(!modal)return;
-  try{if(!document.fullscreenElement)await modal.requestFullscreen();else await document.exitFullscreen();}catch(e){console.warn('StreetLens fullscreen:',e)}
-  setTimeout(()=>STREETLENS_MAPS.modal?.invalidateSize(),150);
-}
+function syncVisibility(map){const src=map?.getSource('streetlens-sections');if(!src)return;src.setData(buildGeoJSON());updateMapPaint(map);}
+function fitRing(map){const ring=STREETLENS_SECTION_DATA?.ring||[];if(!ring.length)return;const b=new maplibregl.LngLatBounds();ring.forEach(p=>b.extend([Number(p[0]),Number(p[1])]));if(!b.isEmpty())map.fitBounds(b,{padding:20,maxZoom:16,duration:450});}
+function buildHoverCard(sec){const cp=classify('pci',sec.pci),units=(sec.units||[]).map(u=>fmt1(u.pci)).join(', ');const flags=[];if(sec.run.batch==='Batch 1')flags.push('Batch 1 labels not reviewed · dashed');if(sec.len<200)flags.push('End piece under 200 ft · thin');if(sec.est)flags.push(`${n0(sec.est)} of ${n0(sec.n)} frames have estimated position`);return `<div class="hover-title">${escapeHtml(sec.run.name)}</div><div class="hover-sub">Section ${sec.bin} · ${n0(sec.f0)}–${n0(sec.f1)} ft · ${escapeHtml(sec.run.batch||'')}</div><div class="hover-metrics"><div><span>SDI</span><b>${fmt2(sec.sdi)}</b></div><div><span>PCI</span><b>${fmt1(sec.pci)}</b></div><div><span>Rating</span><b>${escapeHtml(cp?.[1]||'–')}</b></div></div><div class="hover-grid"><span>Length</span><b>${n0(sec.len)} ft</b><span>NDI / LDI</span><b>${fmt2(sec.ndi)} / ${fmt2(sec.ldi)}</b><span>Cracks</span><b>${n0(sec.cr)} · ${n0(sec.crft)} ft</b><span>Distressed area</span><b>${fmt1(sec.dpct)}%</b><span>Potholes / patches</span><b>${n0(sec.pot)} / ${n0(sec.pat)}</b><span>PCI sample units</span><b>${units||'–'}</b><span>Whole street</span><b>SDI ${fmt2(sec.run.sdi)} · PCI ${fmt1(sec.run.pci)}</b></div>${flags.map(f=>`<div class="hover-flag">${escapeHtml(f)}</div>`).join('')}`;}
+function showHover(sec,map,e){const card=document.getElementById(map._streetlensCardId);if(!card)return;card.innerHTML=buildHoverCard(sec);card.hidden=false;positionHoverCard(card,map,e);}
+function positionHoverCard(card,map,e){const p=e?.point||{x:map.getContainer().clientWidth/2,y:map.getContainer().clientHeight/2},size={x:map.getContainer().clientWidth,y:map.getContainer().clientHeight};const w=card.offsetWidth||280,h=card.offsetHeight||210;let x=p.x+16,y=p.y+16;if(x+w>size.x-10)x=p.x-w-16;if(y+h>size.y-10)y=p.y-h-16;card.style.left=Math.max(10,x)+'px';card.style.top=Math.max(10,y)+'px';}
+function hideHover(map){const card=document.getElementById(map._streetlensCardId);if(card)card.hidden=true;}
+function updateDashboardDetails(sec){if(!sec)return;const pci=Number(sec.pci),sdi=Number(sec.sdi);animateOverallScore(pci,conditionText('pci',pci));const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val};set('streetLensSelectedRoad',sec.run.name+` · Section ${sec.bin}`);set('streetLensSelectedPci',fmt1(pci));set('streetLensSelectedSdi',fmt2(sdi));const lat=sec.g?.[0]?.[0],lon=sec.g?.[0]?.[1];set('streetLensSelectedLatitude',Number.isFinite(lat)?lat.toFixed(6)+'°':'—');set('streetLensSelectedLongitude',Number.isFinite(lon)?lon.toFixed(6)+'°':'—');const frames=STREETLENS_ROADS.filter(r=>String(r.name||'').toLowerCase()===String(sec.run.name||'').toLowerCase()).flatMap(r=>r.frames||[]);if(window.streetLensLoadRoadFrames)window.streetLensLoadRoadFrames(frames);}
+function updateLegendAndRanking(){const legend=document.getElementById('streetLensModalLegend');if(legend){const rows=STREETLENS_METRIC==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES;legend.innerHTML=rows.map(c=>`<div class="sheet-lg-row"><i style="background:${STREETLENS_COLORS[c[2]]}"></i><span>${c[1]}</span><small>${c[3]}</small></div>`).join('');}const label=document.getElementById('streetLensModalLegendLabel');if(label)label.textContent=STREETLENS_METRIC==='sdi'?'SDI of the section':'PCI rating (ASTM D6433)';const rankLabel=document.getElementById('streetLensRankingLabel');if(rankLabel)rankLabel.textContent=`Lowest ten sections by ${STREETLENS_METRIC.toUpperCase()}`;const box=document.getElementById('streetLensRoadRanking');if(!box||!STREETLENS_SECTION_DATA)return;const vals=STREETLENS_SECTION_DATA.sections.filter(sectionVisible);const sorted=[...vals].sort((a,b)=>STREETLENS_METRIC==='sdi'?Number(a.sdi)-Number(b.sdi):Number(a.pci)-Number(b.pci)).slice(0,10);box.innerHTML=sorted.map((s,i)=>`<button class="streetlens-ranking-row" data-section-key="${escapeHtml(s.run.key)}::${s.bin}"><span>${i+1}</span><span>${escapeHtml(s.run.name)}<small>Section ${s.bin} · ${n0(s.f0)}–${n0(s.f1)} ft</small></span><b>${STREETLENS_METRIC==='sdi'?fmt2(s.sdi):fmt1(s.pci)}</b></button>`).join('');box.querySelectorAll('[data-section-key]').forEach(btn=>btn.onclick=()=>{const s=STREETLENS_SECTION_DATA.sections.find(x=>`${x.run.key}::${x.bin}`===btn.dataset.sectionKey);if(s)focusSection(s)});const count=document.getElementById('streetLensRoadCount');if(count)count.textContent=`${STREETLENS_SECTION_DATA.sections.length} mapped sections · ${STREETLENS_SECTION_DATA.runs.length} street runs`;}
+function focusSection(sec){STREETLENS_PINNED=sec;Object.values(STREETLENS_MAPS).forEach(map=>{if(!map)return;const b=new maplibregl.LngLatBounds();sec.coords.forEach(c=>b.extend(c));map.fitBounds(b,{padding:80,maxZoom:18,duration:650});refreshMap(map);});}
+function refreshMap(map){if(!map||!map.loaded())return;syncVisibility(map);if(map.getLayer('streetlens-section-highlight'))map.setFilter('streetlens-section-highlight',['==',['get','sectionKey'],STREETLENS_PINNED?`${STREETLENS_PINNED.run.key}::${STREETLENS_PINNED.bin}`:'__none__']);}
+function addBasemap(map){const street={type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19,attribution:'Basemap: Esri, HERE, Garmin, OpenStreetMap contributors'};const sat={type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19,attribution:'Imagery © Esri'};map.addSource('streetlens-street',{type:'raster',...street});map.addLayer({id:'streetlens-street-basemap',type:'raster',source:'streetlens-street'});map.addSource('streetlens-satellite',{type:'raster',...sat});map.addLayer({id:'streetlens-satellite-basemap',type:'raster',source:'streetlens-satellite',layout:{visibility:'none'}});map._streetlensSatelliteOn=false;}
+function toggleSatellite(map){if(!map)return;map._streetlensSatelliteOn=!map._streetlensSatelliteOn;map.setLayoutProperty('streetlens-satellite-basemap','visibility',map._streetlensSatelliteOn?'visible':'none');map.setLayoutProperty('streetlens-street-basemap','visibility',map._streetlensSatelliteOn?'none':'visible');}
+function resetMap(map){if(map){STREETLENS_PINNED=null;fitRing(map);hideHover(map);refreshMap(map)}}
+function createStreetLensMap(id,cardId){const el=document.getElementById(id);if(!el)throw new Error('Map container not found: '+id);if(!window.maplibregl)throw new Error('MapLibre failed to load');const map=new maplibregl.Map({container:el,style:{version:8,sources:{},layers:[]},center:[-75.078,39.916],zoom:13,attributionControl:true,dragRotate:false});map._streetlensCardId=cardId;map.addControl(new maplibregl.NavigationControl({showCompass:true,showZoom:true}),'top-left');map.addControl(new maplibregl.ScaleControl({unit:'imperial'}),'bottom-left');map.on('load',()=>{addBasemap(map);addMapLayers(map);fitRing(map);document.getElementById(id==='streetLensModalMap'?'streetLensModalMapLoading':'streetLensDashboardMapLoading')?.classList.add('hidden-map-loading');});map.on('mousemove','streetlens-section-line',e=>{if(!e.features?.length)return;const f=e.features[0],sec=STREETLENS_SECTION_DATA.sections.find(s=>`${s.run.key}::${s.bin}`===f.properties.sectionKey);if(!sec)return;map.getCanvas().style.cursor='pointer';showHover(sec,map,e);});map.on('mousemove','streetlens-section-line-batch1',e=>{if(!e.features?.length)return;const f=e.features[0],sec=STREETLENS_SECTION_DATA.sections.find(s=>`${s.run.key}::${s.bin}`===f.properties.sectionKey);if(!sec)return;map.getCanvas().style.cursor='pointer';showHover(sec,map,e);});map.on('mouseleave','streetlens-section-line',()=>{map.getCanvas().style.cursor='';hideHover(map);});map.on('mouseleave','streetlens-section-line-batch1',()=>{map.getCanvas().style.cursor='';hideHover(map);});const clickSection=e=>{const f=e.features?.[0],sec=f&&STREETLENS_SECTION_DATA.sections.find(s=>`${s.run.key}::${s.bin}`===f.properties.sectionKey);if(sec){STREETLENS_PINNED=sec;updateDashboardDetails(sec);refreshMap(map);}};map.on('click','streetlens-section-line',clickSection);map.on('click','streetlens-section-line-batch1',clickSection);map.on('mousemove',e=>{const card=document.getElementById(cardId);if(card&&!card.hidden)positionHoverCard(card,map,e);});return map;}
+function populateStreetSearch(){const list=document.getElementById('streetLensStreetList');if(!list)return;const names=[...new Set(STREETLENS_SECTION_DATA.runs.map(r=>r.name))].sort((a,b)=>a.localeCompare(b));list.innerHTML=names.map(n=>`<option value="${escapeHtml(n)}"></option>`).join('');const input=document.getElementById('streetLensFindStreet');input?.addEventListener('input',()=>{const q=input.value.trim().toLowerCase();if(!q)return;const hits=STREETLENS_SECTION_DATA.sections.filter(s=>s.run.name.toLowerCase()===q);if(!hits.length)return;const b=new maplibregl.LngLatBounds();hits.forEach(s=>s.coords.forEach(c=>b.extend(c)));Object.values(STREETLENS_MAPS).forEach(m=>m?.fitBounds(b,{padding:80,maxZoom:18,duration:500}));});}
+function setMetric(metric){STREETLENS_METRIC=metric==='pci'?'pci':'sdi';document.getElementById('streetLensModalMetricSDI')?.classList.toggle('active',STREETLENS_METRIC==='sdi');document.getElementById('streetLensModalMetricPCI')?.classList.toggle('active',STREETLENS_METRIC==='pci');document.getElementById('streetLensModalMetricSDI')?.setAttribute('aria-pressed',String(STREETLENS_METRIC==='sdi'));document.getElementById('streetLensModalMetricPCI')?.setAttribute('aria-pressed',String(STREETLENS_METRIC==='pci'));Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();}
+async function openMap(fullscreen=false){const modal=document.getElementById('mapModal');if(!modal)return;modal.classList.remove('hidden');if(!STREETLENS_MAPS.modal)STREETLENS_MAPS.modal=createStreetLensMap('streetLensModalMap','streetLensModalHoverCard');setTimeout(()=>STREETLENS_MAPS.modal?.resize(),100);if(fullscreen)await toggleMapFullscreen();}
+async function toggleMapFullscreen(){const modal=document.getElementById('mapModal');if(!modal)return;try{if(!document.fullscreenElement)await modal.requestFullscreen();else await document.exitFullscreen();}catch(e){console.warn('StreetLens fullscreen:',e)}setTimeout(()=>{STREETLENS_MAPS.modal?.resize();},180);}
 function closeMap(e){if(e&&e.target!==e.currentTarget)return;const modal=document.getElementById('mapModal');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});modal?.classList.add('hidden');}
-
-window.openMap=openMap; window.closeMap=closeMap;
-
-document.addEventListener('fullscreenchange',()=>setTimeout(()=>STREETLENS_MAPS.modal?.invalidateSize(),150));
-
-document.addEventListener('DOMContentLoaded',async()=>{
-  const fail=(e)=>{console.error('StreetLens segmented map:',e);};
-  try{
-    if(!window.L) throw new Error('Leaflet failed to load from CDN');
-    const response=await fetch("{{ url_for('static', filename='data/collingswood_sections.json') }}",{cache:'no-store'});
-    if(!response.ok)throw new Error('section data '+response.status);
-    const data=await response.json();
-    STREETLENS_SECTION_DATA={...data,runs:Array.isArray(data.runs)?data.runs:[],sections:flattenSections(data)};
-    if(!STREETLENS_SECTION_DATA.sections.length) throw new Error('No segmented sections were loaded');
-    populateStreetSearch(); updateLegendAndRanking();
-    try{
-      STREETLENS_MAPS.dashboard=createStreetLensMap('streetLensDashboardMap','streetLensDashboardHoverCard');
-      document.getElementById('streetLensDashboardMapLoading')?.classList.add('hidden-map-loading');
-    }catch(e){ fail(e); document.getElementById('streetLensDashboardMapLoading')?.classList.add('hidden-map-loading'); }
-    document.getElementById('streetLensModalMetricSDI')?.addEventListener('click',()=>setMetric('sdi'));
-    document.getElementById('streetLensModalMetricPCI')?.addEventListener('click',()=>setMetric('pci'));
-    document.getElementById('streetLensShowBatch1')?.addEventListener('change',()=>{Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();});
-    document.getElementById('streetLensShowEndPieces')?.addEventListener('change',()=>{Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();});
-    document.getElementById('streetLensDashboardSatellite')?.addEventListener('click',e=>{e.stopPropagation();toggleSatellite(STREETLENS_MAPS.dashboard)});
-    document.getElementById('streetLensDashboardReset')?.addEventListener('click',e=>{e.stopPropagation();resetMap(STREETLENS_MAPS.dashboard)});
-    document.getElementById('streetLensDashboardExpand')?.addEventListener('click',e=>{e.stopPropagation();openMap(false)});
-    document.getElementById('streetLensDashboardFullscreen')?.addEventListener('click',e=>{e.stopPropagation();openMap(true)});
-    document.getElementById('streetLensModalSatellite')?.addEventListener('click',()=>toggleSatellite(STREETLENS_MAPS.modal));
-    document.getElementById('streetLensModalReset')?.addEventListener('click',()=>resetMap(STREETLENS_MAPS.modal));
-    document.getElementById('streetLensModalFullscreen')?.addEventListener('click',toggleMapFullscreen);
-    document.getElementById('streetLensModalClose')?.addEventListener('click',()=>closeMap());
-    setMetric('sdi');
-  }catch(e){
-    fail(e);
-    // Do not replace a working Leaflet map with a misleading full-panel error.
-    document.querySelectorAll('.streetlens-map-loading').forEach(x=>x.classList.add('hidden-map-loading'));
-  }
-});
+window.openMap=openMap;window.closeMap=closeMap;
+document.addEventListener('fullscreenchange',()=>setTimeout(()=>STREETLENS_MAPS.modal?.resize(),180));
+document.addEventListener('DOMContentLoaded',async()=>{const fail=e=>console.error('StreetLens segmented map:',e);try{if(!window.maplibregl)throw new Error('MapLibre failed to load from CDN');const r=await fetch("{{ url_for('static', filename='data/road_registry.json') }}",{cache:'no-store'});if(r.ok){const d=await r.json();STREETLENS_ROAD_REGISTRY=d||STREETLENS_ROAD_REGISTRY;STREETLENS_ROADS=Array.isArray(d?.roads)?d.roads:[];}const response=await fetch("{{ url_for('static', filename='data/collingswood_sections.json') }}",{cache:'no-store'});if(!response.ok)throw new Error('section data '+response.status);const data=await response.json();STREETLENS_SECTION_DATA={...data,runs:Array.isArray(data.runs)?data.runs:[],sections:flattenSections(data)};if(!STREETLENS_SECTION_DATA.sections.length)throw new Error('No segmented sections were loaded');populateStreetSearch();updateLegendAndRanking();STREETLENS_MAPS.dashboard=createStreetLensMap('streetLensDashboardMap','streetLensDashboardHoverCard');document.getElementById('streetLensModalMetricSDI')?.addEventListener('click',()=>setMetric('sdi'));document.getElementById('streetLensModalMetricPCI')?.addEventListener('click',()=>setMetric('pci'));document.getElementById('streetLensShowBatch1')?.addEventListener('change',()=>{Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();});document.getElementById('streetLensShowEndPieces')?.addEventListener('change',()=>{Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();});document.getElementById('streetLensDashboardSatellite')?.addEventListener('click',e=>{e.stopPropagation();toggleSatellite(STREETLENS_MAPS.dashboard)});document.getElementById('streetLensDashboardReset')?.addEventListener('click',e=>{e.stopPropagation();resetMap(STREETLENS_MAPS.dashboard)});document.getElementById('streetLensDashboardExpand')?.addEventListener('click',e=>{e.stopPropagation();openMap(false)});document.getElementById('streetLensDashboardFullscreen')?.addEventListener('click',e=>{e.stopPropagation();openMap(true)});document.getElementById('streetLensModalSatellite')?.addEventListener('click',()=>toggleSatellite(STREETLENS_MAPS.modal));document.getElementById('streetLensModalReset')?.addEventListener('click',()=>resetMap(STREETLENS_MAPS.modal));document.getElementById('streetLensModalFullscreen')?.addEventListener('click',toggleMapFullscreen);document.getElementById('streetLensModalClose')?.addEventListener('click',()=>closeMap());setMetric('sdi');}catch(e){fail(e);document.querySelectorAll('.streetlens-map-loading').forEach(x=>x.classList.add('hidden-map-loading'));}});
 </script>
 </body>
 </html>
