@@ -675,11 +675,23 @@ function toggleSatellite(map){
 function resetMap(map){if(map&&STREETLENS_SECTION_DATA)map.fitBounds(L.latLngBounds(STREETLENS_SECTION_DATA.ring.map(p=>[p[1],p[0]])),{padding:[18,18],maxZoom:16,animate:true,duration:.5});}
 
 function createStreetLensMap(id,cardId){
-  const map=L.map(id,{zoomControl:true,preferCanvas:false,attributionControl:true});
-  addBasemap(map); addSectionLayers(map,cardId);
-  const ring=L.polygon(STREETLENS_SECTION_DATA.ring.map(p=>[p[1],p[0]]),{fill:false,weight:1.5,dashArray:'6 5',color:'#3b4744',interactive:false}).addTo(map);
-  map.fitBounds(ring.getBounds(),{padding:[18,18],maxZoom:16});
+  const el=document.getElementById(id);
+  if(!el) throw new Error('Map container not found: '+id);
+  if(!window.L) throw new Error('Leaflet failed to load');
+  const map=L.map(el,{zoomControl:true,preferCanvas:false,attributionControl:true});
+  map._streetlensId=id+'-'+Date.now();
+  addBasemap(map);
+  // Section rendering is isolated so one malformed section cannot blank the map.
+  try{ addSectionLayers(map,cardId); }catch(err){ console.error('StreetLens section layer error:',err); }
+  const ringPoints=Array.isArray(STREETLENS_SECTION_DATA?.ring)&&STREETLENS_SECTION_DATA.ring.length
+    ? STREETLENS_SECTION_DATA.ring.map(p=>[Number(p[1]),Number(p[0])]).filter(p=>Number.isFinite(p[0])&&Number.isFinite(p[1]))
+    : STREETLENS_SECTION_DATA.sections.flatMap(s=>s.ll.map(ll=>[ll.lat,ll.lng]));
+  if(ringPoints.length>=2){
+    const ring=L.polygon(ringPoints,{fill:false,weight:1.5,dashArray:'6 5',color:'#3b4744',interactive:false}).addTo(map);
+    map.fitBounds(ring.getBounds(),{padding:[18,18],maxZoom:16});
+  }
   L.control.scale({imperial:true,metric:false}).addTo(map);
+  setTimeout(()=>map.invalidateSize(),0);
   return map;
 }
 
@@ -718,14 +730,19 @@ window.openMap=openMap; window.closeMap=closeMap;
 document.addEventListener('fullscreenchange',()=>setTimeout(()=>STREETLENS_MAPS.modal?.invalidateSize(),150));
 
 document.addEventListener('DOMContentLoaded',async()=>{
+  const fail=(e)=>{console.error('StreetLens segmented map:',e);};
   try{
+    if(!window.L) throw new Error('Leaflet failed to load from CDN');
     const response=await fetch("{{ url_for('static', filename='data/collingswood_sections.json') }}",{cache:'no-store'});
     if(!response.ok)throw new Error('section data '+response.status);
     const data=await response.json();
-    STREETLENS_SECTION_DATA={...data,runs:data.runs||[],sections:flattenSections(data)};
+    STREETLENS_SECTION_DATA={...data,runs:Array.isArray(data.runs)?data.runs:[],sections:flattenSections(data)};
+    if(!STREETLENS_SECTION_DATA.sections.length) throw new Error('No segmented sections were loaded');
     populateStreetSearch(); updateLegendAndRanking();
-    STREETLENS_MAPS.dashboard=createStreetLensMap('streetLensDashboardMap','streetLensDashboardHoverCard');
-    const loading=document.getElementById('streetLensDashboardMapLoading');if(loading)loading.classList.add('hidden-map-loading');
+    try{
+      STREETLENS_MAPS.dashboard=createStreetLensMap('streetLensDashboardMap','streetLensDashboardHoverCard');
+      document.getElementById('streetLensDashboardMapLoading')?.classList.add('hidden-map-loading');
+    }catch(e){ fail(e); document.getElementById('streetLensDashboardMapLoading')?.classList.add('hidden-map-loading'); }
     document.getElementById('streetLensModalMetricSDI')?.addEventListener('click',()=>setMetric('sdi'));
     document.getElementById('streetLensModalMetricPCI')?.addEventListener('click',()=>setMetric('pci'));
     document.getElementById('streetLensShowBatch1')?.addEventListener('change',()=>{Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();});
@@ -739,7 +756,11 @@ document.addEventListener('DOMContentLoaded',async()=>{
     document.getElementById('streetLensModalFullscreen')?.addEventListener('click',toggleMapFullscreen);
     document.getElementById('streetLensModalClose')?.addEventListener('click',()=>closeMap());
     setMetric('sdi');
-  }catch(e){console.error('StreetLens segmented map:',e);document.querySelectorAll('.streetlens-map-loading').forEach(x=>x.textContent='Unable to load inspection map');}
+  }catch(e){
+    fail(e);
+    // Do not replace a working Leaflet map with a misleading full-panel error.
+    document.querySelectorAll('.streetlens-map-loading').forEach(x=>x.classList.add('hidden-map-loading'));
+  }
 });
 </script>
 </body>
