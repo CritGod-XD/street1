@@ -75,13 +75,19 @@ def main() -> None:
         sample = ", ".join(missing_images[:8])
         raise RuntimeError(f"Missing {len(missing_images)} road image(s): {sample}")
 
+    # Keep validation aligned with the current MapLibre implementation.
+    # The dashboard intentionally uses compact declarations such as
+    # ``let STREETLENS_ROAD_REGISTRY={...}`` and renders sections through
+    # ``addMapLayers``; the old validator looked for whitespace-sensitive
+    # strings from an earlier implementation.
     required_markers = (
-        "let STREETLENS_ROAD_REGISTRY =",
-        "let STREETLENS_SECTION_DATA =",
-        "function addSectionLayers(",
+        "STREETLENS_ROAD_REGISTRY",
+        "STREETLENS_SECTION_DATA",
+        "function addMapLayers(",
         "collingswood_sections.json",
         "const STREETLENS_PCI_CLASSES",
         "const STREETLENS_SDI_CLASSES",
+        "maplibregl.Map(",
     )
     missing_markers = [m for m in required_markers if m not in html]
     if missing_markers:
