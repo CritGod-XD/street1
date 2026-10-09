@@ -230,6 +230,48 @@ def logout():
     return redirect(url_for("login"))
 
 
+@app.route("/road-ranking")
+@login_required
+def road_ranking():
+    """Show the available Collingswood roads ranked by whole-run PCI."""
+    data_path = os.path.join(app.root_path, "public", "static", "data", "collingswood_sections.json")
+    roads = []
+    try:
+        with open(data_path, "r", encoding="utf-8") as fh:
+            dataset = json.load(fh)
+        grouped = {}
+        for run in dataset.get("runs", []):
+            name = str(run.get("name") or "Unnamed road").strip()
+            try:
+                pci = float(run.get("pci"))
+            except (TypeError, ValueError):
+                continue
+            if not 0 <= pci <= 100:
+                continue
+            key = name.casefold()
+            item = grouped.setdefault(key, {"name": name, "weighted_total": 0.0, "weight": 0.0, "values": [], "batches": set()})
+            weight = max(float(run.get("len") or 0), 1.0)
+            item["weighted_total"] += pci * weight
+            item["weight"] += weight
+            item["values"].append(pci)
+            if run.get("batch"):
+                item["batches"].add(str(run["batch"]))
+        for item in grouped.values():
+            pci = item["weighted_total"] / item["weight"] if item["weight"] else sum(item["values"]) / len(item["values"])
+            if pci >= 85: condition = "Good"
+            elif pci >= 70: condition = "Satisfactory"
+            elif pci >= 55: condition = "Fair"
+            elif pci >= 40: condition = "Poor"
+            elif pci >= 25: condition = "Very Poor"
+            elif pci >= 10: condition = "Serious"
+            else: condition = "Failed"
+            roads.append({"name": item["name"], "pci": round(pci, 1), "condition": condition, "batches": sorted(item["batches"])})
+        roads.sort(key=lambda road: (road["pci"], road["name"].casefold()))
+    except (OSError, ValueError, TypeError):
+        roads = []
+    return render_template("road_ranking.html", roads=roads, username=session.get("username"))
+
+
 @app.route("/dashboard")
 @login_required
 def dashboard():
