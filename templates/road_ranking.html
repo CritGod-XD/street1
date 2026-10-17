@@ -22,4 +22,9 @@
 <p class="footer">PCI condition bands: Failed 0–10 · Serious 10–25 · Very Poor 25–40 · Poor 40–55 · Fair 55–70 · Satisfactory 70–85 · Good 85–100. The spreadsheet contains 109 scored rows for 108 unique road names; duplicate W Franklin Ave entries are represented by their mean PCI.</p>
 </main><script>
 const search=document.getElementById('search'),filter=document.getElementById('conditionFilter'),rows=[...document.querySelectorAll('.road-row')];function applyFilters(){const q=search.value.trim().toLowerCase(),c=filter.value;let visible=0;rows.forEach(row=>{const show=row.dataset.name.includes(q)&&(c==='all'||row.dataset.condition===c);row.hidden=!show;if(show){visible++;row.querySelector('.rank').textContent=String(visible).padStart(3,'0')}});document.getElementById('resultCount').textContent=`${visible} road${visible===1?'':'s'}`;document.getElementById('empty').hidden=visible!==0}search.addEventListener('input',applyFilters);filter.addEventListener('change',applyFilters);
-</script></body></html>
+</script>
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body></html>
