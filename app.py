@@ -144,14 +144,14 @@ def login_required(view):
 @app.route("/")
 def root():
     if session.get("user_id"):
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("map_home"))
     return redirect(url_for("login"))
 
 
 @app.route("/login", methods=["GET"])
 def login():
     if session.get("user_id"):
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("map_home"))
     return render_template("login.html")
 
 
@@ -174,13 +174,13 @@ def login_submit():
     if request.form.get("remember"):
         session.permanent = True
 
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("map_home"))
 
 
 @app.route("/register", methods=["GET"])
 def register_page():
     if session.get("user_id"):
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("map_home"))
     return render_template("register.html")
 
 
@@ -305,6 +305,12 @@ def road_ranking():
                       "source_rows": item.get("source_rows", [])})
     roads.sort(key=lambda road: (road["pci"], road["name"].casefold()))
     return render_template("road_ranking.html", roads=roads, username=session.get("username"))
+
+@app.route("/map")
+@login_required
+def map_home():
+    return render_template("map.html", username=session.get("username"), map_first=True)
+
 
 @app.route("/dashboard")
 @login_required

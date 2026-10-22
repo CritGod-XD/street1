@@ -201,3 +201,15 @@ Distress colors identify *types of distress*; PCI colors represent the *overall 
 **Project:** StreetLens — Pavement Condition Monitoring & Roadway Analysis Platform  
 **Primary application:** Flask + Jinja + MapLibre GL JS  
 **Deployment target:** Vercel
+
+## Map-first build
+
+This build is based on the working `street1` repository structure. It adds the
+map-first page at `/map`, routes signed-in users to the map after login, and
+updates the Road Ranking page to link back to the map. Existing `vercel.json`,
+Python dependencies, static assets, data files, CSS, and `public/static/js/app.js`
+are preserved from the working repository.
+
+The earlier standalone `map-inline.js` experiment is intentionally not included:
+the map page contains its own map-specific initialization, and the existing app
+JavaScript file remains unchanged.
