@@ -5,5 +5,5 @@
       "maxDuration": 30
     }
   },
-  "buildCommand": "python scripts/build_pci_geojson.py && python scripts/build_penn_ave_index.py"
+  "buildCommand": "python scripts/build_pci_geojson.py"
 }
