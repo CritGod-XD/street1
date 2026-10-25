@@ -1,0 +1,97 @@
+{
+  "version": "5.7.0",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "C",
+      "points": [
+        [
+          1131.0,
+          0.0
+        ],
+        [
+          1137.0,
+          3.0
+        ],
+        [
+          1161.0,
+          5.0
+        ],
+        [
+          1188.0,
+          3.0
+        ],
+        [
+          1214.0,
+          10.0
+        ],
+        [
+          1225.0,
+          8.0
+        ],
+        [
+          1230.0,
+          0.0
+        ]
+      ],
+      "group_id": null,
+      "description": null,
+      "shape_type": "polygon",
+      "flags": {},
+      "mask": null
+    }
+  ],
+  "imagePath": "section_0123.png",
+  "imageData": null,
+  "imageHeight": 787,
+  "imageWidth": 1640,
+  "road_analysis_meta": {
+    "section_index": 123,
+    "px_per_in": 10.0,
+    "mp_start": 0.15277935606060605,
+    "mp_end": 0.15402146464646463,
+    "ft_start": 806.6750000000001,
+    "ft_end": 813.2333333333332,
+    "psci": 99.5,
+    "sdi": null,
+    "ndi": null,
+    "ldi": null,
+    "rut_mm": null,
+    "lat": 39.915193920895526,
+    "lon": -75.0584074641791,
+    "speed_mph": 18.118880400912726,
+    "pitch_deg": -48.17138435544767,
+    "roll_deg": -3.507011553214372,
+    "gyro_z": 0.012800818119795799,
+    "obd_speed_kph": 28.0,
+    "obd_rpm": 0.0,
+    "obd_engine_load_pct": 0.0,
+    "obd_coolant_temp_c": 85.0,
+    "obd_throttle_pct": 19.215686274509803,
+    "edited": false,
+    "needs_reanalysis": false,
+    "excluded": false,
+    "x_min_road": 0.0,
+    "x_max_road": 72.0,
+    "x_ipm_min": -38.370779397093465,
+    "stitch": {
+      "px_per_in": 10.0,
+      "band_on": true,
+      "band_start_in": 54.7,
+      "near_band_in": 12.0,
+      "native_across_px_per_in": 6.76,
+      "native_along_px_per_in": 12.38,
+      "predicted_lane_ft": 13.0,
+      "lane_width_ft": 13.67,
+      "trim_edges": true,
+      "trim_col0": 514,
+      "edge_feather_px": 3,
+      "lateral_mode": "straight",
+      "roi_mode": "Full",
+      "detector": "ORB",
+      "chunked": true,
+      "chunk_ft": 6.56,
+      "homography": "JimmyKia1080.json"
+    }
+  }
+}

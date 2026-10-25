@@ -1,0 +1,125 @@
+{
+  "version": "5.7.0",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "C",
+      "points": [
+        [
+          1629.0,
+          632.0
+        ],
+        [
+          1616.0,
+          676.0
+        ],
+        [
+          1617.0,
+          712.0
+        ],
+        [
+          1615.0,
+          722.0
+        ],
+        [
+          1621.0,
+          738.0
+        ],
+        [
+          1621.0,
+          780.0
+        ],
+        [
+          1619.0,
+          786.0
+        ],
+        [
+          1626.0,
+          786.0
+        ],
+        [
+          1628.0,
+          775.0
+        ],
+        [
+          1626.0,
+          746.0
+        ],
+        [
+          1629.0,
+          693.0
+        ],
+        [
+          1625.0,
+          685.0
+        ],
+        [
+          1625.0,
+          677.0
+        ],
+        [
+          1629.0,
+          662.0
+        ]
+      ],
+      "group_id": null,
+      "description": null,
+      "shape_type": "polygon",
+      "flags": {},
+      "mask": null
+    }
+  ],
+  "imagePath": "section_0124.png",
+  "imageData": null,
+  "imageHeight": 787,
+  "imageWidth": 1640,
+  "road_analysis_meta": {
+    "section_index": 124,
+    "px_per_in": 10.0,
+    "mp_start": 0.15402146464646463,
+    "mp_end": 0.15526357323232323,
+    "ft_start": 813.2333333333332,
+    "ft_end": 819.7916666666666,
+    "psci": 98.9,
+    "sdi": null,
+    "ndi": null,
+    "ldi": null,
+    "rut_mm": null,
+    "lat": 39.91532526923077,
+    "lon": -75.05834500769231,
+    "speed_mph": 18.21041230994885,
+    "pitch_deg": -47.45313663876458,
+    "roll_deg": -5.80916270634341,
+    "gyro_z": 0.008467532294945648,
+    "obd_speed_kph": 28.0,
+    "obd_rpm": 0.0,
+    "obd_engine_load_pct": 0.0,
+    "obd_coolant_temp_c": 85.0,
+    "obd_throttle_pct": 19.215686274509803,
+    "edited": false,
+    "needs_reanalysis": false,
+    "excluded": false,
+    "x_min_road": 0.0,
+    "x_max_road": 72.0,
+    "x_ipm_min": -38.370779397093465,
+    "stitch": {
+      "px_per_in": 10.0,
+      "band_on": true,
+      "band_start_in": 54.7,
+      "near_band_in": 12.0,
+      "native_across_px_per_in": 6.76,
+      "native_along_px_per_in": 12.38,
+      "predicted_lane_ft": 13.0,
+      "lane_width_ft": 13.67,
+      "trim_edges": true,
+      "trim_col0": 514,
+      "edge_feather_px": 3,
+      "lateral_mode": "straight",
+      "roi_mode": "Full",
+      "detector": "ORB",
+      "chunked": true,
+      "chunk_ft": 6.56,
+      "homography": "JimmyKia1080.json"
+    }
+  }
+}
