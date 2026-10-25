@@ -1,0 +1,729 @@
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>
+        StreetLens · Pavement Condition
+    </title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+
+    <style>
+        /* Authentication */
+
+        .auth-message {
+            margin: 0 0 18px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.4;
+            border: 1px solid rgba(255,255,255,.08);
+        }
+
+        .auth-message.error {
+            background: rgba(220, 70, 70, .12);
+            border-color: rgba(220, 70, 70, .3);
+            color: #ffaaa0;
+        }
+
+        .auth-message.success {
+            background: rgba(70, 180, 100, .12);
+            border-color: rgba(70, 180, 100, .3);
+            color: #9be0aa;
+        }
+
+        .auth-message.info {
+            background: rgba(70, 130, 220, .12);
+            border-color: rgba(70, 130, 220, .3);
+            color: #a8c8ff;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-wrapper input {
+            width: 100%;
+            padding-right: 48px;
+            box-sizing: border-box;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #777;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-toggle:hover {
+            color: #ddd;
+        }
+
+        .register-view .password-toggle {
+            padding: 0;
+        }
+
+        .password-toggle svg {
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+        }
+
+        .password-toggle .eye-off {
+            display: none;
+        }
+
+        .password-toggle.revealed .eye {
+            display: none;
+        }
+
+        .password-toggle.revealed .eye-off {
+            display: block;
+        }
+
+        .auth-form label {
+            display: block;
+        }
+
+        .auth-form input[type="text"],
+        .auth-form input[type="email"],
+        .auth-form input[type="password"] {
+            margin-top: 7px;
+        }
+
+        .login-card input[type="email"] {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: #ffffff0f;
+            border: 1px solid #ffffff1a;
+            color: #f1f5f9;
+            outline: 0;
+        }
+
+        .register-view h3 {
+            margin-bottom: 8px;
+        }
+
+        .register-view p {
+            line-height: 1.5;
+        }
+
+        .auth-form small {
+            display: block;
+            margin-top: 18px;
+        }
+
+        .signout-form {
+            display: inline;
+            margin: 0;
+            padding: 0;
+        }
+
+        .signout {
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            font: inherit;
+        }
+    
+        /* StreetLens interactive route maps */
+        .map-card {
+            position: relative;
+            cursor: default;
+        }
+        #streetLensDashboardMap, #streetLensModalMap {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+        }
+        .streetlens-map-loading {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            z-index: 5;
+            background: #111b;
+            color: #aaa;
+            font: 11px Inter, sans-serif;
+            pointer-events: none;
+            transition: opacity .2s ease;
+        }
+        .streetlens-map-loading.hidden-map-loading { opacity: 0; }
+        .streetlens-map-mini-legend, .streetlens-map-tools, .streetlens-map-legend {
+            position: absolute;
+            z-index: 10;
+        }
+        .streetlens-map-mini-legend {
+            left: 10px;
+            bottom: 10px;
+            display: flex;
+            gap: 9px;
+            padding: 6px 8px;
+            background: #101010e8;
+            border: 1px solid #2a2a2a;
+            border-radius: 5px;
+            color: #aaa;
+            font: 9px Inter, sans-serif;
+            pointer-events: none;
+        }
+        .streetlens-map-mini-legend span { display:flex; align-items:center; }
+        .streetlens-map-mini-legend i, .streetlens-map-legend i {
+            width: 7px; height: 7px; border-radius: 50%; display:inline-block; margin-right:5px;
+        }
+        .streetlens-map-mini-tools {
+            position: absolute !important;
+            top: 9px !important;
+            right: 9px !important;
+            z-index: 100 !important;
+            display: flex !important;
+            gap: 5px !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        .streetlens-map-mini-tools button,
+        .streetlens-map-tools button {
+            width: 34px;
+            height: 34px;
+            box-sizing: border-box;
+            border: 1px solid #3a3a3a;
+            background: rgba(17, 17, 17, .94);
+            color: #f1f1f1;
+            border-radius: 5px;
+            padding: 0;
+            font: 15px Inter, sans-serif;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            position: relative;
+            z-index: 101;
+        }
+
+        .streetlens-map-mini-tools button:hover,
+        .streetlens-map-tools button:hover {
+            background: #222;
+            border-color: #555;
+        }
+
+        .map-card:fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            min-height: 100vh !important;
+            border-radius: 0 !important;
+            z-index: 99999 !important;
+            background: #111;
+        }
+
+        .map-card:fullscreen #streetLensDashboardMap {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .modal-map { position: relative; }
+        .streetlens-map-legend {
+            left: 14px; bottom: 14px;
+            display: grid; gap: 7px;
+            padding: 9px 11px;
+            background: #101010e8;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            color: #ddd;
+            font: 10px Inter, sans-serif;
+            pointer-events: none;
+        }
+        .streetlens-map-tools { top: 14px; right: 14px; display:flex; gap:6px; }
+        .streetlens-map-popup { font-family: Inter, sans-serif; color:#111; min-width:150px; }
+        .streetlens-map-popup strong { display:block; font-size:12px; margin-bottom:5px; }
+        .streetlens-map-popup div { font-size:10px; line-height:1.55; }
+        .streetlens-map-popup .demo-note { color:#777; margin-top:4px; font-size:9px; }
+        .maplibregl-popup-content { border-radius:7px; padding:10px 12px; }
+        .maplibregl-ctrl-group { border-radius:5px !important; overflow:hidden; }
+        .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin-bottom:7px; margin-right:7px; }
+
+        .streetlens-pci-count {
+            position:absolute; top:10px; left:10px; z-index:12;
+            padding:6px 9px; border-radius:5px;
+            background:#101010e8; border:1px solid #2a2a2a;
+            color:#e5e7eb; font:10px Inter,sans-serif;
+            pointer-events:none;
+        }
+        .map-card { overflow:hidden; }
+
+/* StreetLens dashboard v5 */
+.streetlens-dashboard-grid{grid-template-columns:minmax(230px,.85fr) minmax(420px,1.45fr) minmax(260px,.9fr)!important;gap:0;min-height:calc(100vh - 68px)}
+.header-actions-only{margin-left:auto;display:flex;align-items:center}.streetlens-road-toolbar{display:flex;align-items:center;gap:7px;flex:0 0 auto}.streetlens-road-ctrl-hint{margin-left:auto;color:#666;font:9px Inter,sans-serif}.streetlens-road-zoom-label{min-width:42px;text-align:right;color:#888;font:9px 'JetBrains Mono',monospace}
+.streetlens-left-column{padding:18px 12px 20px 20px;border-right:1px solid #1e1e1e}.streetlens-ml-column{min-width:0;padding:18px 12px 20px;border-right:1px solid #1e1e1e}.streetlens-right-column{padding:18px 20px 20px 12px;min-width:0}.streetlens-main-map-card{height:300px}.streetlens-left-details{margin-top:10px}
+.streetlens-ml-card{margin:0;padding:12px;height:calc(100vh - 104px);min-height:620px;display:flex;flex-direction:column}.streetlens-ml-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex:0 0 auto}.streetlens-ml-head h2{font-size:12px}.streetlens-ml-head span{display:block;margin-top:4px}.streetlens-frame-status{padding:5px 8px;border:1px solid #2b2b2b;border-radius:4px;color:#aaa;font:10px 'JetBrains Mono'}
+.streetlens-road-scroll{position:relative;flex:1 1 auto;min-height:0;overflow:auto;background:#080808;border:1px solid #252525;border-radius:5px;scrollbar-width:thin;scrollbar-color:#555 #111;overscroll-behavior:contain}.streetlens-road-scroll::-webkit-scrollbar{width:8px}.streetlens-road-scroll::-webkit-scrollbar-track{background:#111}.streetlens-road-scroll::-webkit-scrollbar-thumb{background:#4a4a4a;border-radius:8px}.streetlens-road-strip{width:100%}.streetlens-road-frame{width:100%;margin:0;padding:0;line-height:0;background:#080808}.streetlens-road-frame+.streetlens-road-frame{margin-top:-1px}.streetlens-road-frame img{display:block;width:100%;height:auto;min-height:220px;object-fit:cover;background:#0b0b0b;border:0;border-radius:0}.streetlens-scroll-hint{position:sticky;bottom:10px;width:max-content;margin:-32px auto 10px;padding:6px 9px;background:#0c0c0ce8;border:1px solid #303030;border-radius:5px;color:#888;font:9px Inter;pointer-events:none}.streetlens-ml-legend{flex:0 0 auto}.streetlens-score-card{height:auto;min-height:350px}.streetlens-breakdown-card{height:auto;min-height:360px;margin-top:12px}.streetlens-right-column .analytics-card{padding:14px 16px}.streetlens-right-column .gauge{height:165px}.streetlens-right-column .gauge svg{width:245px;height:155px;max-width:100%}
+@media(max-width:1200px){.streetlens-dashboard-grid{grid-template-columns:minmax(220px,.8fr) minmax(360px,1.25fr) minmax(240px,.85fr)!important}.streetlens-ml-card{min-height:560px}}@media(max-width:1000px){.streetlens-dashboard-grid{grid-template-columns:1fr!important}.streetlens-left-column,.streetlens-ml-column{border-right:0;border-bottom:1px solid #222;padding:16px}.streetlens-right-column{padding:16px}.streetlens-ml-card{height:620px;min-height:0}}
+
+
+        /* Excel-backed ML road viewer */
+        .streetlens-road-toolbar{display:flex;align-items:center;gap:6px;padding:0 0 8px}
+        .streetlens-road-toolbar button{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;padding:0 9px;border:1px solid #303030;border-radius:5px;background:#111;color:#d7d7d7;font:600 10px Inter,sans-serif;cursor:pointer}
+        .streetlens-road-toolbar button:hover{background:#1a1a1a;border-color:#484848;color:#fff}
+        .streetlens-road-toolbar button:focus-visible{outline:2px solid #777;outline-offset:2px}
+        .streetlens-road-zoom-label{margin-left:auto;color:#777;font:600 9px 'JetBrains Mono',monospace}
+        .streetlens-road-strip{transform:scale(1);transform-origin:top left;transition:transform .16s ease;will-change:transform;}
+        .streetlens-road-frame{position:relative;display:block;width:100%;margin:0;padding:0;line-height:0;background:#080808}
+        .streetlens-road-frame+.streetlens-road-frame{margin-top:0}
+        .streetlens-road-frame img{display:block;width:100%;height:auto;min-height:0;object-fit:contain;background:#0b0b0b;border:0;border-radius:0}
+        .streetlens-road-frame figcaption{position:absolute;top:6px;right:7px;display:flex;gap:5px;padding:3px 5px;background:#080808d9;border:1px solid #303030;border-radius:4px;color:#ddd;font:600 8px 'JetBrains Mono',monospace;line-height:1;pointer-events:none}
+        .streetlens-road-frame figcaption span+span{color:#999}
+
+        .streetlens-road-pending { min-height: 260px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; color:#777; text-align:center; border:1px dashed #2a2a2a; border-radius:8px; margin:10px; padding:24px; }
+        .streetlens-road-pending strong { color:#d7d7d7; font:600 13px Inter,sans-serif; }
+        .streetlens-road-pending span { color:#666; font:10px Inter,sans-serif; }
+        .streetlens-road-pending.hidden { display:none !important; }
+        .streetlens-road-strip.hidden { display:none !important; }
+
+        .streetlens-dataset-select{max-width:145px;height:28px;padding:0 6px;background:#111;color:#ccc;border:1px solid #303030;border-radius:5px;font:10px Inter,sans-serif;min-width:0}
+        .streetlens-annotation-controls{display:flex;flex-wrap:wrap;gap:7px 12px;padding:10px 2px 4px;flex:0 0 auto}
+        .streetlens-annotation-controls label{display:inline-flex;align-items:center;gap:5px;color:#aaa;font:9px Inter,sans-serif;cursor:pointer}
+        .streetlens-annotation-controls input{accent-color:#ddd;width:11px;height:11px;margin:0}
+        .streetlens-annotation-controls i{display:inline-block;width:7px;height:7px;border-radius:2px}
+        .streetlens-annotation-note{min-height:15px;padding:3px 2px 0;color:#666;font:9px Inter,sans-serif;flex:0 0 auto}
+        .streetlens-road-frame{position:relative;overflow:hidden;aspect-ratio:1640/787}
+        .streetlens-road-frame img{width:100%;height:100%;object-fit:contain}
+        .streetlens-road-frame .streetlens-frame-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+        .streetlens-road-frame .streetlens-frame-error{position:absolute;left:7px;bottom:7px;padding:4px 6px;background:#260f0fe8;border:1px solid #6d2929;color:#ffb0a8;font:9px Inter,sans-serif;line-height:1.3}
+        @media(max-width:700px){.streetlens-dataset-select{max-width:118px}.streetlens-road-ctrl-hint{display:none}.streetlens-annotation-controls{gap:8px}}
+
+
+        .streetlens-map-metric { position:absolute; top:12px; left:12px; z-index:20; display:flex; gap:3px; padding:3px; background:#101010e8; border:1px solid #2a2a2a; border-radius:7px; }
+        .streetlens-map-metric button { border:0; background:transparent; color:#aaa; padding:7px 12px; border-radius:5px; font:700 10px Inter,sans-serif; cursor:pointer; }
+        .streetlens-map-metric button.active { background:#f1f1f1; color:#111; }
+        .streetlens-dashboard-legend { left:12px; bottom:12px; max-width:240px; grid-template-columns:1fr; }
+        .streetlens-dashboard-legend .lg-row { display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap; }
+        .streetlens-dashboard-legend .lg-row span:last-child { color:#888; }
+        .streetlens-ranking-card { padding-bottom:10px; }
+        .streetlens-ranking-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+        .streetlens-ranking-head h2 { margin:0; }
+        .streetlens-ranking-head > span { font:700 10px JetBrains Mono,monospace; color:#888; }
+        .streetlens-ranking-sub { margin:5px 0 10px; color:#777; font-size:10px; }
+        .streetlens-road-ranking { display:grid; gap:5px; max-height:235px; overflow:auto; padding-right:2px; }
+        .streetlens-ranking-row { width:100%; border:1px solid #262626; background:#151515; color:#eee; border-radius:6px; display:grid; grid-template-columns:22px 1fr auto; align-items:center; gap:7px; padding:7px 8px; text-align:left; cursor:pointer; }
+        .streetlens-ranking-row:hover { background:#1c1c1c; border-color:#3a3a3a; }
+        .streetlens-ranking-rank { color:#666; font:700 10px JetBrains Mono,monospace; }
+        .streetlens-ranking-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; }
+        .streetlens-ranking-score { font:700 11px JetBrains Mono,monospace; }
+        .streetlens-ranking-condition { display:block; margin-top:2px; color:#777; font-size:9px; }
+</style>
+
+<style>
+/* Segmented inspection map — no legend/ranking is rendered over the dashboard map. */
+.streetlens-main-map-card{position:relative;overflow:hidden;background:#161c1b}
+#streetLensDashboardMap,#streetLensModalMap{width:100%;height:100%;min-height:0}
+.streetlens-fullmap-shell{width:min(1500px,96vw);height:min(900px,94vh);display:grid;grid-template-columns:330px minmax(0,1fr);background:#1a2120;border:1px solid #313b39;border-radius:8px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+.streetlens-map-sheet{background:#1a2120;color:#e8ecea;border-right:1px solid #313b39;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.streetlens-map-sheet-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:1px solid #313b39}
+.streetlens-map-sheet-head strong{display:block;font:700 20px/1.05 'Outfit',sans-serif}.streetlens-map-sheet-head span{display:block;color:#9aa6a2;font:11px/1.35 Inter,sans-serif;margin-top:5px}
+.streetlens-map-sheet-actions{display:flex;gap:5px}.streetlens-map-sheet-actions button{width:30px;height:30px;border:1px solid #3b4744;border-radius:5px;background:#111817;color:#ddd;cursor:pointer}.streetlens-map-sheet-actions button:hover{background:#222b29}
+.streetlens-map-sheet-label{margin:0 0 7px;color:#9aa6a2;font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.streetlens-map-sheet .streetlens-metric-block{background:#16232d;border:1px solid #2b5268;border-radius:9px;padding:10px}.streetlens-map-sheet .streetlens-metric-block .streetlens-map-sheet-label{color:#9fc4d8}.streetlens-map-sheet .streetlens-metric-block .streetlens-map-segment-toggle{border-color:#294555;background:#0e171d}.streetlens-map-sheet .streetlens-metric-block .streetlens-map-segment-toggle button{color:#9fc4d8;background:#0e171d}.streetlens-map-sheet .streetlens-metric-block .streetlens-map-segment-toggle button.active{background:#2b91a8;color:#fff}.streetlens-map-sheet .streetlens-metric-block .streetlens-map-segment-toggle button:hover{background:#203641;color:#e8f7ff}
+.streetlens-map-segment-toggle{display:grid;grid-template-columns:1fr 1fr;border:1px solid #6cc4d4;border-radius:5px;overflow:hidden}.streetlens-map-segment-toggle button{border:0;background:transparent;color:#6cc4d4;padding:9px 6px;cursor:pointer;font:700 14px Outfit,sans-serif}.streetlens-map-segment-toggle button.active{background:#6cc4d4;color:#08242b}.streetlens-map-segment-toggle small{display:block;font:500 9px Inter,sans-serif;margin-top:3px;opacity:.85}
+.streetlens-sheet-legend{display:flex;flex-direction:column;gap:5px}.sheet-lg-row{display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:center;font:12px Inter,sans-serif}.sheet-lg-row i{width:9px;height:9px;border-radius:2px;border:1px solid #050707}.sheet-lg-row small{color:#8f9996;font-size:10px}
+.streetlens-map-options{display:flex;flex-direction:column;gap:7px;color:#b9c0bd;font:11px Inter,sans-serif}.streetlens-map-options label{display:flex;align-items:center;gap:7px}.streetlens-map-options input{accent-color:#6cc4d4}.dash-sample{width:25px;border-top:3px dashed #aaa}.thin-sample{width:25px;border-top:1.5px solid #aaa}
+.streetlens-find-input{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #313b39;border-radius:4px;background:#121716;color:#e8ecea;font:12px Inter,sans-serif;outline:none}.streetlens-find-input:focus{border-color:#6cc4d4}
+.streetlens-sheet-ranking{display:flex;flex-direction:column;border-top:1px solid #313b39}.streetlens-ranking-row{display:grid;grid-template-columns:20px 1fr auto;gap:7px;align-items:baseline;padding:7px 3px;border:0;border-bottom:1px solid #313b39;background:transparent;color:#e8ecea;text-align:left;cursor:pointer}.streetlens-ranking-row:hover{background:#121817}.streetlens-ranking-row>span:first-child{color:#89938f;font:11px 'JetBrains Mono',monospace}.streetlens-ranking-row>span:nth-child(2){font:12px Inter,sans-serif;overflow:hidden}.streetlens-ranking-row small{display:block;color:#7f8985;font-size:9px;margin-top:2px}.streetlens-ranking-row b{font:700 15px 'JetBrains Mono',monospace}
+.streetlens-map-sheet-foot{margin-top:auto;padding-top:8px;color:#727c79;font:10px/1.4 Inter,sans-serif;border-top:1px solid #313b39}
+.streetlens-fullmap-map-wrap{position:relative;min-width:0;min-height:0;background:#161c1b}.streetlens-fullmap-tools{position:absolute;right:12px;top:12px;z-index:900;display:flex;gap:6px}.streetlens-fullmap-tools button{border:1px solid #3b4744;background:#111817e8;color:#ddd;border-radius:5px;padding:7px 10px;font:11px Inter,sans-serif;cursor:pointer;backdrop-filter:blur(5px)}.streetlens-fullmap-tools button:hover{background:#222b29}
+.streetlens-section-hover-card{position:absolute;z-index:1200;width:190px;max-width:calc(100% - 16px);padding:7px 8px;background:#fbfbf9;color:#1c2422;border:1px solid #1c2422;border-radius:5px;box-shadow:0 6px 18px rgba(0,0,0,.28);font:10px Inter,sans-serif;pointer-events:none}.streetlens-section-hover-card .hover-title{font:700 12px/1.1 'DM Sans',sans-serif}.streetlens-section-hover-card .hover-sub{color:#5d6966;font-size:8px;margin:2px 0 6px}.hover-metrics{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:4px;margin-bottom:6px}.hover-metrics>div{border:1px solid #d3d8d4;border-radius:4px;padding:4px}.hover-metrics span{display:block;color:#5d6966;font-size:8px}.hover-metrics b{display:block;font:700 13px/1 'DM Sans',sans-serif;margin-top:2px}.hover-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 7px;font-size:8.5px}.hover-grid span{color:#5d6966}.hover-grid b{text-align:right;font-weight:600}.hover-flag{margin-top:5px;padding:4px 5px;border-left:2px solid #f39a32;background:#eef0ee;color:#5d6966;font-size:8px}
+.streetlens-street-label{background:transparent;border:0;box-shadow:none;color:#e8ecea;font:600 12px/1 'Outfit',sans-serif;letter-spacing:.03em;padding:0;text-shadow:0 0 3px #161c1b,0 0 3px #161c1b,0 0 3px #161c1b}.streetlens-street-label:before{display:none}
+#mapModal:fullscreen{padding:0;background:#000}.modal:fullscreen .streetlens-fullmap-shell{width:100vw;height:100vh;border:0;border-radius:0;box-shadow:none}.modal:fullscreen .streetlens-map-sheet{border-radius:0}
+@media(max-width:850px){.streetlens-fullmap-shell{grid-template-columns:280px 1fr;width:100vw;height:100vh;border-radius:0}.streetlens-map-sheet{padding:12px}.streetlens-map-sheet-head strong{font-size:17px}}
+
+.streetlens-current-section{background:#ebe5d8;border:1px solid #d2c9b8;border-radius:8px;padding:10px 11px;color:#26312c}
+.streetlens-current-section>strong{display:block;font:700 14px/1.25 'DM Sans',sans-serif;margin:2px 0 9px;overflow-wrap:anywhere}
+.streetlens-current-score-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.streetlens-current-score-grid>div{background:#f8f5ed;border:1px solid #d8d0c2;border-radius:5px;padding:7px}
+.streetlens-current-score-grid span{display:block;font:10px 'DM Sans',sans-serif;color:#68736d}
+.streetlens-current-score-grid b{display:block;font:700 17px 'DM Sans',sans-serif;color:#183d36;margin-top:2px}
+#streetLensCurrentCondition{font-size:12px}
+.streetlens-current-section>small{display:block;color:#737d77;font:10px/1.4 'DM Sans',sans-serif;margin-top:8px}
+.streetlens-legend-control label{display:flex;align-items:center;gap:7px;color:#4f5a55;font:11px 'DM Sans',sans-serif;cursor:pointer}
+.streetlens-legend-control input{accent-color:#355d50}
+#streetLensLegendWrap.legend-hidden{display:none}
+</style>
+<style>
+/* StreetLens v21 visual refinement */
+.streetlens-main-map-card .streetlens-section-hover-card{display:none!important}
+.streetlens-main-map-card #streetLensDashboardMap{image-rendering:auto}
+/* The fullscreen analysis panel is intentionally editorial rather than AI-blue. */
+.streetlens-map-sheet{background:#f3f0e7;color:#202824;border-left:1px solid #d8d1c2;font-family:'DM Sans',sans-serif}
+.streetlens-map-sheet-head{border-bottom-color:#d7d0c2}
+.streetlens-map-sheet-head strong{font-family:'DM Sans',sans-serif;color:#18211d;letter-spacing:-.02em}
+.streetlens-map-sheet-head span{color:#69736e;font-family:'DM Sans',sans-serif}
+.streetlens-map-sheet-actions button{border-color:#c9c1b2;background:#e7e2d6;color:#35403b}
+.streetlens-map-sheet-actions button:hover{background:#ddd7ca}
+.streetlens-map-sheet-label{color:#68736d;font-family:'DM Sans',sans-serif}
+.streetlens-map-sheet .streetlens-metric-block{background:#e9e4d7;border:1px solid #d2c9b8;border-radius:10px}
+.streetlens-map-sheet .streetlens-metric-block .streetlens-map-sheet-label{color:#5b675f}
+.streetlens-map-segment-toggle{border-color:#b7ad9c;background:#f7f4ec}
+.streetlens-map-segment-toggle button{color:#52605a;background:#f7f4ec;font-family:'DM Sans',sans-serif}
+.streetlens-map-segment-toggle button.active{background:#355d50;color:#fff}
+.streetlens-map-segment-toggle button:hover{background:#e5dfd3;color:#23312b}
+.streetlens-sheet-legend .sheet-lg-row{font-family:'DM Sans',sans-serif;color:#27322d}
+.sheet-lg-row small{color:#7b847f}
+.streetlens-map-options{color:#4f5a55;font-family:'DM Sans',sans-serif}
+.streetlens-map-options input{accent-color:#355d50}
+.streetlens-find-input{border-color:#c9c1b2;background:#faf8f2;color:#202824;font-family:'DM Sans',sans-serif}
+.streetlens-find-input:focus{border-color:#789080}
+.streetlens-sheet-ranking{border-top-color:#d7d0c2}
+.streetlens-ranking-row{border-bottom-color:#d7d0c2;color:#26312c;font-family:'DM Sans',sans-serif}
+.streetlens-ranking-row:hover{background:#e9e4d9}
+.streetlens-ranking-row>span:first-child{color:#7a817d}
+.streetlens-ranking-row small{color:#737d77}
+.streetlens-ranking-row b{font-family:'DM Sans',sans-serif;color:#25342e}
+.streetlens-map-sheet-foot{color:#78817c;border-top-color:#d7d0c2;font-family:'DM Sans',sans-serif}
+.streetlens-section-hover-card{font-family:'DM Sans',sans-serif}
+.streetlens-section-hover-card .hover-title{font-family:'DM Sans',sans-serif}
+</style>
+<style>
+/* StreetLens MapLibre v19 layout fixes */
+.maplibregl-map{font-family:Inter,sans-serif;background:#111}
+.maplibregl-ctrl-group{background:#111817e8!important;border:1px solid #3b4744!important;box-shadow:0 3px 10px rgba(0,0,0,.28)!important}
+.maplibregl-ctrl-group button{background:transparent!important;color:#e8ecea!important}
+.maplibregl-ctrl-group button:hover{background:#242d2b!important}
+.maplibregl-ctrl-attrib{background:rgba(12,15,15,.82)!important;color:#b6bfbc!important;font-size:9px!important}
+.maplibregl-ctrl-attrib a{color:#d1d8d5!important}
+.streetlens-fullmap-shell{width:min(1500px,96vw);height:min(900px,94vh);display:grid;grid-template-columns:minmax(0,1fr) 360px;background:#161c1b;border:1px solid #313b39;border-radius:8px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+.streetlens-fullmap-map-wrap{grid-column:1;grid-row:1;position:relative;min-width:0;min-height:0;background:#111}
+.streetlens-map-sheet{grid-column:2;grid-row:1;background:#1a2120;color:#e8ecea;border-left:1px solid #313b39;border-right:0;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.streetlens-fullmap-tools{position:absolute;right:14px;top:14px;z-index:20;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.streetlens-fullmap-tools button{border:1px solid #3b4744;background:#111817ee;color:#ddd;border-radius:5px;padding:8px 10px;font:600 11px Inter,sans-serif;cursor:pointer;backdrop-filter:blur(5px)}
+.streetlens-fullmap-tools button:hover{background:#222b29;border-color:#5c6b67}
+.streetlens-section-hover-card{z-index:30}
+#mapModal{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.86);backdrop-filter:blur(4px);padding:18px;display:grid;place-items:center}
+#mapModal.hidden{display:none!important}
+#mapModal:fullscreen{padding:0;background:#000}
+#mapModal:fullscreen .streetlens-fullmap-shell{width:100vw;height:100vh;max-width:none;max-height:none;border:0;border-radius:0;box-shadow:none}
+#mapModal:fullscreen .streetlens-map-sheet{border-radius:0}
+.streetlens-main-map-card .streetlens-map-mini-tools{z-index:50}
+.satellite-icon{width:15px;height:15px;display:block;flex:0 0 15px}
+.streetlens-map-mini-tools button:has(.satellite-icon),.streetlens-fullmap-tools button:has(.satellite-icon){display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.streetlens-main-map-card .streetlens-map-mini-tools button:has(.satellite-icon){width:auto;min-width:36px;padding:6px 8px}
+.streetlens-main-map-card .streetlens-map-mini-tools button:has(.satellite-icon) span{display:none}
+@media(max-width:850px){.streetlens-fullmap-shell{grid-template-columns:minmax(0,1fr) 300px;width:100vw;height:100vh;border-radius:0}.streetlens-map-sheet{padding:12px}.streetlens-fullmap-tools{right:8px;top:8px}.streetlens-fullmap-tools button{padding:7px 8px;font-size:10px}}
+</style>
+<style>
+/* StreetLens v22: clean map + Map 1 road/sidebar styling */
+.maplibregl-map{font-family:'DM Sans',sans-serif;background:#e9e7df}
+/* Keep the mini map clean: rounded pavement strokes with a restrained casing. */
+.streetlens-main-map-card .maplibregl-ctrl-group{background:rgba(18,24,22,.94)!important;border:1px solid rgba(255,255,255,.16)!important}
+.streetlens-main-map-card .maplibregl-ctrl-group button{color:#eef3ef!important}
+/* The full map uses the light editorial sidebar from the preferred reference. */
+.streetlens-fullmap-shell{background:#f3f0e7;border-color:#d5cec0}
+.streetlens-map-sheet{background:#f3f0e7!important;color:#26312c!important;border-left:1px solid #d5cec0!important;font-family:'DM Sans',sans-serif!important}
+.streetlens-map-sheet-head strong{color:#18211d!important;font-family:'DM Sans',sans-serif!important}
+.streetlens-map-sheet-head span,.streetlens-map-sheet-label{color:#68736d!important}
+.streetlens-map-sheet .streetlens-metric-block{background:#e8e2d6!important;border-color:#cfc5b4!important}
+.streetlens-map-segment-toggle{border-color:#9eb3aa!important;background:#f8f5ed!important}
+.streetlens-map-segment-toggle button{background:#f8f5ed!important;color:#43534c!important}
+.streetlens-map-segment-toggle button.active{background:#355d50!important;color:#fff!important}
+.streetlens-map-options{color:#4f5a55!important}
+.streetlens-find-input{background:#fffdf8!important;border-color:#cfc5b4!important;color:#202824!important}
+.streetlens-sheet-ranking{border-top-color:#d5cec0!important}
+.streetlens-ranking-row{color:#26312c!important;border-bottom-color:#d5cec0!important;background:transparent!important}
+.streetlens-ranking-row:hover{background:#e7e1d5!important}
+.streetlens-ranking-row b{color:#25342e!important}
+.streetlens-ranking-row small{color:#737d77!important}
+/* Map 1 style: rounded, readable, not oversized. */
+.streetlens-section-hover-card{font-family:'DM Sans',sans-serif!important}
+</style>
+<style>
+.streetlens-ranking-link { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:8px 13px; margin-right:14px; border:1px solid #355d50; border-radius:8px; color:#fff; background:#355d50; text-decoration:none; font:600 12px 'DM Sans',sans-serif; white-space:nowrap; transition:background .16s ease,border-color .16s ease,transform .16s ease; }
+.streetlens-ranking-link:hover { background:#28483e; border-color:#28483e; transform:translateY(-1px); }
+.streetlens-ranking-link:focus-visible { outline:2px solid #8eb5a6; outline-offset:3px; }
+.streetlens-ranking-link .ranking-link-icon { font-size:14px; line-height:1; }
+@media(max-width:560px){.streetlens-ranking-link{margin-right:7px;padding:7px 9px;font-size:11px}.header-actions-only{gap:4px}}
+/* Shared ML distress palette — kept consistent with the image legend. */
+:root {
+  --distress-alligator: #4a90c4;
+  --distress-longitudinal: #c1543d;
+  --distress-transverse: #d1a13c;
+  --distress-pothole: #9370c4;
+}
+.streetlens-breakdown-card .distress-row:nth-of-type(1) .bar span { background: var(--distress-alligator) !important; }
+.streetlens-breakdown-card .distress-row:nth-of-type(2) .bar span { background: var(--distress-longitudinal) !important; }
+.streetlens-breakdown-card .distress-row:nth-of-type(3) .bar span { background: var(--distress-transverse) !important; }
+.streetlens-breakdown-card .distress-row:nth-of-type(4) .bar span { background: var(--distress-pothole) !important; }
+.streetlens-breakdown-card .distress-row:nth-of-type(1) .swatch { background: var(--distress-alligator) !important; }
+.streetlens-breakdown-card .distress-row:nth-of-type(2) .swatch { background: var(--distress-longitudinal) !important; }
+.streetlens-breakdown-card .distress-row:nth-of-type(3) .swatch { background: var(--distress-transverse) !important; }
+.streetlens-breakdown-card .distress-row:nth-of-type(4) .swatch { background: var(--distress-pothole) !important; }
+</style>
+
+<style id="streetlens-dashboard-back-map-style">
+.header-actions-only .streetlens-header-back-map{display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid #344640;border-radius:7px;background:#315f52;color:#fff;text-decoration:none;font:600 12px Inter,sans-serif;margin-right:8px}
+.header-actions-only .streetlens-header-back-map:hover{background:#3c7564}
+</style>
+</head>
+<body>
+
+
+
+<!-- DASHBOARD -->
+
+<div class="dashboard">
+
+    <header class="header">
+
+        <div class="header-brand">
+            <strong>StreetLens</strong>
+            <span>·</span>
+            <span>Pavement Condition</span>
+        </div>
+
+
+        <div class="header-actions-only">
+            <a href="{{ url_for('map_home') }}" class="streetlens-header-back-map" aria-label="Back to inspection map"><span class="ranking-link-icon" aria-hidden="true">←</span><span>Back to map</span></a><a href="{{ url_for('road_ranking') }}" class="streetlens-ranking-link" aria-label="Open PCI road ranking page"><span class="ranking-link-icon" aria-hidden="true">↗</span><span>Road ranking</span></a>
+            <!-- Logout must be POST because Flask route is POST-only -->
+            <form
+                action="{{ url_for('logout') }}"
+                method="POST"
+                class="signout-form"
+            >
+                <button type="submit" class="signout">Sign out</button>
+            </form>
+        </div>
+
+    </header>
+
+
+    <main class="dashboard-body streetlens-dashboard-grid">
+<aside class="left-column streetlens-left-column">
+<section class="route-section">
+<div class="map-card streetlens-main-map-card" aria-label="Interactive StreetLens route map"><div id="streetLensDashboardMap"></div><div id="streetLensDashboardMapLoading" class="streetlens-map-loading">Loading segmented inspection map…</div><div id="streetLensDashboardHoverCard" class="streetlens-section-hover-card" hidden></div><div class="streetlens-map-mini-tools"><button id="streetLensDashboardSatellite" type="button" title="Toggle satellite imagery"><svg class="satellite-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 4-4 4 4-4 4zM13 13l4 4m-7-7-4 4m8-2 3-3 3 3-3 3zM4 20l5-5m-2 5h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Satellite</span></button><button id="streetLensDashboardReset" type="button" title="Reset">↺</button><button id="streetLensDashboardExpand" type="button" title="Open map">⤢</button><button id="streetLensDashboardFullscreen" type="button" title="Full screen map">⛶</button></div></div></section>
+
+<section class="streetlens-left-preview" aria-label="Road image preview"><div class="streetlens-left-preview-head"><strong>Road image</strong><span>Preview</span></div><div class="streetlens-left-preview-frame"><img src="/static/images/road_preview.png" alt="Road inspection preview"></div></section>
+</aside>
+<section class="streetlens-ml-column"><section class="ml-card streetlens-ml-card">
+<div class="streetlens-road-scroll" id="streetLensRoadScroll" aria-label="Scrollable road inspection view">
+<div class="streetlens-road-toolbar" aria-label="Road image controls">
+<span class="streetlens-frame-status" id="streetLensFrameStatus">—</span>
+<select id="streetLensDatasetSelect" class="streetlens-dataset-select" aria-label="Inspection frame dataset" title="Choose a loaded inspection dataset">
+  <option value="map">Selected map road</option>
+  <option value="penn-sample">Penn Ave N · sample</option>
+</select>
+<button id="streetLensRoadZoomIn" type="button" title="Zoom in on the road frames" aria-label="Zoom in">＋</button>
+<span class="streetlens-road-ctrl-hint">Ctrl + scroll</span>
+<span id="streetLensRoadZoomLabel" class="streetlens-road-zoom-label">100%</span>
+</div>
+<div class="streetlens-road-strip" id="streetLensRoadStrip"></div>
+<div class="streetlens-road-pending hidden" id="streetLensRoadPending">
+    <strong>ML imagery pending upload</strong>
+    <span>The selected road does not have inspection frames uploaded yet.</span>
+</div>
+</div>
+<div class="streetlens-annotation-controls" aria-label="Annotation categories">
+  <label><input type="checkbox" data-annotation-label="C" checked><i style="background:#ff3b30"></i>Crack</label>
+  <label><input type="checkbox" data-annotation-label="P" checked><i style="background:#ff9500"></i>Pothole</label>
+  <label><input type="checkbox" data-annotation-label="M" checked><i style="background:#0a84ff"></i>Maintenance / patches</label>
+  <label><input type="checkbox" data-annotation-label="S" checked><i style="background:#ffd60a"></i>Sealant</label>
+</div>
+<div class="streetlens-annotation-note" id="streetLensAnnotationNote" role="status">Select a road section to view its inspection frames and annotations.</div></section></section>
+<section class="right-column streetlens-right-column"><div class="analytics-card score streetlens-score-card"><h2>Overall distress score</h2><div class="gauge"><svg viewBox="0 0 220 130"><path d="M35 105 A75 75 0 0 1 185 105" fill="none" stroke="#2a2a2a" stroke-width="14" stroke-linecap="round"/><path d="M35 105 A75 75 0 0 1 185 105" fill="none" id="streetLensGaugeProgress" stroke="#c1543d" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 236"/><text id="streetLensScoreValue" x="110" y="95" text-anchor="middle" fill="#f1f1f1" font-size="36" font-weight="700" font-family="Outfit">—</text><text x="110" y="113" text-anchor="middle" fill="#777" font-size="9" font-family="Inter">PCI: 100 = best condition</text></svg></div><div id="streetLensCondition" class="condition">CONDITION: —</div><div id="streetLensRoadSummary" class="pills road-summary">
+<div class="road-summary-wide"><span>Street name</span><b id="streetLensSelectedRoad">—</b></div>
+<div><span>PCI</span><b id="streetLensSelectedPci">—</b></div>
+<div><span>SDI</span><b id="streetLensSelectedSdi">—</b></div>
+<div><span>Latitude</span><b id="streetLensSelectedLatitude">—</b></div>
+<div><span>Longitude</span><b id="streetLensSelectedLongitude">—</b></div>
+</div></div>
+<div class="analytics-card breakdown streetlens-breakdown-card"><h2>Distress breakdown</h2>{% for d in distress %}<div class="distress-row"><div class="distress-line"><span><i class="swatch" data-color="{{ d.color }}"></i>{{ d.label }}</span><b>{{ d.pct }}%</b></div><div class="bar"><span style="width: {{ d.pct }}%; background: {{ d.color }};"></span></div><p>{{ d.sub }}</p></div>{% endfor %}</div></section>
+</main>
+
+</div>
+
+
+<!-- Full inspection map -->
+<div id="mapModal" class="modal hidden" onclick="closeMap(event)">
+  <div class="streetlens-fullmap-shell" onclick="event.stopPropagation()">
+    <div class="streetlens-fullmap-map-wrap">
+      <div id="streetLensModalMap"></div>
+      <div id="streetLensModalMapLoading" class="streetlens-map-loading">Loading segmented inspection map…</div>
+      <div id="streetLensModalHoverCard" class="streetlens-section-hover-card" hidden></div>
+      <div class="streetlens-fullmap-tools">
+        <button id="streetLensModalSatellite" type="button" title="Toggle satellite imagery"><svg class="satellite-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 4-4 4 4-4 4zM13 13l4 4m-7-7-4 4m8-2 3-3 3 3-3 3zM4 20l5-5m-2 5h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Satellite</span></button>
+        <button id="streetLensModalReset" type="button" title="Reset map view">↺ Reset</button>
+        <button id="streetLensModalFullscreen" type="button" title="Browser fullscreen">⛶ Fullscreen</button>
+        <button id="streetLensModalClose" type="button" title="Close map">×</button>
+      </div>
+    </div>
+    <aside class="streetlens-map-sheet">
+      <div class="streetlens-map-sheet-head">
+        <div>
+          <strong>StreetLens Inspection Map</strong>
+          <span>Collingswood, NJ · segmented pavement condition</span>
+        </div>
+      </div>
+      <div class="streetlens-metric-block">
+        <p class="streetlens-map-sheet-label">Color the map by</p>
+        <div class="streetlens-map-segment-toggle" role="group" aria-label="Metric">
+          <button id="streetLensModalMetricSDI" type="button" class="active" aria-pressed="true">SDI<small>Surface Distress Index · 0–5</small></button>
+          <button id="streetLensModalMetricPCI" type="button" aria-pressed="false">PCI<small>Pavement Condition Index · 0–100</small></button>
+        </div>
+      </div>
+      <div class="streetlens-current-section" aria-live="polite">
+        <p class="streetlens-map-sheet-label">Hovered section</p>
+        <strong id="streetLensHoveredRoad">Hover over a colored road</strong>
+        <div class="streetlens-current-score-grid">
+          <div><span id="streetLensCurrentMetricLabel">SDI</span><b id="streetLensCurrentMetricValue">—</b></div>
+          <div><span id="streetLensCurrentOtherMetricLabel">PCI</span><b id="streetLensCurrentOtherMetricValue">—</b></div>
+          <div><span>Condition</span><b id="streetLensCurrentCondition">—</b></div>
+        </div>
+        <small id="streetLensCurrentSectionMeta">Move the cursor over a section to inspect its scores.</small>
+      </div>
+      <div class="streetlens-legend-control">
+        <label><input type="checkbox" id="streetLensToggleLegend" checked><span>Show color legend</span></label>
+      </div>
+      <div id="streetLensLegendWrap">
+        <p class="streetlens-map-sheet-label" id="streetLensModalLegendLabel">SDI of the section</p>
+        <div id="streetLensModalLegend" class="streetlens-sheet-legend"></div>
+      </div>
+      <div class="streetlens-map-options">
+        <label><input type="checkbox" id="streetLensShowBatch1" checked><span class="dash-sample"></span><span>Batch 1 runs · dashed</span></label>
+        <label><input type="checkbox" id="streetLensShowEndPieces" checked><span class="thin-sample"></span><span>End pieces under 200 ft · thin</span></label>
+      </div>
+      <div>
+        <p class="streetlens-map-sheet-label">Find a street</p>
+        <input id="streetLensFindStreet" class="streetlens-find-input" list="streetLensStreetList" placeholder="Type a street name" autocomplete="off">
+        <datalist id="streetLensStreetList"></datalist>
+      </div>
+      <div>
+        <p class="streetlens-map-sheet-label" id="streetLensRankingLabel">All sections ranked by SDI</p>
+        <div id="streetLensRoadRanking" class="streetlens-sheet-ranking"></div>
+      </div>
+      <p class="streetlens-map-sheet-foot" id="streetLensRoadCount"></p>
+    </aside>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+/* StreetLens segmented Collingswood map — MapLibre implementation. */
+let STREETLENS_ROAD_REGISTRY={version:1,section_length_ft:2500,roads:[]};
+let STREETLENS_ROADS=[]; let STREETLENS_REGISTRY_READY=null;
+let STREETLENS_SECTION_DATA=null; let STREETLENS_METRIC='sdi'; let STREETLENS_CURRENT_SECTION=null;
+let STREETLENS_MAPS={};
+const STREETLENS_COLORS={failed:'#5b1136',serious:'#a31631',vpoor:'#dc4a2c',poor:'#f39a32',fair:'#f1d451',sat:'#62b8a5',good:'#1f6f9c'};
+const STREETLENS_PCI_CLASSES=[[85,'Good','good','85–100'],[70,'Satisfactory','sat','70–85'],[55,'Fair','fair','55–70'],[40,'Poor','poor','40–55'],[25,'Very Poor','vpoor','25–40'],[10,'Serious','serious','10–25'],[-1,'Failed','failed','0–10']];
+const STREETLENS_SDI_CLASSES=[[4.5,'4.5 and up','good',''],[4.0,'4.0 – 4.5','sat',''],[3.5,'3.5 – 4.0','fair',''],[3.0,'3.0 – 3.5','poor',''],[-1,'Under 3.0','serious','']];
+function classify(metric,value){const v=Number(value);if(!Number.isFinite(v))return null;return(metric==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES).find(c=>v>=c[0])||null;}
+function conditionText(metric,value){const c=classify(metric,value);return c?c[1]:'No data';}
+function fmt1(v){return Number.isFinite(Number(v))?Number(v).toFixed(1):'–'}
+function fmt2(v){return Number.isFinite(Number(v))?Number(v).toFixed(2):'–'}
+function n0(v){return Number.isFinite(Number(v))?Math.round(Number(v)).toLocaleString():'–'}
+function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function animateOverallScore(value,condition){const s=document.getElementById('streetLensScoreValue'),g=document.getElementById('streetLensGaugeProgress'),cEl=document.getElementById('streetLensCondition');const target=Number(value);if(!Number.isFinite(target)){if(s)s.textContent='—';return;}const clamped=Math.max(0,Math.min(100,target));const c=classify('pci',clamped),color=c?STREETLENS_COLORS[c[2]]:'#f59e0b';if(g){g.setAttribute('stroke',color)}if(cEl){cEl.textContent=`CONDITION: ${String(condition||c?.[1]||'').toUpperCase()}`;cEl.style.borderColor=color;cEl.style.color=color;}const start=performance.now();function tick(now){const t=Math.min(1,(now-start)/700),e=1-Math.pow(1-t,3),cur=clamped*e;if(s)s.textContent=cur.toFixed(1).replace(/\.0$/,'');if(g)g.setAttribute('stroke-dasharray',`${236*(cur/100)} 236`);if(t<1)requestAnimationFrame(tick)}requestAnimationFrame(tick)}
+function sectionVisible(sec){const b1=document.getElementById('streetLensShowBatch1')?.checked!==false;const end=document.getElementById('streetLensShowEndPieces')?.checked!==false;if(sec.run.batch==='Batch 1'&&!b1)return false;if(sec.len<200&&!end)return false;return true;}
+function flattenSections(data){const out=[];(data?.runs||[]).forEach(run=>(run.secs||[]).forEach(sec=>{if(!Array.isArray(sec.g)||sec.g.length<2)return;sec.run=run;sec.coords=sec.g.map(p=>[Number(p[1]),Number(p[0])]);out.push(sec)}));return out;}
+function sectionColor(sec){const c=classify(STREETLENS_METRIC,STREETLENS_METRIC==='sdi'?sec.sdi:sec.pci);return c?STREETLENS_COLORS[c[2]]:'#6b7280';}
+function buildGeoJSON(){return{type:'FeatureCollection',features:STREETLENS_SECTION_DATA.sections.map((s,i)=>({type:'Feature',id:i,properties:{sectionKey:`${s.run.key}::${s.bin}`,runKey:s.run.key,name:s.run.name,bin:s.bin,f0:s.f0,f1:s.f1,len:s.len,pci:Number(s.pci),sdi:Number(s.sdi),batch:s.run.batch||'',visible:sectionVisible(s)},geometry:{type:'LineString',coordinates:s.coords}}))};}
+function buildBoundaryGeoJSON(){const features=[];for(const s of STREETLENS_SECTION_DATA.sections){if(!sectionVisible(s)||!s.coords?.length)continue;for(const c of [s.coords[0],s.coords[s.coords.length-1]])features.push({type:'Feature',properties:{sectionKey:`${s.run.key}::${s.bin}`},geometry:{type:'Point',coordinates:c}});}return{type:'FeatureCollection',features};}
+function buildLabelsGeoJSON(){const seen=new Set(),features=[];for(const s of STREETLENS_SECTION_DATA.sections){if(seen.has(s.run.key))continue;seen.add(s.run.key);const secs=STREETLENS_SECTION_DATA.sections.filter(x=>x.run.key===s.run.key);const mid=secs[Math.floor(secs.length/2)],coords=mid.coords[Math.floor(mid.coords.length/2)];if(coords)features.push({type:'Feature',properties:{name:mid.run.name,batch:mid.run.batch||''},geometry:{type:'Point',coordinates:coords}})}return{type:'FeatureCollection',features};}
+function lineColorExpression(){if(STREETLENS_METRIC==='sdi')return['step',['get','sdi'],STREETLENS_COLORS.serious,3,STREETLENS_COLORS.poor,3.5,STREETLENS_COLORS.fair,4,STREETLENS_COLORS.sat,4.5,STREETLENS_COLORS.good];return['step',['get','pci'],STREETLENS_COLORS.failed,10,STREETLENS_COLORS.serious,25,STREETLENS_COLORS.vpoor,40,STREETLENS_COLORS.poor,55,STREETLENS_COLORS.fair,70,STREETLENS_COLORS.sat,85,STREETLENS_COLORS.good];}
+function visibilityExpression(){return['case',['get','visible'],1,0];}
+function addMapLayers(map){
+  const mini=!!map._streetlensDashboard;
+  const caseWidth=mini?['case',['<',['get','len'],200],2.6,4.2]:['case',['<',['get','len'],200],3.6,5.6];
+  const lineWidth=mini?['case',['<',['get','len'],200],1.5,2.4]:['case',['<',['get','len'],200],2.0,3.4];
+  map.addSource('streetlens-sections',{type:'geojson',data:buildGeoJSON()});
+  map.addSource('streetlens-labels',{type:'geojson',data:buildLabelsGeoJSON()});
+  // Reuse the verified Collingswood study-area ring on the expanded dashboard map.
+  // A world-sized outer ring with the study area as a hole dims every region outside it.
+  if(!mini && Array.isArray(STREETLENS_SECTION_DATA.ring) && STREETLENS_SECTION_DATA.ring.length>2){
+    const boundary=STREETLENS_SECTION_DATA.ring.map(p=>[Number(p[0]),Number(p[1])]);
+    if(boundary[0][0]!==boundary[boundary.length-1][0]||boundary[0][1]!==boundary[boundary.length-1][1])boundary.push([...boundary[0]]);
+    const area=boundary.slice(0,-1).reduce((sum,p,i)=>{const q=boundary[i+1];return sum+p[0]*q[1]-q[0]*p[1]},0);
+    if(area>0)boundary.reverse();
+    const world=[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]];
+    map.addSource('streetlens-collingswood-mask',{type:'geojson',data:{type:'FeatureCollection',features:[{type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[world,boundary]}}]}});
+    map.addLayer({id:'streetlens-outside-dim',type:'fill',source:'streetlens-collingswood-mask',paint:{'fill-color':'#05090b','fill-opacity':0.58,'fill-outline-color':'#05090b'}});
+    map.addSource('streetlens-collingswood-boundary',{type:'geojson',data:{type:'Feature',properties:{},geometry:{type:'LineString',coordinates:boundary}}});
+    map.addLayer({id:'streetlens-collingswood-boundary-line',type:'line',source:'streetlens-collingswood-boundary',paint:{'line-color':'#c4e5db','line-width':['interpolate',['linear'],['zoom'],10,1.3,13,2,16,2.7],'line-opacity':0.95,'line-dasharray':[2,1.5]}});
+  }
+  map.addLayer({id:'streetlens-section-case',type:'line',source:'streetlens-sections',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#111614','line-opacity':visibilityExpression(),'line-width':caseWidth}});
+  map.addLayer({id:'streetlens-section-line',type:'line',source:'streetlens-sections',filter:['!=',['get','batch'],'Batch 1'],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':lineColorExpression(),'line-opacity':visibilityExpression(),'line-width':lineWidth}});
+  map.addLayer({id:'streetlens-section-line-batch1',type:'line',source:'streetlens-sections',filter:['==',['get','batch'],'Batch 1'],layout:{'line-cap':'round','line-join':'round','line-dasharray':['literal',[2,2]]},paint:{'line-color':lineColorExpression(),'line-opacity':visibilityExpression(),'line-width':lineWidth}});
+  // Small pale boundary marks make adjacent inspection sections distinguishable.
+  // Endpoint dots are reserved for the expanded/fullscreen analysis map.
+  if(!mini){
+    map.addSource('streetlens-section-boundaries',{type:'geojson',data:buildBoundaryGeoJSON()});
+    map.addLayer({id:'streetlens-section-boundaries',type:'circle',source:'streetlens-section-boundaries',paint:{'circle-radius':['interpolate',['linear'],['zoom'],11,1.1,15,1.8,18,2.2],'circle-color':'#f7f4eb','circle-opacity':0.92,'circle-stroke-color':'#27342f','circle-stroke-width':0.7}});
+  }
+  map.addSource('streetlens-selected-section',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+  map.addLayer({id:'streetlens-selected-glow',type:'line',source:'streetlens-selected-section',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':lineColorExpression(),'line-width':['interpolate',['linear'],['zoom'],11,7,14,11,18,16],'line-opacity':0.5,'line-blur':2.8}});
+  map.addLayer({id:'streetlens-selected-core',type:'line',source:'streetlens-selected-section',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':lineColorExpression(),'line-width':['interpolate',['linear'],['zoom'],11,3,14,5,18,7],'line-opacity':1}});
+  map.addLayer({id:'streetlens-street-labels',type:'symbol',source:'streetlens-labels',minzoom:15.2,layout:{'text-field':['get','name'],'text-size':['interpolate',['linear'],['zoom'],15,10,18,14],'text-anchor':'center','text-allow-overlap':false},paint:{'text-color':'#18211f','text-halo-color':'#f5f2df','text-halo-width':1.4}});
+  updateMapPaint(map);
+}
+function updateMapPaint(map){
+  if(!map?.getLayer('streetlens-section-line'))return;
+  const vis=visibilityExpression();
+  map.setPaintProperty('streetlens-section-line','line-color',lineColorExpression());
+  map.setPaintProperty('streetlens-section-line-batch1','line-color',lineColorExpression());
+  map.setPaintProperty('streetlens-section-case','line-opacity',vis);
+  map.setPaintProperty('streetlens-section-line','line-opacity',vis);
+  map.setPaintProperty('streetlens-section-line-batch1','line-opacity',vis);
+}
+function syncVisibility(map){const src=map?.getSource('streetlens-sections');if(!src)return;src.setData(buildGeoJSON());const boundaries=map.getSource('streetlens-section-boundaries');if(boundaries)boundaries.setData(buildBoundaryGeoJSON());updateMapPaint(map);if(map.getLayer('streetlens-selected-glow'))map.setPaintProperty('streetlens-selected-glow','line-color',lineColorExpression());if(map.getLayer('streetlens-selected-core'))map.setPaintProperty('streetlens-selected-core','line-color',lineColorExpression());}
+function fitRing(map){const ring=STREETLENS_SECTION_DATA?.ring||[];if(!ring.length)return;const b=new maplibregl.LngLatBounds();ring.forEach(p=>b.extend([Number(p[0]),Number(p[1])]));if(!b.isEmpty())map.fitBounds(b,{padding:20,maxZoom:16,duration:450});}
+function buildHoverCard(sec){const cp=classify('pci',sec.pci),units=(sec.units||[]).map(u=>fmt1(u.pci)).join(', ');const flags=[];if(sec.run.batch==='Batch 1')flags.push('Batch 1 labels not reviewed · dashed');if(sec.len<200)flags.push('End piece under 200 ft · thin');if(sec.est)flags.push(`${n0(sec.est)} of ${n0(sec.n)} frames have estimated position`);return `<div class="hover-title">${escapeHtml(sec.run.name)}</div><div class="hover-sub">Section ${sec.bin} · ${n0(sec.f0)}–${n0(sec.f1)} ft · ${escapeHtml(sec.run.batch||'')}</div><div class="hover-metrics"><div><span>SDI</span><b>${fmt2(sec.sdi)}</b></div><div><span>PCI</span><b>${fmt1(sec.pci)}</b></div><div><span>Rating</span><b>${escapeHtml(cp?.[1]||'–')}</b></div></div><div class="hover-grid"><span>Length</span><b>${n0(sec.len)} ft</b><span>NDI / LDI</span><b>${fmt2(sec.ndi)} / ${fmt2(sec.ldi)}</b><span>Cracks</span><b>${n0(sec.cr)} · ${n0(sec.crft)} ft</b><span>Distressed area</span><b>${fmt1(sec.dpct)}%</b><span>Potholes / patches</span><b>${n0(sec.pot)} / ${n0(sec.pat)}</b><span>PCI sample units</span><b>${units||'–'}</b><span>Whole street</span><b>SDI ${fmt2(sec.run.sdi)} · PCI ${fmt1(sec.run.pci)}</b></div>${flags.map(f=>`<div class="hover-flag">${escapeHtml(f)}</div>`).join('')}`;}
+function showHover(sec,map,e){updateHoveredSection(sec);updateDashboardDetails(sec);if(map._streetlensDashboard){hideHover(map);return;}const card=document.getElementById(map._streetlensCardId);if(!card)return;card.innerHTML=buildHoverCard(sec);card.hidden=false;positionHoverCard(card,map,e);}
+function positionHoverCard(card,map,e){const p=e?.point||{x:map.getContainer().clientWidth/2,y:map.getContainer().clientHeight/2},size={x:map.getContainer().clientWidth,y:map.getContainer().clientHeight};const w=card.offsetWidth||280,h=card.offsetHeight||210;let x=p.x+16,y=p.y+16;if(x+w>size.x-10)x=p.x-w-16;if(y+h>size.y-10)y=p.y-h-16;card.style.left=Math.max(10,x)+'px';card.style.top=Math.max(10,y)+'px';}
+function hideHover(map){const card=document.getElementById(map._streetlensCardId);if(card)card.hidden=true;}
+function updateHoveredSection(sec){if(!sec)return;STREETLENS_CURRENT_SECTION=sec;const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val};const metric=STREETLENS_METRIC==='sdi'?'SDI':'PCI',other=STREETLENS_METRIC==='sdi'?'PCI':'SDI';const current=STREETLENS_METRIC==='sdi'?sec.sdi:sec.pci,otherValue=STREETLENS_METRIC==='sdi'?sec.pci:sec.sdi;set('streetLensHoveredRoad',`${sec.run.name} · Section ${sec.bin}`);set('streetLensCurrentMetricLabel',metric);set('streetLensCurrentMetricValue',STREETLENS_METRIC==='sdi'?fmt2(current):fmt1(current));set('streetLensCurrentOtherMetricLabel',other);set('streetLensCurrentOtherMetricValue',STREETLENS_METRIC==='sdi'?fmt1(otherValue):fmt2(otherValue));set('streetLensCurrentCondition',conditionText(STREETLENS_METRIC,current));set('streetLensCurrentSectionMeta',`${n0(sec.f0)}–${n0(sec.f1)} ft · ${n0(sec.len)} ft section`);const condition=document.getElementById('streetLensCurrentCondition');const cls=classify(STREETLENS_METRIC,current);if(condition)condition.style.color=cls?STREETLENS_COLORS[cls[2]]:'#68736d';}
+function updateDashboardDetails(sec){if(!sec)return;updateHoveredSection(sec);const pci=Number(sec.pci),sdi=Number(sec.sdi);animateOverallScore(pci,conditionText('pci',pci));const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val};set('streetLensSelectedRoad',sec.run.name+` · Section ${sec.bin}`);set('streetLensSelectedPci',fmt1(pci));set('streetLensSelectedSdi',fmt2(sdi));const lat=sec.g?.[0]?.[0],lon=sec.g?.[0]?.[1];set('streetLensSelectedLatitude',Number.isFinite(lat)?lat.toFixed(6)+'°':'—');set('streetLensSelectedLongitude',Number.isFinite(lon)?lon.toFixed(6)+'°':'—');const frames=STREETLENS_ROADS.filter(r=>String(r.name||'').toLowerCase()===String(sec.run.name||'').toLowerCase()).flatMap(r=>r.frames||[]);if(window.streetLensLoadRoadFrames)window.streetLensLoadRoadFrames(frames);}
+function updateLegendAndRanking(){const legend=document.getElementById('streetLensModalLegend');if(legend){const rows=STREETLENS_METRIC==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES;legend.innerHTML=rows.map(c=>`<div class="sheet-lg-row"><i style="background:${STREETLENS_COLORS[c[2]]}"></i><span>${c[1]}</span><small>${c[3]}</small></div>`).join('');}const label=document.getElementById('streetLensModalLegendLabel');if(label)label.textContent=STREETLENS_METRIC==='sdi'?'SDI of the section':'PCI rating (ASTM D6433)';const rankLabel=document.getElementById('streetLensRankingLabel');if(rankLabel)rankLabel.textContent=`All sections ranked by ${STREETLENS_METRIC.toUpperCase()}`;const box=document.getElementById('streetLensRoadRanking');if(!box||!STREETLENS_SECTION_DATA)return;const vals=STREETLENS_SECTION_DATA.sections.filter(sectionVisible);const sorted=[...vals].sort((a,b)=>STREETLENS_METRIC==='sdi'?Number(a.sdi)-Number(b.sdi):Number(a.pci)-Number(b.pci));box.innerHTML=sorted.map((s,i)=>`<button class="streetlens-ranking-row" data-section-key="${escapeHtml(s.run.key)}::${s.bin}"><span>${i+1}</span><span>${escapeHtml(s.run.name)}<small>Section ${s.bin} · ${n0(s.f0)}–${n0(s.f1)} ft</small></span><b>${STREETLENS_METRIC==='sdi'?fmt2(s.sdi):fmt1(s.pci)}</b></button>`).join('');box.querySelectorAll('[data-section-key]').forEach(btn=>btn.onclick=()=>{const s=STREETLENS_SECTION_DATA.sections.find(x=>`${x.run.key}::${x.bin}`===btn.dataset.sectionKey);if(s)focusSection(s)});const count=document.getElementById('streetLensRoadCount');if(count)count.textContent=`${STREETLENS_SECTION_DATA.sections.length} mapped sections · ${STREETLENS_SECTION_DATA.runs.length} street runs`;}
+function focusSection(sec){Object.values(STREETLENS_MAPS).forEach(map=>{if(!map)return;const b=new maplibregl.LngLatBounds();sec.coords.forEach(c=>b.extend(c));map.fitBounds(b,{padding:80,maxZoom:18,duration:650});});}
+function refreshMap(map){if(!map||!map.loaded())return;syncVisibility(map);}
+function addBasemap(map){const street={type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19,attribution:'© Esri, HERE, Garmin, © OpenStreetMap contributors'};const sat={type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19,attribution:'Imagery © Esri'};map.addSource('streetlens-street',{type:'raster',...street});map.addLayer({id:'streetlens-street-basemap',type:'raster',source:'streetlens-street'});map.addSource('streetlens-satellite',{type:'raster',...sat});map.addLayer({id:'streetlens-satellite-basemap',type:'raster',source:'streetlens-satellite',layout:{visibility:'none'}});map._streetlensSatelliteOn=false;}
+function toggleSatellite(map){if(!map)return;map._streetlensSatelliteOn=!map._streetlensSatelliteOn;map.setLayoutProperty('streetlens-satellite-basemap','visibility',map._streetlensSatelliteOn?'visible':'none');map.setLayoutProperty('streetlens-street-basemap','visibility',map._streetlensSatelliteOn?'none':'visible');}
+function resetMap(map){if(map){fitRing(map);hideHover(map);refreshMap(map)}}
+function highlightSelectedSection(map,sec){if(!map||!sec||!map.getSource('streetlens-selected-section'))return;const feature={type:'Feature',properties:{sectionKey:`${sec.run.key}::${sec.bin}`,sdi:Number(sec.sdi),pci:Number(sec.pci)},geometry:{type:'LineString',coordinates:sec.coords}};map.getSource('streetlens-selected-section').setData({type:'FeatureCollection',features:[feature]});}
+function createStreetLensMap(id,cardId){const el=document.getElementById(id);if(!el)throw new Error('Map container not found: '+id);if(!window.maplibregl)throw new Error('MapLibre failed to load');const map=new maplibregl.Map({container:el,style:{version:8,sources:{},layers:[]},center:[-75.078,39.916],zoom:13,attributionControl:true,dragRotate:false});map._streetlensCardId=cardId;map._streetlensDashboard=(id==='streetLensDashboardMap');map.addControl(new maplibregl.NavigationControl({showCompass:true,showZoom:true}),'top-left');map.addControl(new maplibregl.ScaleControl({unit:'imperial'}),'bottom-left');map.on('load',()=>{addBasemap(map);addMapLayers(map);fitRing(map);document.getElementById(id==='streetLensModalMap'?'streetLensModalMapLoading':'streetLensDashboardMapLoading')?.classList.add('hidden-map-loading');});map.on('mousemove','streetlens-section-line',e=>{if(!e.features?.length)return;const f=e.features[0],sec=STREETLENS_SECTION_DATA.sections.find(s=>`${s.run.key}::${s.bin}`===f.properties.sectionKey);if(!sec)return;map.getCanvas().style.cursor='pointer';showHover(sec,map,e);});map.on('mousemove','streetlens-section-line-batch1',e=>{if(!e.features?.length)return;const f=e.features[0],sec=STREETLENS_SECTION_DATA.sections.find(s=>`${s.run.key}::${s.bin}`===f.properties.sectionKey);if(!sec)return;map.getCanvas().style.cursor='pointer';showHover(sec,map,e);});map.on('mouseleave','streetlens-section-line',()=>{map.getCanvas().style.cursor='';hideHover(map);});map.on('mouseleave','streetlens-section-line-batch1',()=>{map.getCanvas().style.cursor='';hideHover(map);});const clickSection=e=>{const f=e.features?.[0],sec=f&&STREETLENS_SECTION_DATA.sections.find(s=>`${s.run.key}::${s.bin}`===f.properties.sectionKey);if(sec){highlightSelectedSection(map,sec);updateDashboardDetails(sec);}};map.on('click','streetlens-section-line',clickSection);map.on('click','streetlens-section-line-batch1',clickSection);map.on('mousemove',e=>{const card=document.getElementById(cardId);if(card&&!card.hidden)positionHoverCard(card,map,e);});return map;}
+function populateStreetSearch(){const list=document.getElementById('streetLensStreetList');if(!list)return;const names=[...new Set(STREETLENS_SECTION_DATA.runs.map(r=>r.name))].sort((a,b)=>a.localeCompare(b));list.innerHTML=names.map(n=>`<option value="${escapeHtml(n)}"></option>`).join('');const input=document.getElementById('streetLensFindStreet');input?.addEventListener('input',()=>{const q=input.value.trim().toLowerCase();if(!q)return;const hits=STREETLENS_SECTION_DATA.sections.filter(s=>s.run.name.toLowerCase()===q);if(!hits.length)return;const b=new maplibregl.LngLatBounds();hits.forEach(s=>s.coords.forEach(c=>b.extend(c)));Object.values(STREETLENS_MAPS).forEach(m=>m?.fitBounds(b,{padding:80,maxZoom:18,duration:500}));});}
+function setMetric(metric){STREETLENS_METRIC=metric==='pci'?'pci':'sdi';document.getElementById('streetLensModalMetricSDI')?.classList.toggle('active',STREETLENS_METRIC==='sdi');document.getElementById('streetLensModalMetricPCI')?.classList.toggle('active',STREETLENS_METRIC==='pci');document.getElementById('streetLensModalMetricSDI')?.setAttribute('aria-pressed',String(STREETLENS_METRIC==='sdi'));document.getElementById('streetLensModalMetricPCI')?.setAttribute('aria-pressed',String(STREETLENS_METRIC==='pci'));Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();if(STREETLENS_CURRENT_SECTION)updateHoveredSection(STREETLENS_CURRENT_SECTION);}
+async function openMap(fullscreen=false){const modal=document.getElementById('mapModal');if(!modal)return;modal.classList.remove('hidden');if(!STREETLENS_MAPS.modal)STREETLENS_MAPS.modal=createStreetLensMap('streetLensModalMap','streetLensModalHoverCard');setTimeout(()=>STREETLENS_MAPS.modal?.resize(),100);if(fullscreen)await toggleMapFullscreen();}
+async function toggleMapFullscreen(){const modal=document.getElementById('mapModal');if(!modal)return;try{if(!document.fullscreenElement)await modal.requestFullscreen();else await document.exitFullscreen();}catch(e){console.warn('StreetLens fullscreen:',e)}setTimeout(()=>{STREETLENS_MAPS.modal?.resize();},180);}
+function closeMap(e){if(e&&e.target!==e.currentTarget)return;const modal=document.getElementById('mapModal');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});modal?.classList.add('hidden');}
+window.openMap=openMap;window.closeMap=closeMap;
+document.addEventListener('fullscreenchange',()=>setTimeout(()=>STREETLENS_MAPS.modal?.resize(),180));
+document.addEventListener('DOMContentLoaded',async()=>{const fail=e=>console.error('StreetLens segmented map:',e);try{if(!window.maplibregl)throw new Error('MapLibre failed to load from CDN');const r=await fetch("{{ url_for('static', filename='data/road_registry.json') }}",{cache:'no-store'});if(r.ok){const d=await r.json();STREETLENS_ROAD_REGISTRY=d||STREETLENS_ROAD_REGISTRY;STREETLENS_ROADS=Array.isArray(d?.roads)?d.roads:[];}const response=await fetch("{{ url_for('static', filename='data/collingswood_sections.json') }}",{cache:'no-store'});if(!response.ok)throw new Error('section data '+response.status);const data=await response.json();STREETLENS_SECTION_DATA={...data,runs:Array.isArray(data.runs)?data.runs:[],sections:flattenSections(data)};if(!STREETLENS_SECTION_DATA.sections.length)throw new Error('No segmented sections were loaded');populateStreetSearch();updateLegendAndRanking();STREETLENS_MAPS.dashboard=createStreetLensMap('streetLensDashboardMap','streetLensDashboardHoverCard');document.getElementById('streetLensModalMetricSDI')?.addEventListener('click',()=>setMetric('sdi'));document.getElementById('streetLensModalMetricPCI')?.addEventListener('click',()=>setMetric('pci'));document.getElementById('streetLensToggleLegend')?.addEventListener('change',e=>{document.getElementById('streetLensLegendWrap')?.classList.toggle('legend-hidden',!e.target.checked);});document.getElementById('streetLensShowBatch1')?.addEventListener('change',()=>{Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();});document.getElementById('streetLensShowEndPieces')?.addEventListener('change',()=>{Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();});document.getElementById('streetLensDashboardSatellite')?.addEventListener('click',e=>{e.stopPropagation();toggleSatellite(STREETLENS_MAPS.dashboard)});document.getElementById('streetLensDashboardReset')?.addEventListener('click',e=>{e.stopPropagation();resetMap(STREETLENS_MAPS.dashboard)});document.getElementById('streetLensDashboardExpand')?.addEventListener('click',e=>{e.stopPropagation();openMap(false)});document.getElementById('streetLensDashboardFullscreen')?.addEventListener('click',e=>{e.stopPropagation();openMap(true)});document.getElementById('streetLensModalSatellite')?.addEventListener('click',()=>toggleSatellite(STREETLENS_MAPS.modal));document.getElementById('streetLensModalReset')?.addEventListener('click',()=>resetMap(STREETLENS_MAPS.modal));document.getElementById('streetLensModalFullscreen')?.addEventListener('click',toggleMapFullscreen);document.getElementById('streetLensModalClose')?.addEventListener('click',()=>closeMap());setMetric('sdi');}catch(e){fail(e);document.querySelectorAll('.streetlens-map-loading').forEach(x=>x.classList.add('hidden-map-loading'));}});
+</script>
+</body>
+</html>

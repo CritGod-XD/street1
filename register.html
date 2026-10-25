@@ -1,0 +1,135 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>StreetLens · Register</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"><style>
+        /* Authentication */
+
+        .auth-message {
+            margin: 0 0 18px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.4;
+            border: 1px solid rgba(255,255,255,.08);
+        }
+
+        .auth-message.error {
+            background: rgba(220, 70, 70, .12);
+            border-color: rgba(220, 70, 70, .3);
+            color: #ffaaa0;
+        }
+
+        .auth-message.success {
+            background: rgba(70, 180, 100, .12);
+            border-color: rgba(70, 180, 100, .3);
+            color: #9be0aa;
+        }
+
+        .auth-message.info {
+            background: rgba(70, 130, 220, .12);
+            border-color: rgba(70, 130, 220, .3);
+            color: #a8c8ff;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-wrapper input {
+            width: 100%;
+            padding-right: 48px;
+            box-sizing: border-box;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #777;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-toggle:hover {
+            color: #ddd;
+        }
+
+        .register-view .password-toggle {
+            padding: 0;
+        }
+
+        .password-toggle svg {
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+        }
+
+        .password-toggle .eye-off {
+            display: none;
+        }
+
+        .password-toggle.revealed .eye {
+            display: none;
+        }
+
+        .password-toggle.revealed .eye-off {
+            display: block;
+        }
+
+        .auth-form label {
+            display: block;
+        }
+
+        .auth-form input[type="text"],
+        .auth-form input[type="email"],
+        .auth-form input[type="password"] {
+            margin-top: 7px;
+        }
+
+        .login-card input[type="email"] {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: #ffffff0f;
+            border: 1px solid #ffffff1a;
+            color: #f1f5f9;
+            outline: 0;
+        }
+
+        .register-view h3 {
+            margin-bottom: 8px;
+        }
+
+        .register-view p {
+            line-height: 1.5;
+        }
+
+        .auth-form small {
+            display: block;
+            margin-top: 18px;
+        }
+
+        .signout-form {
+            display: inline;
+            margin: 0;
+            padding: 0;
+        }
+
+        .signout {
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            font: inherit;
+        }
+    
+</style></head><body><div class="login-page"><div class="login-topbar"><div class="brand-mark">⌁</div><span class="apcd">StreetLens</span><span class="divider"></span><span class="top-note">Pavement Crack Detection &amp; Road Condition Analysis</span></div><main class="login-main"><div class="login-grid"><section class="login-intro"><h1>Automated<br>Pavement<br><span>Condition</span><br>Detector</h1><p>Real-time crack detection and distress classification for highway infrastructure. Powered by computer vision and deep learning.</p><ul><li>AI-powered crack detection</li><li>Distress severity scoring</li><li>GPS-tagged inspection logs</li></ul></section><section class="login-card"><h2>Create an account</h2><p>Register for access to the StreetLens pavement inspection dashboard.</p>{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-container">{% for category,message in messages %}<div class="auth-message {{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}{% endwith %}<form action="{{ url_for('register') }}" method="POST" class="auth-form"><label>Username<input name="username" type="text" minlength="3" maxlength="32" required></label><label>Email<input name="email" type="email" required></label><label>Password<input name="password" type="password" autocomplete="new-password" required></label><label>Confirm password<input name="confirm_password" type="password" autocomplete="new-password" required></label><button class="login-btn" type="submit">Create account</button><a class="register-btn" href="{{ url_for('login') }}">Back to login</a></form><small>DOT Infrastructure Division · Secure Access Portal</small></section></div></main><footer>© 2026 StreetLens Platform · v2.4.1</footer></div></body></html>

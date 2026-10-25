@@ -1,0 +1,1263 @@
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>document.documentElement.classList.add("streetlens-map-first");</script>
+
+    <title>
+        StreetLens · Pavement Condition
+    </title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+
+    <style>
+        /* Authentication */
+
+        .auth-message {
+            margin: 0 0 18px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.4;
+            border: 1px solid rgba(255,255,255,.08);
+        }
+
+        .auth-message.error {
+            background: rgba(220, 70, 70, .12);
+            border-color: rgba(220, 70, 70, .3);
+            color: #ffaaa0;
+        }
+
+        .auth-message.success {
+            background: rgba(70, 180, 100, .12);
+            border-color: rgba(70, 180, 100, .3);
+            color: #9be0aa;
+        }
+
+        .auth-message.info {
+            background: rgba(70, 130, 220, .12);
+            border-color: rgba(70, 130, 220, .3);
+            color: #a8c8ff;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-wrapper input {
+            width: 100%;
+            padding-right: 48px;
+            box-sizing: border-box;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #777;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-toggle:hover {
+            color: #ddd;
+        }
+
+        .register-view .password-toggle {
+            padding: 0;
+        }
+
+        .password-toggle svg {
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+        }
+
+        .password-toggle .eye-off {
+            display: none;
+        }
+
+        .password-toggle.revealed .eye {
+            display: none;
+        }
+
+        .password-toggle.revealed .eye-off {
+            display: block;
+        }
+
+        .auth-form label {
+            display: block;
+        }
+
+        .auth-form input[type="text"],
+        .auth-form input[type="email"],
+        .auth-form input[type="password"] {
+            margin-top: 7px;
+        }
+
+        .login-card input[type="email"] {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: #ffffff0f;
+            border: 1px solid #ffffff1a;
+            color: #f1f5f9;
+            outline: 0;
+        }
+
+        .register-view h3 {
+            margin-bottom: 8px;
+        }
+
+        .register-view p {
+            line-height: 1.5;
+        }
+
+        .auth-form small {
+            display: block;
+            margin-top: 18px;
+        }
+
+        .signout-form {
+            display: inline;
+            margin: 0;
+            padding: 0;
+        }
+
+        .signout {
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            font: inherit;
+        }
+    
+        /* StreetLens interactive route maps */
+        .map-card {
+            position: relative;
+            cursor: default;
+        }
+        #streetLensDashboardMap, #streetLensModalMap {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+        }
+        .streetlens-map-loading {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            z-index: 5;
+            background: #111b;
+            color: #aaa;
+            font: 11px Inter, sans-serif;
+            pointer-events: none;
+            transition: opacity .2s ease;
+        }
+        .streetlens-map-loading.hidden-map-loading { opacity: 0; }
+        .streetlens-map-mini-legend, .streetlens-map-tools, .streetlens-map-legend {
+            position: absolute;
+            z-index: 10;
+        }
+        .streetlens-map-mini-legend {
+            left: 10px;
+            bottom: 10px;
+            display: flex;
+            gap: 9px;
+            padding: 6px 8px;
+            background: #101010e8;
+            border: 1px solid #2a2a2a;
+            border-radius: 5px;
+            color: #aaa;
+            font: 9px Inter, sans-serif;
+            pointer-events: none;
+        }
+        .streetlens-map-mini-legend span { display:flex; align-items:center; }
+        .streetlens-map-mini-legend i, .streetlens-map-legend i {
+            width: 7px; height: 7px; border-radius: 50%; display:inline-block; margin-right:5px;
+        }
+        .streetlens-map-mini-tools {
+            position: absolute !important;
+            top: 9px !important;
+            right: 9px !important;
+            z-index: 100 !important;
+            display: flex !important;
+            gap: 5px !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        .streetlens-map-mini-tools button,
+        .streetlens-map-tools button {
+            width: 34px;
+            height: 34px;
+            box-sizing: border-box;
+            border: 1px solid #3a3a3a;
+            background: rgba(17, 17, 17, .94);
+            color: #f1f1f1;
+            border-radius: 5px;
+            padding: 0;
+            font: 15px Inter, sans-serif;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            position: relative;
+            z-index: 101;
+        }
+
+        .streetlens-map-mini-tools button:hover,
+        .streetlens-map-tools button:hover {
+            background: #222;
+            border-color: #555;
+        }
+
+        .map-card:fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            min-height: 100vh !important;
+            border-radius: 0 !important;
+            z-index: 99999 !important;
+            background: #111;
+        }
+
+        .map-card:fullscreen #streetLensDashboardMap {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .modal-map { position: relative; }
+        .streetlens-map-legend {
+            left: 14px; bottom: 14px;
+            display: grid; gap: 7px;
+            padding: 9px 11px;
+            background: #101010e8;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            color: #ddd;
+            font: 10px Inter, sans-serif;
+            pointer-events: none;
+        }
+        .streetlens-map-tools { top: 14px; right: 14px; display:flex; gap:6px; }
+        .streetlens-map-popup { font-family: Inter, sans-serif; color:#111; min-width:150px; }
+        .streetlens-map-popup strong { display:block; font-size:12px; margin-bottom:5px; }
+        .streetlens-map-popup div { font-size:10px; line-height:1.55; }
+        .streetlens-map-popup .demo-note { color:#777; margin-top:4px; font-size:9px; }
+        .maplibregl-popup-content { border-radius:7px; padding:10px 12px; }
+        .maplibregl-ctrl-group { border-radius:5px !important; overflow:hidden; }
+        .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin-bottom:7px; margin-right:7px; }
+
+        .streetlens-pci-count {
+            position:absolute; top:10px; left:10px; z-index:12;
+            padding:6px 9px; border-radius:5px;
+            background:#101010e8; border:1px solid #2a2a2a;
+            color:#e5e7eb; font:10px Inter,sans-serif;
+            pointer-events:none;
+        }
+        .map-card { overflow:hidden; }
+
+/* StreetLens dashboard v5 */
+.streetlens-dashboard-grid{grid-template-columns:minmax(230px,.85fr) minmax(420px,1.45fr) minmax(260px,.9fr)!important;gap:0;min-height:calc(100vh - 68px)}
+.header-actions-only{margin-left:auto;display:flex;align-items:center}.streetlens-road-toolbar{display:flex;align-items:center;gap:7px;flex:0 0 auto}.streetlens-road-ctrl-hint{margin-left:auto;color:#666;font:9px Inter,sans-serif}.streetlens-road-zoom-label{min-width:42px;text-align:right;color:#888;font:9px 'JetBrains Mono',monospace}
+.streetlens-left-column{padding:18px 12px 20px 20px;border-right:1px solid #1e1e1e}.streetlens-ml-column{min-width:0;padding:18px 12px 20px;border-right:1px solid #1e1e1e}.streetlens-right-column{padding:18px 20px 20px 12px;min-width:0}.streetlens-main-map-card{height:300px}.streetlens-left-details{margin-top:10px}
+.streetlens-ml-card{margin:0;padding:12px;height:calc(100vh - 104px);min-height:620px;display:flex;flex-direction:column}.streetlens-ml-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex:0 0 auto}.streetlens-ml-head h2{font-size:12px}.streetlens-ml-head span{display:block;margin-top:4px}.streetlens-frame-status{padding:5px 8px;border:1px solid #2b2b2b;border-radius:4px;color:#aaa;font:10px 'JetBrains Mono'}
+.streetlens-road-scroll{position:relative;flex:1 1 auto;min-height:0;overflow:auto;background:#080808;border:1px solid #252525;border-radius:5px;scrollbar-width:thin;scrollbar-color:#555 #111;overscroll-behavior:contain}.streetlens-road-scroll::-webkit-scrollbar{width:8px}.streetlens-road-scroll::-webkit-scrollbar-track{background:#111}.streetlens-road-scroll::-webkit-scrollbar-thumb{background:#4a4a4a;border-radius:8px}.streetlens-road-strip{width:100%}.streetlens-road-frame{width:100%;margin:0;padding:0;line-height:0;background:#080808}.streetlens-road-frame+.streetlens-road-frame{margin-top:-1px}.streetlens-road-frame img{display:block;width:100%;height:auto;min-height:220px;object-fit:cover;background:#0b0b0b;border:0;border-radius:0}.streetlens-scroll-hint{position:sticky;bottom:10px;width:max-content;margin:-32px auto 10px;padding:6px 9px;background:#0c0c0ce8;border:1px solid #303030;border-radius:5px;color:#888;font:9px Inter;pointer-events:none}.streetlens-ml-legend{flex:0 0 auto}.streetlens-score-card{height:auto;min-height:350px}.streetlens-breakdown-card{height:auto;min-height:360px;margin-top:12px}.streetlens-right-column .analytics-card{padding:14px 16px}.streetlens-right-column .gauge{height:165px}.streetlens-right-column .gauge svg{width:245px;height:155px;max-width:100%}
+@media(max-width:1200px){.streetlens-dashboard-grid{grid-template-columns:minmax(220px,.8fr) minmax(360px,1.25fr) minmax(240px,.85fr)!important}.streetlens-ml-card{min-height:560px}}@media(max-width:1000px){.streetlens-dashboard-grid{grid-template-columns:1fr!important}.streetlens-left-column,.streetlens-ml-column{border-right:0;border-bottom:1px solid #222;padding:16px}.streetlens-right-column{padding:16px}.streetlens-ml-card{height:620px;min-height:0}}
+
+
+        /* Excel-backed ML road viewer */
+        .streetlens-road-toolbar{display:flex;align-items:center;gap:6px;padding:0 0 8px}
+        .streetlens-road-toolbar button{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;padding:0 9px;border:1px solid #303030;border-radius:5px;background:#111;color:#d7d7d7;font:600 10px Inter,sans-serif;cursor:pointer}
+        .streetlens-road-toolbar button:hover{background:#1a1a1a;border-color:#484848;color:#fff}
+        .streetlens-road-toolbar button:focus-visible{outline:2px solid #777;outline-offset:2px}
+        .streetlens-road-zoom-label{margin-left:auto;color:#777;font:600 9px 'JetBrains Mono',monospace}
+        .streetlens-road-strip{transform:scale(1);transform-origin:top left;transition:transform .16s ease;will-change:transform;}
+        .streetlens-road-frame{position:relative;display:block;width:100%;margin:0;padding:0;line-height:0;background:#080808}
+        .streetlens-road-frame+.streetlens-road-frame{margin-top:0}
+        .streetlens-road-frame img{display:block;width:100%;height:auto;min-height:0;object-fit:contain;background:#0b0b0b;border:0;border-radius:0}
+        .streetlens-road-frame figcaption{position:absolute;top:6px;right:7px;display:flex;gap:5px;padding:3px 5px;background:#080808d9;border:1px solid #303030;border-radius:4px;color:#ddd;font:600 8px 'JetBrains Mono',monospace;line-height:1;pointer-events:none}
+        .streetlens-road-frame figcaption span+span{color:#999}
+
+        .streetlens-road-pending { min-height: 260px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; color:#777; text-align:center; border:1px dashed #2a2a2a; border-radius:8px; margin:10px; padding:24px; }
+        .streetlens-road-pending strong { color:#d7d7d7; font:600 13px Inter,sans-serif; }
+        .streetlens-road-pending span { color:#666; font:10px Inter,sans-serif; }
+        .streetlens-road-pending.hidden { display:none !important; }
+        .streetlens-road-strip.hidden { display:none !important; }
+
+        .streetlens-map-metric { position:absolute; top:12px; left:12px; z-index:20; display:flex; gap:3px; padding:3px; background:#101010e8; border:1px solid #2a2a2a; border-radius:7px; }
+        .streetlens-map-metric button { border:0; background:transparent; color:#aaa; padding:7px 12px; border-radius:5px; font:700 10px Inter,sans-serif; cursor:pointer; }
+        .streetlens-map-metric button.active { background:#f1f1f1; color:#111; }
+        .streetlens-dashboard-legend { left:12px; bottom:12px; max-width:240px; grid-template-columns:1fr; }
+        .streetlens-dashboard-legend .lg-row { display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap; }
+        .streetlens-dashboard-legend .lg-row span:last-child { color:#888; }
+        .streetlens-ranking-card { padding-bottom:10px; }
+        .streetlens-ranking-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+        .streetlens-ranking-head h2 { margin:0; }
+        .streetlens-ranking-head > span { font:700 10px JetBrains Mono,monospace; color:#888; }
+        .streetlens-ranking-sub { margin:5px 0 10px; color:#777; font-size:10px; }
+        .streetlens-road-ranking { display:grid; gap:5px; max-height:235px; overflow:auto; padding-right:2px; }
+        .streetlens-ranking-row { width:100%; border:1px solid #262626; background:#151515; color:#eee; border-radius:6px; display:grid; grid-template-columns:22px 1fr auto; align-items:center; gap:7px; padding:7px 8px; text-align:left; cursor:pointer; }
+        .streetlens-ranking-row:hover { background:#1c1c1c; border-color:#3a3a3a; }
+        .streetlens-ranking-rank { color:#666; font:700 10px JetBrains Mono,monospace; }
+        .streetlens-ranking-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; }
+        .streetlens-ranking-score { font:700 11px JetBrains Mono,monospace; }
+        .streetlens-ranking-condition { display:block; margin-top:2px; color:#777; font-size:9px; }
+
+/* Map-first overrides for the original light-map theme's !important declarations. */
+html.streetlens-map-first #mapModal .streetlens-map-sheet{background:linear-gradient(180deg,#11191d 0%,#0c1215 100%)!important;color:#edf3f2!important;border-left:1px solid #263238!important;font-family:Inter,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head strong{color:#f3f7f6!important;font-family:Inter,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head span,html.streetlens-map-first #mapModal .streetlens-map-sheet-label{color:#789093!important}
+html.streetlens-map-first #mapModal .streetlens-metric-block{background:transparent!important;border-color:transparent!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle{border-color:#2b3a40!important;background:transparent!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button{background:#121c20!important;color:#9cafb1!important;border-color:#2b3a40!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button.active{background:#203034!important;border-color:#6e9996!important;color:#effaf7!important}
+html.streetlens-map-first #mapModal .streetlens-find-input{background:#0b1215!important;border-color:#314147!important;color:#eef4f2!important}
+html.streetlens-map-first #mapModal .streetlens-current-section{background:#121b1f!important;border-color:#2a393e!important;color:#edf3f2!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid>div{background:#0c1316!important;border-color:#243136!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid span{color:#82989b!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid b{color:#edf3f2!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-row{background:transparent!important;color:#bdc9c8!important;border-bottom-color:#202c31!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-row:hover{background:#162126!important;color:#fff!important}
+/* Map-first StreetLens landing experience: dark, compact, Collingswood-focused. */
+html.streetlens-map-first, html.streetlens-map-first body{height:100%;min-height:100%;margin:0;background:#090d10;color:#edf3f2;overflow:hidden}
+html.streetlens-map-first .dashboard>header,html.streetlens-map-first .dashboard-body{display:none!important}
+html.streetlens-map-first .dashboard{height:100vh;min-height:100vh;padding:0;margin:0;max-width:none;background:#090d10}
+html.streetlens-map-first #mapModal.map-first-modal{display:block!important;position:fixed;inset:0;z-index:1000;padding:0;background:#090d10;overflow:hidden}
+html.streetlens-map-first #mapModal .streetlens-fullmap-shell{display:grid;grid-template-columns:minmax(0,1fr) 336px;width:100%;height:100%;max-width:none;max-height:none;margin:0;border:0;border-radius:0;background:#0b1013;box-shadow:none;overflow:hidden}
+html.streetlens-map-first #mapModal .streetlens-fullmap-map-wrap{position:relative;min-width:0;min-height:0;background:#0b1013}
+html.streetlens-map-first #streetLensModalMap{position:absolute;inset:0;background:#0b1013}
+html.streetlens-map-first .streetlens-map-loading{background:#0b1013;color:#c5d1d0}
+html.streetlens-map-first .streetlens-map-sheet{width:auto;min-width:0;max-width:none;max-height:none;overflow-y:auto;display:flex;flex-direction:column;gap:17px;padding:25px 20px 20px;background:linear-gradient(180deg,#11191d 0%,#0c1215 100%);color:#edf3f2;border:0;border-left:1px solid #263238;border-radius:0;box-shadow:none}
+html.streetlens-map-first .streetlens-map-sheet-head{padding:0 0 15px;border-bottom:1px solid #29353a}
+html.streetlens-map-first .streetlens-map-sheet-head strong{display:block;font-size:15px;letter-spacing:.105em;font-weight:800;color:#f3f7f6}
+html.streetlens-map-first .map-title-muted{color:#7f9698;font-weight:600}
+html.streetlens-map-first .streetlens-map-sheet-head span{display:block;margin-top:7px;font-size:11px;letter-spacing:.025em;color:#8ea2a4}
+html.streetlens-map-first .streetlens-map-sheet-label{font-size:9px;letter-spacing:.16em;font-weight:800;color:#789093;margin:0 0 9px}
+html.streetlens-map-first .streetlens-map-segment-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+html.streetlens-map-first .streetlens-map-segment-toggle button{background:#121c20;color:#9cafb1;border:1px solid #2b3a40;border-radius:9px;padding:10px 9px;text-align:left;font-size:13px;font-weight:800}
+html.streetlens-map-first .streetlens-map-segment-toggle button small{display:block;margin-top:4px;font-size:9px;font-weight:500;color:#789093;line-height:1.35}
+html.streetlens-map-first .streetlens-map-segment-toggle button.active{background:#203034;border-color:#6e9996;color:#effaf7;box-shadow:inset 0 0 0 1px #6e999622}
+html.streetlens-map-first .streetlens-current-section{background:#121b1f;border:1px solid #2a393e;border-radius:11px;padding:13px}
+html.streetlens-map-first #streetLensHoveredRoad{font-size:14px;line-height:1.35;color:#f4f7f5}
+html.streetlens-map-first .streetlens-current-score-grid>div{background:#0c1316;border:1px solid #243136;border-radius:7px;padding:9px 8px}
+html.streetlens-map-first .streetlens-current-score-grid span{color:#82989b;font-size:9px;letter-spacing:.07em;text-transform:uppercase}
+html.streetlens-map-first .streetlens-current-score-grid b{display:block;color:#edf3f2;font-size:16px;margin-top:4px}
+html.streetlens-map-first #streetLensCurrentSectionMeta{color:#83979a}
+html.streetlens-map-first .streetlens-find-input{width:100%;box-sizing:border-box;background:#0b1215;border:1px solid #314147;border-radius:9px;padding:12px 12px;color:#eef4f2;font:inherit;font-size:12px;outline:none}
+html.streetlens-map-first .streetlens-find-input:focus{border-color:#77a6a1;box-shadow:0 0 0 3px #77a6a119}
+html.streetlens-map-first .streetlens-sheet-legend{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+html.streetlens-map-first .sheet-lg-row{display:grid;grid-template-columns:9px 1fr;gap:7px;align-items:center;color:#bdc9c8;font-size:10px}
+html.streetlens-map-first .sheet-lg-row i{width:8px;height:8px;border-radius:3px;box-shadow:0 0 10px currentColor}
+html.streetlens-map-first .sheet-lg-row small{display:none}
+html.streetlens-map-first .streetlens-legend-control,html.streetlens-map-first .streetlens-map-options{display:none!important}
+html.streetlens-map-first .streetlens-sheet-ranking{max-height:25vh;overflow:auto;border-top:1px solid #27353a}
+html.streetlens-map-first .streetlens-ranking-row{display:grid;grid-template-columns:22px 1fr auto;gap:8px;width:100%;padding:10px 2px;border:0;border-bottom:1px solid #202c31;background:transparent;color:#bdc9c8;text-align:left;cursor:pointer;font-size:11px}
+html.streetlens-map-first .streetlens-ranking-row:hover{background:#162126;color:#fff}
+html.streetlens-map-first .streetlens-ranking-row>span:first-child{color:#6f888b;font-size:10px}
+html.streetlens-map-first .streetlens-ranking-row small{display:block;margin-top:3px;color:#6f8588;font-size:9px}
+html.streetlens-map-first .streetlens-ranking-row b{font-size:12px;color:#e7efed}
+html.streetlens-map-first .streetlens-map-sheet-foot{font-size:10px;color:#688084;margin:0}
+html.streetlens-map-first .streetlens-fullmap-tools{top:18px;left:18px;right:auto;display:flex;gap:6px}
+html.streetlens-map-first .streetlens-fullmap-tools button{background:#0d1519eF;border:1px solid #39474b;color:#e1eae7;border-radius:9px;padding:9px 11px;box-shadow:0 5px 18px #0004}
+html.streetlens-map-first .map-back-dashboard{display:inline-flex;align-items:center;text-decoration:none;color:#c5d7d3;font-size:11px;border:1px solid #334448;border-radius:8px;padding:8px 10px;margin-left:auto}
+html.streetlens-map-first .map-signout-form{display:inline-flex;margin:0}
+html.streetlens-map-first .map-signout-form button{border:1px solid #334448;background:#121b1f;color:#a9bfbd;border-radius:8px;padding:8px 10px;font-size:11px;cursor:pointer}
+html.streetlens-map-first .maplibregl-map{font-family:Inter,sans-serif;background:#0a1013}
+html.streetlens-map-first .maplibregl-ctrl-group{background:#111a1e!important;border:1px solid #314046!important;box-shadow:0 4px 18px #0006!important}
+html.streetlens-map-first .maplibregl-ctrl-group button{background:transparent!important;color:#e2ece9!important}
+html.streetlens-map-first .maplibregl-ctrl-attrib{background:#0a1013dd!important;color:#9eafaf!important}
+html.streetlens-map-first .maplibregl-ctrl-attrib a{color:#c1d0ce!important}
+html.streetlens-map-first .streetlens-section-hover-card{background:#111b1f;color:#edf4f2;border:1px solid #34464b;box-shadow:0 14px 40px #0008}
+html.streetlens-map-first .streetlens-section-hover-card .hover-sub,html.streetlens-map-first .streetlens-section-hover-card .hover-grid span{color:#92a7a7}
+html.streetlens-map-first .streetlens-section-hover-card .hover-metrics>div{background:#0b1215;border-color:#2a393d}
+html.streetlens-map-first .streetlens-section-hover-card .hover-metrics span{color:#8ea2a4}
+html.streetlens-map-first .streetlens-section-hover-card .hover-metrics b{color:#edf4f2}
+@media(max-width:760px){html.streetlens-map-first #mapModal .streetlens-fullmap-shell{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(45vh,1fr) minmax(40vh,45vh)}html.streetlens-map-first .streetlens-map-sheet{padding:15px;gap:12px;border-left:0;border-top:1px solid #263238}html.streetlens-map-first .streetlens-sheet-ranking{max-height:18vh}html.streetlens-map-first .streetlens-fullmap-tools{top:10px;left:10px;flex-wrap:wrap}}
+
+</style>
+
+<style>
+/* Segmented inspection map — no legend/ranking is rendered over the dashboard map. */
+.streetlens-main-map-card{position:relative;overflow:hidden;background:#161c1b}
+#streetLensDashboardMap,#streetLensModalMap{width:100%;height:100%;min-height:0}
+.streetlens-fullmap-shell{width:min(1500px,96vw);height:min(900px,94vh);display:grid;grid-template-columns:330px minmax(0,1fr);background:#1a2120;border:1px solid #313b39;border-radius:8px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+.streetlens-map-sheet{background:#1a2120;color:#e8ecea;border-right:1px solid #313b39;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.streetlens-map-sheet-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding-bottom:10px;border-bottom:1px solid #313b39}
+.streetlens-map-sheet-head strong{display:block;font:700 20px/1.05 'Outfit',sans-serif}.streetlens-map-sheet-head span{display:block;color:#9aa6a2;font:11px/1.35 Inter,sans-serif;margin-top:5px}
+.streetlens-map-sheet-actions{display:flex;gap:5px}.streetlens-map-sheet-actions button{width:30px;height:30px;border:1px solid #3b4744;border-radius:5px;background:#111817;color:#ddd;cursor:pointer}.streetlens-map-sheet-actions button:hover{background:#222b29}
+.streetlens-map-sheet-label{margin:0 0 7px;color:#9aa6a2;font:600 11px/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.streetlens-map-sheet .streetlens-metric-block{background:#16232d;border:1px solid #2b5268;border-radius:9px;padding:10px}.streetlens-map-sheet .streetlens-metric-block .streetlens-map-sheet-label{color:#9fc4d8}.streetlens-map-sheet .streetlens-metric-block .streetlens-map-segment-toggle{border-color:#294555;background:#0e171d}.streetlens-map-sheet .streetlens-metric-block .streetlens-map-segment-toggle button{color:#9fc4d8;background:#0e171d}.streetlens-map-sheet .streetlens-metric-block .streetlens-map-segment-toggle button.active{background:#2b91a8;color:#fff}.streetlens-map-sheet .streetlens-metric-block .streetlens-map-segment-toggle button:hover{background:#203641;color:#e8f7ff}
+.streetlens-map-segment-toggle{display:grid;grid-template-columns:1fr 1fr;border:1px solid #6cc4d4;border-radius:5px;overflow:hidden}.streetlens-map-segment-toggle button{border:0;background:transparent;color:#6cc4d4;padding:9px 6px;cursor:pointer;font:700 14px Outfit,sans-serif}.streetlens-map-segment-toggle button.active{background:#6cc4d4;color:#08242b}.streetlens-map-segment-toggle small{display:block;font:500 9px Inter,sans-serif;margin-top:3px;opacity:.85}
+.streetlens-sheet-legend{display:flex;flex-direction:column;gap:5px}.sheet-lg-row{display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:center;font:12px Inter,sans-serif}.sheet-lg-row i{width:9px;height:9px;border-radius:2px;border:1px solid #050707}.sheet-lg-row small{color:#8f9996;font-size:10px}
+.streetlens-map-options{display:flex;flex-direction:column;gap:7px;color:#b9c0bd;font:11px Inter,sans-serif}.streetlens-map-options label{display:flex;align-items:center;gap:7px}.streetlens-map-options input{accent-color:#6cc4d4}.dash-sample{width:25px;border-top:3px dashed #aaa}.thin-sample{width:25px;border-top:1.5px solid #aaa}
+.streetlens-find-input{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #313b39;border-radius:4px;background:#121716;color:#e8ecea;font:12px Inter,sans-serif;outline:none}.streetlens-find-input:focus{border-color:#6cc4d4}
+.streetlens-sheet-ranking{display:flex;flex-direction:column;border-top:1px solid #313b39}.streetlens-ranking-row{display:grid;grid-template-columns:20px 1fr auto;gap:7px;align-items:baseline;padding:7px 3px;border:0;border-bottom:1px solid #313b39;background:transparent;color:#e8ecea;text-align:left;cursor:pointer}.streetlens-ranking-row:hover{background:#121817}.streetlens-ranking-row>span:first-child{color:#89938f;font:11px 'JetBrains Mono',monospace}.streetlens-ranking-row>span:nth-child(2){font:12px Inter,sans-serif;overflow:hidden}.streetlens-ranking-row small{display:block;color:#7f8985;font-size:9px;margin-top:2px}.streetlens-ranking-row b{font:700 15px 'JetBrains Mono',monospace}
+.streetlens-map-sheet-foot{margin-top:auto;padding-top:8px;color:#727c79;font:10px/1.4 Inter,sans-serif;border-top:1px solid #313b39}
+.streetlens-fullmap-map-wrap{position:relative;min-width:0;min-height:0;background:#161c1b}.streetlens-fullmap-tools{position:absolute;right:12px;top:12px;z-index:900;display:flex;gap:6px}.streetlens-fullmap-tools button{border:1px solid #3b4744;background:#111817e8;color:#ddd;border-radius:5px;padding:7px 10px;font:11px Inter,sans-serif;cursor:pointer;backdrop-filter:blur(5px)}.streetlens-fullmap-tools button:hover{background:#222b29}
+.streetlens-section-hover-card{position:absolute;z-index:1200;width:190px;max-width:calc(100% - 16px);padding:7px 8px;background:#fbfbf9;color:#1c2422;border:1px solid #1c2422;border-radius:5px;box-shadow:0 6px 18px rgba(0,0,0,.28);font:10px Inter,sans-serif;pointer-events:none}.streetlens-section-hover-card .hover-title{font:700 12px/1.1 'DM Sans',sans-serif}.streetlens-section-hover-card .hover-sub{color:#5d6966;font-size:8px;margin:2px 0 6px}.hover-metrics{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:4px;margin-bottom:6px}.hover-metrics>div{border:1px solid #d3d8d4;border-radius:4px;padding:4px}.hover-metrics span{display:block;color:#5d6966;font-size:8px}.hover-metrics b{display:block;font:700 13px/1 'DM Sans',sans-serif;margin-top:2px}.hover-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 7px;font-size:8.5px}.hover-grid span{color:#5d6966}.hover-grid b{text-align:right;font-weight:600}.hover-flag{margin-top:5px;padding:4px 5px;border-left:2px solid #f39a32;background:#eef0ee;color:#5d6966;font-size:8px}
+.streetlens-street-label{background:transparent;border:0;box-shadow:none;color:#e8ecea;font:600 12px/1 'Outfit',sans-serif;letter-spacing:.03em;padding:0;text-shadow:0 0 3px #161c1b,0 0 3px #161c1b,0 0 3px #161c1b}.streetlens-street-label:before{display:none}
+#mapModal:fullscreen{padding:0;background:#000}.modal:fullscreen .streetlens-fullmap-shell{width:100vw;height:100vh;border:0;border-radius:0;box-shadow:none}.modal:fullscreen .streetlens-map-sheet{border-radius:0}
+@media(max-width:850px){.streetlens-fullmap-shell{grid-template-columns:280px 1fr;width:100vw;height:100vh;border-radius:0}.streetlens-map-sheet{padding:12px}.streetlens-map-sheet-head strong{font-size:17px}}
+
+.streetlens-current-section{background:#ebe5d8;border:1px solid #d2c9b8;border-radius:8px;padding:10px 11px;color:#26312c}
+.streetlens-current-section>strong{display:block;font:700 14px/1.25 'DM Sans',sans-serif;margin:2px 0 9px;overflow-wrap:anywhere}
+.streetlens-current-score-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.streetlens-current-score-grid>div{background:#f8f5ed;border:1px solid #d8d0c2;border-radius:5px;padding:7px}
+.streetlens-current-score-grid span{display:block;font:10px 'DM Sans',sans-serif;color:#68736d}
+.streetlens-current-score-grid b{display:block;font:700 17px 'DM Sans',sans-serif;color:#183d36;margin-top:2px}
+#streetLensCurrentCondition{font-size:12px}
+.streetlens-current-section>small{display:block;color:#737d77;font:10px/1.4 'DM Sans',sans-serif;margin-top:8px}
+.streetlens-legend-control label{display:flex;align-items:center;gap:7px;color:#4f5a55;font:11px 'DM Sans',sans-serif;cursor:pointer}
+.streetlens-legend-control input{accent-color:#355d50}
+#streetLensLegendWrap.legend-hidden{display:none}
+</style>
+<style>
+/* StreetLens v21 visual refinement */
+.streetlens-main-map-card .streetlens-section-hover-card{display:none!important}
+.streetlens-main-map-card #streetLensDashboardMap{image-rendering:auto}
+/* The fullscreen analysis panel is intentionally editorial rather than AI-blue. */
+.streetlens-map-sheet{background:#f3f0e7;color:#202824;border-left:1px solid #d8d1c2;font-family:'DM Sans',sans-serif}
+.streetlens-map-sheet-head{border-bottom-color:#d7d0c2}
+.streetlens-map-sheet-head strong{font-family:'DM Sans',sans-serif;color:#18211d;letter-spacing:-.02em}
+.streetlens-map-sheet-head span{color:#69736e;font-family:'DM Sans',sans-serif}
+.streetlens-map-sheet-actions button{border-color:#c9c1b2;background:#e7e2d6;color:#35403b}
+.streetlens-map-sheet-actions button:hover{background:#ddd7ca}
+.streetlens-map-sheet-label{color:#68736d;font-family:'DM Sans',sans-serif}
+.streetlens-map-sheet .streetlens-metric-block{background:#e9e4d7;border:1px solid #d2c9b8;border-radius:10px}
+.streetlens-map-sheet .streetlens-metric-block .streetlens-map-sheet-label{color:#5b675f}
+.streetlens-map-segment-toggle{border-color:#b7ad9c;background:#f7f4ec}
+.streetlens-map-segment-toggle button{color:#52605a;background:#f7f4ec;font-family:'DM Sans',sans-serif}
+.streetlens-map-segment-toggle button.active{background:#355d50;color:#fff}
+.streetlens-map-segment-toggle button:hover{background:#e5dfd3;color:#23312b}
+.streetlens-sheet-legend .sheet-lg-row{font-family:'DM Sans',sans-serif;color:#27322d}
+.sheet-lg-row small{color:#7b847f}
+.streetlens-map-options{color:#4f5a55;font-family:'DM Sans',sans-serif}
+.streetlens-map-options input{accent-color:#355d50}
+.streetlens-find-input{border-color:#c9c1b2;background:#faf8f2;color:#202824;font-family:'DM Sans',sans-serif}
+.streetlens-find-input:focus{border-color:#789080}
+.streetlens-sheet-ranking{border-top-color:#d7d0c2}
+.streetlens-ranking-row{border-bottom-color:#d7d0c2;color:#26312c;font-family:'DM Sans',sans-serif}
+.streetlens-ranking-row:hover{background:#e9e4d9}
+.streetlens-ranking-row>span:first-child{color:#7a817d}
+.streetlens-ranking-row small{color:#737d77}
+.streetlens-ranking-row b{font-family:'DM Sans',sans-serif;color:#25342e}
+.streetlens-map-sheet-foot{color:#78817c;border-top-color:#d7d0c2;font-family:'DM Sans',sans-serif}
+.streetlens-section-hover-card{font-family:'DM Sans',sans-serif}
+.streetlens-section-hover-card .hover-title{font-family:'DM Sans',sans-serif}
+</style>
+<style>
+/* StreetLens MapLibre v19 layout fixes */
+.maplibregl-map{font-family:Inter,sans-serif;background:#111}
+.maplibregl-ctrl-group{background:#111817e8!important;border:1px solid #3b4744!important;box-shadow:0 3px 10px rgba(0,0,0,.28)!important}
+.maplibregl-ctrl-group button{background:transparent!important;color:#e8ecea!important}
+.maplibregl-ctrl-group button:hover{background:#242d2b!important}
+.maplibregl-ctrl-attrib{background:rgba(12,15,15,.82)!important;color:#b6bfbc!important;font-size:9px!important}
+.maplibregl-ctrl-attrib a{color:#d1d8d5!important}
+.streetlens-fullmap-shell{width:min(1500px,96vw);height:min(900px,94vh);display:grid;grid-template-columns:minmax(0,1fr) 360px;background:#161c1b;border:1px solid #313b39;border-radius:8px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+.streetlens-fullmap-map-wrap{grid-column:1;grid-row:1;position:relative;min-width:0;min-height:0;background:#111}
+.streetlens-map-sheet{grid-column:2;grid-row:1;background:#1a2120;color:#e8ecea;border-left:1px solid #313b39;border-right:0;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.streetlens-fullmap-tools{position:absolute;right:14px;top:14px;z-index:20;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.streetlens-fullmap-tools button{border:1px solid #3b4744;background:#111817ee;color:#ddd;border-radius:5px;padding:8px 10px;font:600 11px Inter,sans-serif;cursor:pointer;backdrop-filter:blur(5px)}
+.streetlens-fullmap-tools button:hover{background:#222b29;border-color:#5c6b67}
+.streetlens-section-hover-card{z-index:30}
+#mapModal{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.86);backdrop-filter:blur(4px);padding:18px;display:grid;place-items:center}
+#mapModal.hidden{display:none!important}
+#mapModal:fullscreen{padding:0;background:#000}
+#mapModal:fullscreen .streetlens-fullmap-shell{width:100vw;height:100vh;max-width:none;max-height:none;border:0;border-radius:0;box-shadow:none}
+#mapModal:fullscreen .streetlens-map-sheet{border-radius:0}
+.streetlens-main-map-card .streetlens-map-mini-tools{z-index:50}
+.satellite-icon{width:15px;height:15px;display:block;flex:0 0 15px}
+.streetlens-map-mini-tools button:has(.satellite-icon),.streetlens-fullmap-tools button:has(.satellite-icon){display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.streetlens-main-map-card .streetlens-map-mini-tools button:has(.satellite-icon){width:auto;min-width:36px;padding:6px 8px}
+.streetlens-main-map-card .streetlens-map-mini-tools button:has(.satellite-icon) span{display:none}
+@media(max-width:850px){.streetlens-fullmap-shell{grid-template-columns:minmax(0,1fr) 300px;width:100vw;height:100vh;border-radius:0}.streetlens-map-sheet{padding:12px}.streetlens-fullmap-tools{right:8px;top:8px}.streetlens-fullmap-tools button{padding:7px 8px;font-size:10px}}
+</style>
+<style>
+/* StreetLens v22: clean map + Map 1 road/sidebar styling */
+.maplibregl-map{font-family:'DM Sans',sans-serif;background:#e9e7df}
+/* Keep the mini map clean: rounded pavement strokes with a restrained casing. */
+.streetlens-main-map-card .maplibregl-ctrl-group{background:rgba(18,24,22,.94)!important;border:1px solid rgba(255,255,255,.16)!important}
+.streetlens-main-map-card .maplibregl-ctrl-group button{color:#eef3ef!important}
+/* The full map uses the light editorial sidebar from the preferred reference. */
+.streetlens-fullmap-shell{background:#f3f0e7;border-color:#d5cec0}
+.streetlens-map-sheet{background:#f3f0e7!important;color:#26312c!important;border-left:1px solid #d5cec0!important;font-family:'DM Sans',sans-serif!important}
+.streetlens-map-sheet-head strong{color:#18211d!important;font-family:'DM Sans',sans-serif!important}
+.streetlens-map-sheet-head span,.streetlens-map-sheet-label{color:#68736d!important}
+.streetlens-map-sheet .streetlens-metric-block{background:#e8e2d6!important;border-color:#cfc5b4!important}
+.streetlens-map-segment-toggle{border-color:#9eb3aa!important;background:#f8f5ed!important}
+.streetlens-map-segment-toggle button{background:#f8f5ed!important;color:#43534c!important}
+.streetlens-map-segment-toggle button.active{background:#355d50!important;color:#fff!important}
+.streetlens-map-options{color:#4f5a55!important}
+.streetlens-find-input{background:#fffdf8!important;border-color:#cfc5b4!important;color:#202824!important}
+.streetlens-sheet-ranking{border-top-color:#d5cec0!important}
+.streetlens-ranking-row{color:#26312c!important;border-bottom-color:#d5cec0!important;background:transparent!important}
+.streetlens-ranking-row:hover{background:#e7e1d5!important}
+.streetlens-ranking-row b{color:#25342e!important}
+.streetlens-ranking-row small{color:#737d77!important}
+/* Map 1 style: rounded, readable, not oversized. */
+.streetlens-section-hover-card{font-family:'DM Sans',sans-serif!important}
+</style>
+<style>
+.streetlens-ranking-link { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:8px 13px; margin-right:14px; border:1px solid #355d50; border-radius:8px; color:#fff; background:#355d50; text-decoration:none; font:600 12px 'DM Sans',sans-serif; white-space:nowrap; transition:background .16s ease,border-color .16s ease,transform .16s ease; }
+.streetlens-ranking-link:hover { background:#28483e; border-color:#28483e; transform:translateY(-1px); }
+.streetlens-ranking-link:focus-visible { outline:2px solid #8eb5a6; outline-offset:3px; }
+.streetlens-ranking-link .ranking-link-icon { font-size:14px; line-height:1; }
+@media(max-width:560px){.streetlens-ranking-link{margin-right:7px;padding:7px 9px;font-size:11px}.header-actions-only{gap:4px}}
+/* Shared ML distress palette — kept consistent with the image legend. */
+:root {
+  --distress-alligator: #4a90c4;
+  --distress-longitudinal: #c1543d;
+  --distress-transverse: #d1a13c;
+  --distress-pothole: #9370c4;
+}
+.streetlens-breakdown-card .distress-row:nth-of-type(1) .bar span { background: var(--distress-alligator) !important; }
+.streetlens-breakdown-card .distress-row:nth-of-type(2) .bar span { background: var(--distress-longitudinal) !important; }
+.streetlens-breakdown-card .distress-row:nth-of-type(3) .bar span { background: var(--distress-transverse) !important; }
+.streetlens-breakdown-card .distress-row:nth-of-type(4) .bar span { background: var(--distress-pothole) !important; }
+.streetlens-breakdown-card .distress-row:nth-of-type(1) .swatch { background: var(--distress-alligator) !important; }
+.streetlens-breakdown-card .distress-row:nth-of-type(2) .swatch { background: var(--distress-longitudinal) !important; }
+.streetlens-breakdown-card .distress-row:nth-of-type(3) .swatch { background: var(--distress-transverse) !important; }
+.streetlens-breakdown-card .distress-row:nth-of-type(4) .swatch { background: var(--distress-pothole) !important; }
+</style>
+
+<style id="streetlens-map-first-sidebar-redesign">
+/* New StreetLens map-first sidebar: compact, dark, utilitarian and distinct from the old reference. */
+html.streetlens-map-first #mapModal .streetlens-fullmap-shell{grid-template-columns:minmax(0,1fr) 320px!important;background:#080d10!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet{box-sizing:border-box!important;width:320px!important;padding:22px 18px 16px!important;gap:0!important;overflow-y:auto!important;background:#0c1317!important;color:#e7f0ee!important;border:0!important;border-left:1px solid #26343a!important;border-radius:0!important;box-shadow:-12px 0 36px #0002!important;font-family:Inter,system-ui,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head{order:0!important;padding:0 0 17px!important;border:0!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head:before{content:'SL  /  FIELD INTELLIGENCE';display:block;margin-bottom:17px;color:#80b8a9;font-size:9px;font-weight:800;letter-spacing:.19em}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head strong{display:block!important;color:#f3f7f6!important;font-size:23px!important;letter-spacing:-.055em!important;font-weight:750!important;line-height:1.05!important}
+html.streetlens-map-first #mapModal .map-title-muted{display:none!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head span{display:block!important;margin-top:8px!important;color:#8da3a5!important;font-size:11px!important;letter-spacing:0!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head .map-subtitle:before{content:'● ';color:#83c6a9}
+html.streetlens-map-first #mapModal .streetlens-map-sheet>div:has(>#streetLensFindStreet){order:1!important;margin:0 0 18px!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet>div:has(>#streetLensFindStreet) .streetlens-map-sheet-label{display:none!important}
+html.streetlens-map-first #mapModal .streetlens-find-input{height:43px!important;padding:0 13px 0 38px!important;border:1px solid #293b40!important;border-radius:8px!important;background:#111d22!important;color:#eef6f3!important;font-size:12px!important;box-shadow:none!important}
+html.streetlens-map-first #mapModal .streetlens-find-input::placeholder{color:#789093!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet>div:has(>#streetLensFindStreet){position:relative!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet>div:has(>#streetLensFindStreet):before{content:'⌕';position:absolute;left:13px;top:8px;z-index:2;color:#8ca9a5;font-size:22px;line-height:24px}
+html.streetlens-map-first #mapModal .streetlens-metric-block{order:2!important;padding:0!important;margin:0 0 18px!important;background:transparent!important;border:0!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-label{margin:0 0 9px!important;color:#77908f!important;font-size:9px!important;letter-spacing:.14em!important;font-weight:800!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle{display:flex!important;gap:5px!important;padding:4px!important;background:#080e11!important;border:1px solid #24343a!important;border-radius:9px!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button{flex:1!important;padding:10px 8px!important;text-align:center!important;background:transparent!important;border:1px solid transparent!important;border-radius:6px!important;color:#9db0b0!important;font-size:12px!important;font-weight:800!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button small{display:none!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button.active{background:#1b3934!important;border-color:#315e53!important;color:#dff8ee!important;box-shadow:none!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet> .streetlens-current-section{order:3!important;position:relative!important;margin:0 0 18px!important;padding:15px 0 14px!important;background:transparent!important;border:0!important;border-top:1px solid #24343a!important;border-bottom:1px solid #24343a!important;border-radius:0!important}
+html.streetlens-map-first #mapModal .streetlens-current-section .streetlens-map-sheet-label{margin-bottom:11px!important}
+html.streetlens-map-first #mapModal #streetLensHoveredRoad{display:block!important;margin-bottom:12px!important;color:#f2f7f5!important;font-size:15px!important;line-height:1.35!important;font-weight:650!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid>div{padding:10px 11px!important;background:#111d22!important;border:1px solid #26383e!important;border-radius:7px!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid>div:last-child{grid-column:1/-1!important;display:flex!important;align-items:center!important;justify-content:space-between!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid span{color:#8aa1a2!important;font-size:9px!important;letter-spacing:.08em!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid b{color:#f0f6f3!important;font-size:17px!important}
+html.streetlens-map-first #mapModal #streetLensCurrentSectionMeta{display:block!important;margin-top:10px!important;color:#799092!important;font-size:10px!important;line-height:1.5!important}
+html.streetlens-map-first #mapModal .streetlens-legend-control{display:none!important}
+html.streetlens-map-first #mapModal #streetLensLegendWrap{order:4!important;margin-bottom:19px!important}
+html.streetlens-map-first #mapModal .streetlens-sheet-legend{display:grid!important;grid-template-columns:1fr 1fr!important;gap:9px!important}
+html.streetlens-map-first #mapModal .sheet-lg-row{display:flex!important;align-items:center!important;gap:7px!important;color:#b6c7c5!important;font-size:10px!important}
+html.streetlens-map-first #mapModal .sheet-lg-row i{width:8px!important;height:8px!important;flex:0 0 8px!important;border-radius:2px!important;box-shadow:none!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet>div:has(>#streetLensRoadRanking){order:5!important}html.streetlens-map-first #mapModal .streetlens-map-sheet-foot{order:6!important}html.streetlens-map-first #mapModal .streetlens-sheet-ranking{max-height:31vh!important;overflow:auto!important;border-top:1px solid #26363b!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-row{grid-template-columns:20px minmax(0,1fr) auto!important;gap:8px!important;padding:11px 2px!important;border-bottom:1px solid #1d2a2f!important;background:transparent!important;color:#c7d4d1!important;font-size:11px!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-row:hover{background:#142329!important;color:#fff!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-row>span:first-child{color:#6e8b8b!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-row small{color:#7c9697!important;font-size:9px!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-row b{color:#e7f2ee!important;font-size:12px!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-foot{padding-top:12px!important;margin-top:7px!important;border-top:1px solid #24343a!important;color:#769091!important;font-size:10px!important}
+html.streetlens-map-first #mapModal .streetlens-fullmap-tools{top:16px!important;left:16px!important;right:auto!important;gap:6px!important}
+html.streetlens-map-first #mapModal .streetlens-fullmap-tools button,html.streetlens-map-first #mapModal .map-back-dashboard{background:#0b1519eF!important;border:1px solid #34464b!important;color:#dce9e5!important;border-radius:7px!important;padding:9px 11px!important;box-shadow:0 5px 18px #0004!important}
+html.streetlens-map-first #mapModal .map-back-dashboard{color:#9ec7ba!important}
+html.streetlens-map-first #mapModal .map-signout-form button{background:#101b1f!important;border:1px solid #34464b!important;color:#c0d0cc!important;border-radius:7px!important}
+html.streetlens-map-first #mapModal .maplibregl-ctrl-attrib{background:#091116d9!important;color:#a3b5b2!important}
+html.streetlens-map-first #mapModal .maplibregl-ctrl-attrib a{color:#c0d8d0!important}
+@media(max-width:760px){html.streetlens-map-first #mapModal .streetlens-fullmap-shell{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(45vh,1fr) minmax(40vh,45vh)!important}html.streetlens-map-first #mapModal .streetlens-map-sheet{width:100%!important;padding:14px 16px!important;border-top:1px solid #26343a!important;border-left:0!important}html.streetlens-map-first #mapModal .streetlens-map-sheet-head:before{margin-bottom:8px!important}html.streetlens-map-first #mapModal .streetlens-map-sheet-head{padding-bottom:10px!important}html.streetlens-map-first #mapModal .streetlens-map-sheet-head strong{font-size:19px!important}}
+</style>
+
+</head>
+<body>
+
+
+
+<!-- DASHBOARD -->
+
+<div class="dashboard">
+
+    <header class="header">
+
+        <div class="header-brand">
+            <strong>StreetLens</strong>
+            <span>·</span>
+            <span>Pavement Condition</span>
+        </div>
+
+
+        <div class="header-actions-only">
+            <a href="{{ url_for('road_ranking') }}" class="streetlens-ranking-link" aria-label="Open PCI road ranking page"><span class="ranking-link-icon" aria-hidden="true">↗</span><span>Road ranking</span></a>
+            <!-- Logout must be POST because Flask route is POST-only -->
+            <form
+                action="{{ url_for('logout') }}"
+                method="POST"
+                class="signout-form"
+            >
+                <button type="submit" class="signout">Sign out</button>
+            </form>
+        </div>
+
+    </header>
+
+
+    <main class="dashboard-body streetlens-dashboard-grid">
+<aside class="left-column streetlens-left-column">
+<section class="route-section">
+<div class="map-card streetlens-main-map-card" aria-label="Interactive StreetLens route map"><div id="streetLensDashboardMap"></div><div id="streetLensDashboardMapLoading" class="streetlens-map-loading">Loading segmented inspection map…</div><div id="streetLensDashboardHoverCard" class="streetlens-section-hover-card" hidden></div><div class="streetlens-map-mini-tools"><button id="streetLensDashboardSatellite" type="button" title="Toggle satellite imagery"><svg class="satellite-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 4-4 4 4-4 4zM13 13l4 4m-7-7-4 4m8-2 3-3 3 3-3 3zM4 20l5-5m-2 5h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Satellite</span></button><button id="streetLensDashboardReset" type="button" title="Reset">↺</button><button id="streetLensDashboardExpand" type="button" title="Open map">⤢</button><button id="streetLensDashboardFullscreen" type="button" title="Full screen map">⛶</button></div></div></section>
+
+<section class="streetlens-left-preview" aria-label="Road image preview"><div class="streetlens-left-preview-head"><strong>Road image</strong><span>Preview</span></div><div class="streetlens-left-preview-frame"><img src="/static/images/road_preview.png" alt="Road inspection preview"></div></section>
+</aside>
+<section class="streetlens-ml-column"><section class="ml-card streetlens-ml-card">
+<div class="streetlens-road-scroll" id="streetLensRoadScroll" aria-label="Scrollable road inspection view">
+<div class="streetlens-road-toolbar" aria-label="Road image controls">
+<span class="streetlens-frame-status" id="streetLensFrameStatus">—</span>
+<button id="streetLensRoadZoomIn" type="button" title="Zoom in on the road frames" aria-label="Zoom in">＋</button>
+<span class="streetlens-road-ctrl-hint">Ctrl + scroll</span>
+<span id="streetLensRoadZoomLabel" class="streetlens-road-zoom-label">100%</span>
+</div>
+<div class="streetlens-road-strip" id="streetLensRoadStrip"></div>
+<div class="streetlens-road-pending hidden" id="streetLensRoadPending">
+    <strong>ML imagery pending upload</strong>
+    <span>The selected road does not have inspection frames uploaded yet.</span>
+</div>
+</div>
+<div class="sample-legend streetlens-ml-legend"><span><i style="background:#4a90c4"></i>Alligator crack</span><span><i style="background:#c1543d"></i>Longitudinal crack</span><span><i style="background:#d1a13c"></i>Transverse crack</span><span><i style="background:#9370c4"></i>Pothole</span></div></section></section>
+<section class="right-column streetlens-right-column"><div class="analytics-card score streetlens-score-card"><h2>Overall distress score</h2><div class="gauge"><svg viewBox="0 0 220 130"><path d="M35 105 A75 75 0 0 1 185 105" fill="none" stroke="#2a2a2a" stroke-width="14" stroke-linecap="round"/><path d="M35 105 A75 75 0 0 1 185 105" fill="none" id="streetLensGaugeProgress" stroke="#c1543d" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 236"/><text id="streetLensScoreValue" x="110" y="95" text-anchor="middle" fill="#f1f1f1" font-size="36" font-weight="700" font-family="Outfit">—</text><text x="110" y="113" text-anchor="middle" fill="#777" font-size="9" font-family="Inter">PCI: 100 = best condition</text></svg></div><div id="streetLensCondition" class="condition">CONDITION: —</div><div id="streetLensRoadSummary" class="pills road-summary">
+<div class="road-summary-wide"><span>Street name</span><b id="streetLensSelectedRoad">—</b></div>
+<div><span>PCI</span><b id="streetLensSelectedPci">—</b></div>
+<div><span>SDI</span><b id="streetLensSelectedSdi">—</b></div>
+<div><span>Latitude</span><b id="streetLensSelectedLatitude">—</b></div>
+<div><span>Longitude</span><b id="streetLensSelectedLongitude">—</b></div>
+</div></div>
+<div class="analytics-card breakdown streetlens-breakdown-card"><h2>Distress breakdown</h2>{% for d in distress %}<div class="distress-row"><div class="distress-line"><span><i class="swatch" data-color="{{ d.color }}"></i>{{ d.label }}</span><b>{{ d.pct }}%</b></div><div class="bar"><span style="width: {{ d.pct }}%; background: {{ d.color }};"></span></div><p>{{ d.sub }}</p></div>{% endfor %}</div></section>
+</main>
+
+</div>
+
+
+<!-- Full inspection map -->
+<div id="mapModal" class="modal map-first-modal" onclick="closeMap(event)">
+  <div class="streetlens-fullmap-shell" onclick="event.stopPropagation()">
+    <div class="streetlens-fullmap-map-wrap">
+      <div id="streetLensModalMap"></div>
+      <div id="streetLensModalMapLoading" class="streetlens-map-loading">Loading segmented inspection map…</div>
+      <div id="streetLensModalHoverCard" class="streetlens-section-hover-card" hidden></div>
+      <div class="streetlens-fullmap-tools">
+        <button id="streetLensModalSatellite" type="button" title="Toggle satellite imagery"><svg class="satellite-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 4-4 4 4-4 4zM13 13l4 4m-7-7-4 4m8-2 3-3 3 3-3 3zM4 20l5-5m-2 5h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Satellite</span></button>
+        <button id="streetLensModalReset" type="button" title="Reset map view">↺ Reset</button>
+        <button id="streetLensModalFullscreen" type="button" title="Browser fullscreen">⛶ Fullscreen</button>
+        <a class="map-back-dashboard" href="{{ url_for('road_ranking') }}" title="Open road ranking">Ranking ↗</a><form class="map-signout-form" action="{{ url_for('logout') }}" method="POST"><button type="submit" title="Sign out">Exit</button></form>
+      </div>
+    </div>
+    <aside class="streetlens-map-sheet">
+      <div class="streetlens-map-sheet-head">
+        <p class="streetlens-map-sheet-kicker">STREET LENS</p>
+        <strong>COLLINGSWOOD</strong>
+        <span class="map-subtitle">Pavement condition · section view</span>
+      </div>
+      <div class="streetlens-sidebar-search">
+        <p class="streetlens-map-sheet-label">FIND A STREET</p>
+        <input id="streetLensFindStreet" class="streetlens-find-input" list="streetLensStreetList" placeholder="Search streets" autocomplete="off">
+        <datalist id="streetLensStreetList"></datalist>
+      </div>
+      <div class="streetlens-metric-block">
+        <p class="streetlens-map-sheet-label">VIEW METRIC</p>
+        <div class="streetlens-metric-action-row">
+          <div class="streetlens-map-segment-toggle" role="group" aria-label="Metric">
+            <button id="streetLensModalMetricSDI" type="button" class="active" aria-pressed="true">SDI<small>Surface Distress Index · 0–5</small></button>
+            <button id="streetLensModalMetricPCI" type="button" aria-pressed="false">PCI<small>Pavement Condition Index · 0–100</small></button>
+          </div>
+          <button id="streetLensViewRoad" class="streetlens-view-road" type="button" disabled>View Road</button>
+        </div>
+      </div>
+      <div class="streetlens-current-section" aria-live="polite">
+        <div class="streetlens-selection-heading"><p class="streetlens-map-sheet-label">CURRENT SELECTION</p><span id="streetLensCurrentSectionNumber">SECTION —</span></div>
+        <strong id="streetLensHoveredRoad">Select a colored street section</strong>
+        <div class="streetlens-current-score-line"><b id="streetLensCurrentMetricValue">—</b><span id="streetLensCurrentScoreDenominator">/ 5</span><span class="streetlens-condition-chip" id="streetLensCurrentConditionChip">—</span></div>
+        <div class="streetlens-score-scale" aria-hidden="true"><div class="streetlens-score-scale-colors" id="streetLensScoreScaleColors"></div><i id="streetLensScoreScaleMarker"></i></div>
+        <div class="streetlens-score-scale-labels" id="streetLensScoreScaleLabels"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+        <div class="streetlens-current-score-grid">
+          <div><span>PCI</span><b id="streetLensCurrentOtherMetricValue">—</b></div>
+          <div><span>Section length</span><b id="streetLensCurrentLengthValue">—</b></div>
+        </div>
+        <small id="streetLensCurrentSectionMeta">Move the cursor over a section to inspect its scores.</small>
+      </div>
+      <div class="streetlens-along-street-block">
+        <p class="streetlens-map-sheet-label">SECTIONS ALONG STREET</p>
+        <div id="streetLensAlongStreetBar" class="streetlens-along-street-bar" aria-label="Sections along selected street"></div>
+        <p id="streetLensAlongStreetMeta" class="streetlens-along-street-meta">Select a section to view its street</p>
+      </div>
+      <div class="streetlens-legend-control">
+        <label><input type="checkbox" id="streetLensToggleLegend"><span>Show color legend</span></label>
+      </div>
+      <div id="streetLensLegendWrap" class="legend-hidden">
+        <p class="streetlens-map-sheet-label" id="streetLensModalLegendLabel">SDI of the section</p>
+        <div id="streetLensModalLegend" class="streetlens-sheet-legend"></div>
+      </div>
+      <div class="streetlens-map-options">
+        <label><input type="checkbox" id="streetLensShowBatch1" checked><span class="dash-sample"></span><span>Batch 1 runs · dashed</span></label>
+        <label><input type="checkbox" id="streetLensShowEndPieces" checked><span class="thin-sample"></span><span>End pieces under 200 ft · thin</span></label>
+      </div>
+      <div class="streetlens-ranking-block">
+        <div class="streetlens-ranking-toolbar">
+          <div>
+            <p class="streetlens-map-sheet-label" id="streetLensRankingLabel">TOP 10 STREETS BY SDI</p>
+            <p class="streetlens-ranking-description" id="streetLensRankingDescription">Worst condition first · average street score</p>
+          </div>
+          <label class="streetlens-ranking-limit-label" for="streetLensRankingLimit">SHOW
+            <select id="streetLensRankingLimit" aria-label="Number of ranked streets to show">
+              <option value="10" selected>10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="all">All</option>
+            </select>
+          </label>
+        </div>
+        <div id="streetLensRoadRanking" class="streetlens-sheet-ranking"></div>
+      </div>
+      <p class="streetlens-map-sheet-foot" id="streetLensRoadCount"></p>
+    </aside>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+const STREETLENS_MAP_FIRST = true;
+/* StreetLens segmented Collingswood map — MapLibre implementation. */
+let STREETLENS_ROAD_REGISTRY={version:1,section_length_ft:2500,roads:[]};
+let STREETLENS_ROADS=[]; let STREETLENS_REGISTRY_READY=null;
+let STREETLENS_SECTION_DATA=null; let STREETLENS_METRIC='sdi'; let STREETLENS_CURRENT_SECTION=null; let STREETLENS_SELECTED_SECTION=null;
+let STREETLENS_MAPS={};
+const STREETLENS_COLORS={failed:'#5b1136',serious:'#a31631',vpoor:'#dc4a2c',poor:'#f39a32',fair:'#f1d451',sat:'#62b8a5',good:'#1f6f9c'};
+const STREETLENS_PCI_CLASSES=[[85,'Good','good','85–100'],[70,'Satisfactory','sat','70–85'],[55,'Fair','fair','55–70'],[40,'Poor','poor','40–55'],[25,'Very Poor','vpoor','25–40'],[10,'Serious','serious','10–25'],[-1,'Failed','failed','0–10']];
+const STREETLENS_SDI_CLASSES=[[4.5,'4.5 and up','good',''],[4.0,'4.0 – 4.5','sat',''],[3.5,'3.5 – 4.0','fair',''],[3.0,'3.0 – 3.5','poor',''],[-1,'Under 3.0','serious','']];
+function classify(metric,value){const v=Number(value);if(!Number.isFinite(v))return null;return(metric==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES).find(c=>v>=c[0])||null;}
+function conditionText(metric,value){const c=classify(metric,value);return c?c[1]:'No data';}
+function fmt1(v){return Number.isFinite(Number(v))?Number(v).toFixed(1):'–'}
+function fmt2(v){return Number.isFinite(Number(v))?Number(v).toFixed(2):'–'}
+function n0(v){return Number.isFinite(Number(v))?Math.round(Number(v)).toLocaleString():'–'}
+function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function animateOverallScore(value,condition){const s=document.getElementById('streetLensScoreValue'),g=document.getElementById('streetLensGaugeProgress'),cEl=document.getElementById('streetLensCondition');const target=Number(value);if(!Number.isFinite(target)){if(s)s.textContent='—';return;}const clamped=Math.max(0,Math.min(100,target));const c=classify('pci',clamped),color=c?STREETLENS_COLORS[c[2]]:'#f59e0b';if(g){g.setAttribute('stroke',color)}if(cEl){cEl.textContent=`CONDITION: ${String(condition||c?.[1]||'').toUpperCase()}`;cEl.style.borderColor=color;cEl.style.color=color;}const start=performance.now();function tick(now){const t=Math.min(1,(now-start)/700),e=1-Math.pow(1-t,3),cur=clamped*e;if(s)s.textContent=cur.toFixed(1).replace(/\.0$/,'');if(g)g.setAttribute('stroke-dasharray',`${236*(cur/100)} 236`);if(t<1)requestAnimationFrame(tick)}requestAnimationFrame(tick)}
+function sectionVisible(sec){const b1=document.getElementById('streetLensShowBatch1')?.checked!==false;const end=document.getElementById('streetLensShowEndPieces')?.checked!==false;if(sec.run.batch==='Batch 1'&&!b1)return false;if(sec.len<200&&!end)return false;return true;}
+function flattenSections(data){const out=[];(data?.runs||[]).forEach(run=>(run.secs||[]).forEach(sec=>{if(!Array.isArray(sec.g)||sec.g.length<2)return;sec.run=run;sec.coords=sec.g.map(p=>[Number(p[1]),Number(p[0])]);out.push(sec)}));return out;}
+function sectionColor(sec){const c=classify(STREETLENS_METRIC,STREETLENS_METRIC==='sdi'?sec.sdi:sec.pci);return c?STREETLENS_COLORS[c[2]]:'#6b7280';}
+function buildGeoJSON(){return{type:'FeatureCollection',features:STREETLENS_SECTION_DATA.sections.map((s,i)=>({type:'Feature',id:i,properties:{sectionKey:`${s.run.key}::${s.bin}`,runKey:s.run.key,name:s.run.name,bin:s.bin,f0:s.f0,f1:s.f1,len:s.len,pci:Number(s.pci),sdi:Number(s.sdi),batch:s.run.batch||'',visible:sectionVisible(s)},geometry:{type:'LineString',coordinates:s.coords}}))};}
+function buildBoundaryGeoJSON(){const features=[];for(const s of STREETLENS_SECTION_DATA.sections){if(!sectionVisible(s)||!s.coords?.length)continue;for(const c of [s.coords[0],s.coords[s.coords.length-1]])features.push({type:'Feature',properties:{sectionKey:`${s.run.key}::${s.bin}`},geometry:{type:'Point',coordinates:c}});}return{type:'FeatureCollection',features};}
+function buildLabelsGeoJSON(){const seen=new Set(),features=[];for(const s of STREETLENS_SECTION_DATA.sections){if(seen.has(s.run.key))continue;seen.add(s.run.key);const secs=STREETLENS_SECTION_DATA.sections.filter(x=>x.run.key===s.run.key);const mid=secs[Math.floor(secs.length/2)],coords=mid.coords[Math.floor(mid.coords.length/2)];if(coords)features.push({type:'Feature',properties:{name:mid.run.name,batch:mid.run.batch||''},geometry:{type:'Point',coordinates:coords}})}return{type:'FeatureCollection',features};}
+function lineColorExpression(){if(STREETLENS_METRIC==='sdi')return['step',['get','sdi'],STREETLENS_COLORS.serious,3,STREETLENS_COLORS.poor,3.5,STREETLENS_COLORS.fair,4,STREETLENS_COLORS.sat,4.5,STREETLENS_COLORS.good];return['step',['get','pci'],STREETLENS_COLORS.failed,10,STREETLENS_COLORS.serious,25,STREETLENS_COLORS.vpoor,40,STREETLENS_COLORS.poor,55,STREETLENS_COLORS.fair,70,STREETLENS_COLORS.sat,85,STREETLENS_COLORS.good];}
+function visibilityExpression(){return['case',['get','visible'],1,0];}
+function addMapLayers(map){
+  const mini=!!map._streetlensDashboard;
+  const caseWidth=mini?['case',['<',['get','len'],200],2.6,4.2]:['case',['<',['get','len'],200],3.6,5.6];
+  const lineWidth=mini?['case',['<',['get','len'],200],1.5,2.4]:['case',['<',['get','len'],200],2.0,3.4];
+  map.addSource('streetlens-sections',{type:'geojson',data:buildGeoJSON()});
+  map.addSource('streetlens-labels',{type:'geojson',data:buildLabelsGeoJSON()});
+  if(STREETLENS_MAP_FIRST && Array.isArray(STREETLENS_SECTION_DATA.ring) && STREETLENS_SECTION_DATA.ring.length>2){
+    const boundary=STREETLENS_SECTION_DATA.ring.map(p=>[Number(p[0]),Number(p[1])]);
+    if(boundary.length && (boundary[0][0]!==boundary[boundary.length-1][0]||boundary[0][1]!==boundary[boundary.length-1][1]))boundary.push([...boundary[0]]);
+    const area=boundary.slice(0,-1).reduce((sum,p,i)=>{const q=boundary[i+1];return sum+p[0]*q[1]-q[0]*p[1]},0);
+    // GeoJSON holes are wound opposite to the outer world polygon.
+    if(area>0)boundary.reverse();
+    const outside=[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]];
+    map.addSource('streetlens-collingswood-mask',{type:'geojson',data:{type:'FeatureCollection',features:[{type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[outside,boundary]}}]}});
+    map.addLayer({id:'streetlens-outside-dim',type:'fill',source:'streetlens-collingswood-mask',paint:{'fill-color':'#05090b','fill-opacity':0.58,'fill-outline-color':'#05090b'}});
+    map.addSource('streetlens-collingswood-boundary',{type:'geojson',data:{type:'Feature',properties:{},geometry:{type:'LineString',coordinates:boundary}}});
+    map.addLayer({id:'streetlens-collingswood-boundary-line',type:'line',source:'streetlens-collingswood-boundary',paint:{'line-color':'#c4e5db','line-width':['interpolate',['linear'],['zoom'],10,1.3,13,2,16,2.7],'line-opacity':0.9,'line-dasharray':[2,1.5]}});
+  }
+  map.addLayer({id:'streetlens-section-case',type:'line',source:'streetlens-sections',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#111614','line-opacity':visibilityExpression(),'line-width':caseWidth}});
+  map.addLayer({id:'streetlens-section-line',type:'line',source:'streetlens-sections',filter:['!=',['get','batch'],'Batch 1'],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':lineColorExpression(),'line-opacity':visibilityExpression(),'line-width':lineWidth}});
+  map.addLayer({id:'streetlens-section-line-batch1',type:'line',source:'streetlens-sections',filter:['==',['get','batch'],'Batch 1'],layout:{'line-cap':'round','line-join':'round','line-dasharray':['literal',[2,2]]},paint:{'line-color':lineColorExpression(),'line-opacity':visibilityExpression(),'line-width':lineWidth}});
+  // Wide, nearly invisible hit target makes narrow road sections easier to select without changing their appearance.
+  map.addLayer({id:'streetlens-section-hit-target',type:'line',source:'streetlens-sections',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#ffffff','line-opacity':0.015,'line-width':['interpolate',['linear'],['zoom'],10,12,13,18,16,24]}});
+  // Small pale boundary marks make adjacent inspection sections distinguishable.
+  // Endpoint dots are reserved for the expanded/fullscreen analysis map.
+  if(!mini){
+    map.addSource('streetlens-section-boundaries',{type:'geojson',data:buildBoundaryGeoJSON()});
+    map.addLayer({id:'streetlens-section-boundaries',type:'circle',source:'streetlens-section-boundaries',paint:{'circle-radius':['interpolate',['linear'],['zoom'],11,1.1,15,1.8,18,2.2],'circle-color':'#f7f4eb','circle-opacity':0.92,'circle-stroke-color':'#27342f','circle-stroke-width':0.7}});
+  }
+  map.addSource('streetlens-selected-section',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+  map.addLayer({id:'streetlens-selected-glow',type:'line',source:'streetlens-selected-section',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#ffffff','line-width':['interpolate',['linear'],['zoom'],11,5,14,7,18,9],'line-opacity':1,'line-blur':0}});
+  map.addLayer({id:'streetlens-selected-core',type:'line',source:'streetlens-selected-section',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':lineColorExpression(),'line-width':['interpolate',['linear'],['zoom'],11,2,14,3.5,18,5],'line-opacity':1}});
+  map.addLayer({id:'streetlens-street-labels',type:'symbol',source:'streetlens-labels',minzoom:15.2,layout:{'text-field':['get','name'],'text-size':['interpolate',['linear'],['zoom'],15,10,18,14],'text-anchor':'center','text-allow-overlap':false},paint:{'text-color':STREETLENS_MAP_FIRST?'#e1ece8':'#18211f','text-halo-color':STREETLENS_MAP_FIRST?'#11191d':'#f5f2df','text-halo-width':1.6}});
+  updateMapPaint(map);
+}
+function updateMapPaint(map){
+  if(!map?.getLayer('streetlens-section-line'))return;
+  const vis=visibilityExpression();
+  map.setPaintProperty('streetlens-section-line','line-color',lineColorExpression());
+  map.setPaintProperty('streetlens-section-line-batch1','line-color',lineColorExpression());
+  map.setPaintProperty('streetlens-section-case','line-opacity',vis);
+  map.setPaintProperty('streetlens-section-line','line-opacity',vis);
+  map.setPaintProperty('streetlens-section-line-batch1','line-opacity',vis);
+}
+function syncVisibility(map){const src=map?.getSource('streetlens-sections');if(!src)return;src.setData(buildGeoJSON());const boundaries=map.getSource('streetlens-section-boundaries');if(boundaries)boundaries.setData(buildBoundaryGeoJSON());updateMapPaint(map);if(map.getLayer('streetlens-selected-glow'))map.setPaintProperty('streetlens-selected-glow','line-color',lineColorExpression());if(map.getLayer('streetlens-selected-core'))map.setPaintProperty('streetlens-selected-core','line-color',lineColorExpression());}
+function fitRing(map){const ring=STREETLENS_SECTION_DATA?.ring||[];if(!ring.length)return;const b=new maplibregl.LngLatBounds();ring.forEach(p=>b.extend([Number(p[0]),Number(p[1])]));if(!b.isEmpty())map.fitBounds(b,{padding:STREETLENS_MAP_FIRST?54:20,maxZoom:16,duration:450});}
+function buildHoverCard(sec){const cp=classify('pci',sec.pci),units=(sec.units||[]).map(u=>fmt1(u.pci)).join(', ');const flags=[];if(sec.run.batch==='Batch 1')flags.push('Batch 1 labels not reviewed · dashed');if(sec.len<200)flags.push('End piece under 200 ft · thin');if(sec.est)flags.push(`${n0(sec.est)} of ${n0(sec.n)} frames have estimated position`);return `<div class="hover-title">${escapeHtml(sec.run.name)}</div><div class="hover-sub">Section ${sec.bin} · ${n0(sec.f0)}–${n0(sec.f1)} ft · ${escapeHtml(sec.run.batch||'')}</div><div class="hover-metrics"><div><span>SDI</span><b>${fmt2(sec.sdi)}</b></div><div><span>PCI</span><b>${fmt1(sec.pci)}</b></div><div><span>Rating</span><b>${escapeHtml(cp?.[1]||'–')}</b></div></div><div class="hover-grid"><span>Length</span><b>${n0(sec.len)} ft</b><span>NDI / LDI</span><b>${fmt2(sec.ndi)} / ${fmt2(sec.ldi)}</b><span>Cracks</span><b>${n0(sec.cr)} · ${n0(sec.crft)} ft</b><span>Distressed area</span><b>${fmt1(sec.dpct)}%</b><span>Potholes / patches</span><b>${n0(sec.pot)} / ${n0(sec.pat)}</b><span>PCI sample units</span><b>${units||'–'}</b><span>Whole street</span><b>SDI ${fmt2(sec.run.sdi)} · PCI ${fmt1(sec.run.pci)}</b></div>${flags.map(f=>`<div class="hover-flag">${escapeHtml(f)}</div>`).join('')}`;}
+function showHover(sec,map,e){if(map._streetlensDashboard){updateDashboardDetails(sec);hideHover(map);return;}if(!STREETLENS_MAP_FIRST||!STREETLENS_SELECTED_SECTION)updateHoveredSection(sec);const card=document.getElementById(map._streetlensCardId);if(!card)return;card.innerHTML=buildHoverCard(sec);card.hidden=false;positionHoverCard(card,map,e);}
+function positionHoverCard(card,map,e){const p=e?.point||{x:map.getContainer().clientWidth/2,y:map.getContainer().clientHeight/2},size={x:map.getContainer().clientWidth,y:map.getContainer().clientHeight};const w=card.offsetWidth||280,h=card.offsetHeight||210;let x=p.x+16,y=p.y+16;if(x+w>size.x-10)x=p.x-w-16;if(y+h>size.y-10)y=p.y-h-16;card.style.left=Math.max(10,x)+'px';card.style.top=Math.max(10,y)+'px';}
+function hideHover(map){const card=document.getElementById(map._streetlensCardId);if(card)card.hidden=true;}
+function updateHoveredSection(sec){if(!sec)return;STREETLENS_CURRENT_SECTION=sec;const viewRoadButton=document.getElementById('streetLensViewRoad');if(viewRoadButton)viewRoadButton.disabled=false;const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val};const metric=STREETLENS_METRIC==='sdi'?'SDI':'PCI',other=STREETLENS_METRIC==='sdi'?'PCI':'SDI';const current=STREETLENS_METRIC==='sdi'?sec.sdi:sec.pci,otherValue=STREETLENS_METRIC==='sdi'?sec.pci:sec.sdi;set('streetLensHoveredRoad',`${sec.run.name} · Section ${sec.bin}`);set('streetLensCurrentMetricLabel',metric);set('streetLensCurrentMetricValue',STREETLENS_METRIC==='sdi'?fmt2(current):fmt1(current));set('streetLensCurrentOtherMetricLabel','PCI');set('streetLensCurrentOtherMetricValue',fmt1(sec.pci));set('streetLensCurrentCondition',conditionText(STREETLENS_METRIC,current));set('streetLensCurrentSectionMeta',`${n0(sec.f0)}–${n0(sec.f1)} ft · ${n0(sec.len)} ft section`);set('streetLensCurrentSectionNumber',`SECTION ${sec.bin}`);set('streetLensCurrentLengthValue',`${n0(sec.len)} ft`);set('streetLensCurrentScoreDenominator',STREETLENS_METRIC==='sdi'?'/ 5':'/ 100');set('streetLensCurrentConditionChip',conditionText(STREETLENS_METRIC,current));const condition=document.getElementById('streetLensCurrentCondition');const cls=classify(STREETLENS_METRIC,current);if(condition)condition.style.color=cls?STREETLENS_COLORS[cls[2]]:'#68736d';const chip=document.getElementById('streetLensCurrentConditionChip');if(chip&&cls)chip.style.color=STREETLENS_COLORS[cls[2]];const pct=Math.max(0,Math.min(100,Number(current)/(STREETLENS_METRIC==='sdi'?5:100)*100));const marker=document.getElementById('streetLensScoreScaleMarker');if(marker)marker.style.left=pct+'%';const scaleLabels=document.getElementById('streetLensScoreScaleLabels');if(scaleLabels)scaleLabels.innerHTML=(STREETLENS_METRIC==='sdi'?['0','1','2','3','4','5']:['0','20','40','60','80','100']).map(x=>`<span>${x}</span>`).join('');const denominator=document.getElementById('streetLensCurrentScoreDenominator');if(denominator)denominator.textContent=STREETLENS_METRIC==='sdi'?'/ 5':'/ 100';renderAlongStreet(sec); }
+function renderAlongStreet(sec){const bar=document.getElementById('streetLensAlongStreetBar'),meta=document.getElementById('streetLensAlongStreetMeta');if(!bar||!STREETLENS_SECTION_DATA)return;const street=STREETLENS_SECTION_DATA.sections.filter(x=>x.run.key===sec.run.key).sort((a,b)=>Number(a.bin)-Number(b.bin));bar.innerHTML=street.map((x)=>`<button type="button" title="Section ${escapeHtml(x.bin)} · ${STREETLENS_METRIC.toUpperCase()} ${STREETLENS_METRIC==='sdi'?fmt2(x.sdi):fmt1(x.pci)}" class="${x===sec?'selected':''}" style="background:${sectionColor(x)} !important" aria-label="Select section ${escapeHtml(x.bin)}"></button>`).join('');bar.querySelectorAll('button').forEach((btn,i)=>btn.addEventListener('click',()=>{const selected=street[i];STREETLENS_SELECTED_SECTION=selected;Object.values(STREETLENS_MAPS).forEach(map=>highlightSelectedSection(map,selected));updateHoveredSection(selected);hideHover(STREETLENS_MAPS.modal);renderAlongStreet(selected);focusSection(selected);}));if(meta)meta.textContent=`${street.length?`${n0(street[0].f0)}–${n0(street[street.length-1].f1)} ft`:'—'} · ${n0(sec.len)} ft section`;const scale=document.getElementById('streetLensScoreScaleColors');if(scale){const colors=STREETLENS_METRIC==='sdi'?['#a31631','#f39a32','#f1d451','#62b8a5','#1f6f9c']:['#5b1136','#a31631','#dc4a2c','#f39a32','#f1d451','#62b8a5','#1f6f9c'];scale.innerHTML=colors.map(c=>`<span style="background:${c}"></span>`).join('');}}
+function updateDashboardDetails(sec){if(!sec)return;updateHoveredSection(sec);const pci=Number(sec.pci),sdi=Number(sec.sdi);animateOverallScore(pci,conditionText('pci',pci));const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val};set('streetLensSelectedRoad',sec.run.name+` · Section ${sec.bin}`);set('streetLensSelectedPci',fmt1(pci));set('streetLensSelectedSdi',fmt2(sdi));const lat=sec.g?.[0]?.[0],lon=sec.g?.[0]?.[1];set('streetLensSelectedLatitude',Number.isFinite(lat)?lat.toFixed(6)+'°':'—');set('streetLensSelectedLongitude',Number.isFinite(lon)?lon.toFixed(6)+'°':'—');const frames=STREETLENS_ROADS.filter(r=>String(r.name||'').toLowerCase()===String(sec.run.name||'').toLowerCase()).flatMap(r=>r.frames||[]);if(window.streetLensLoadRoadFrames)window.streetLensLoadRoadFrames(frames);}
+function updateLegendAndRanking(){
+ const legend=document.getElementById('streetLensModalLegend');
+ if(legend){const rows=STREETLENS_METRIC==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES;legend.innerHTML=rows.map(c=>`<div class="sheet-lg-row"><i style="background:${STREETLENS_COLORS[c[2]]}"></i><span>${c[1]}</span><small>${c[3]}</small></div>`).join('');}
+ const label=document.getElementById('streetLensModalLegendLabel');if(label)label.textContent=STREETLENS_METRIC==='sdi'?'SDI of the section':'PCI rating (ASTM D6433)';
+ const box=document.getElementById('streetLensRoadRanking');if(!box||!STREETLENS_SECTION_DATA)return;
+ const visible=STREETLENS_SECTION_DATA.sections.filter(sectionVisible);
+ const groups=new Map();
+ visible.forEach(section=>{const name=String(section.run.name||'Unnamed street').trim();const key=name.toLocaleLowerCase();if(!groups.has(key))groups.set(key,{name,sections:[],sdiTotal:0,pciTotal:0});const g=groups.get(key);g.sections.push(section);g.sdiTotal+=Number(section.sdi)||0;g.pciTotal+=Number(section.pci)||0;});
+ const streets=[...groups.values()].map(g=>({...g,sdi:g.sdiTotal/g.sections.length,pci:g.pciTotal/g.sections.length}));
+ streets.sort((a,b)=>STREETLENS_METRIC==='sdi'?b.sdi-a.sdi:a.pci-b.pci);
+ const limit=document.getElementById('streetLensRankingLimit')?.value||'10';const shown=limit==='all'?streets:streets.slice(0,Math.max(1,Number(limit)||10));
+ const rankLabel=document.getElementById('streetLensRankingLabel');if(rankLabel)rankLabel.textContent=`TOP ${limit==='all'?'ALL':shown.length} STREETS BY ${STREETLENS_METRIC.toUpperCase()}`;
+ const description=document.getElementById('streetLensRankingDescription');if(description)description.textContent=`${STREETLENS_METRIC==='sdi'?'Highest distress first':'Lowest pavement condition first'} · average street score`;
+ box.innerHTML=shown.map((street,i)=>`<button type="button" class="streetlens-ranking-row" data-street-key="${escapeHtml(street.name)}"><span class="streetlens-ranking-rank">${i+1}</span><span class="streetlens-ranking-name">${escapeHtml(street.name)}<small>${street.sections.length} section${street.sections.length===1?'':'s'} · average ${STREETLENS_METRIC.toUpperCase()}</small></span><b>${STREETLENS_METRIC==='sdi'?fmt2(street.sdi):fmt1(street.pci)}</b></button>`).join('');
+ box.querySelectorAll('[data-street-key]').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.streetKey.toLocaleLowerCase();const sections=STREETLENS_SECTION_DATA.sections.filter(x=>String(x.run.name||'').trim().toLocaleLowerCase()===key);if(!sections.length)return;const bounds=new maplibregl.LngLatBounds();sections.forEach(sec=>sec.coords.forEach(coord=>bounds.extend(coord)));Object.values(STREETLENS_MAPS).forEach(map=>map?.fitBounds(bounds,{padding:70,maxZoom:17,duration:650}));if(sections.length===1)updateHoveredSection(sections[0]);}));
+ const count=document.getElementById('streetLensRoadCount');if(count)count.textContent=`${STREETLENS_SECTION_DATA.runs.length} street runs · ${STREETLENS_SECTION_DATA.sections.length} mapped sections`;
+}
+function focusSection(sec){Object.values(STREETLENS_MAPS).forEach(map=>{if(!map)return;const b=new maplibregl.LngLatBounds();sec.coords.forEach(c=>b.extend(c));map.fitBounds(b,{padding:80,maxZoom:18,duration:650});});}
+function refreshMap(map){if(!map||!map.loaded())return;syncVisibility(map);}
+function addBasemap(map){const sat={type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19,attribution:'Imagery © Esri'};map.addSource('streetlens-satellite',{type:'raster',...sat});const firstSymbol=(map.getStyle().layers||[]).find(l=>l.type==='symbol');map.addLayer({id:'streetlens-satellite-basemap',type:'raster',source:'streetlens-satellite',layout:{visibility:'none'}},firstSymbol?.id);map._streetlensSatelliteOn=false;}
+function toggleSatellite(map){if(!map)return;map._streetlensSatelliteOn=!map._streetlensSatelliteOn;map.setLayoutProperty('streetlens-satellite-basemap','visibility',map._streetlensSatelliteOn?'visible':'none');}
+function resetMap(map){if(map){fitRing(map);hideHover(map);refreshMap(map)}}
+function highlightSelectedSection(map,sec){if(!map||!sec||!map.getSource('streetlens-selected-section'))return;const feature={type:'Feature',properties:{sectionKey:`${sec.run.key}::${sec.bin}`,sdi:Number(sec.sdi),pci:Number(sec.pci)},geometry:{type:'LineString',coordinates:sec.coords}};map.getSource('streetlens-selected-section').setData({type:'FeatureCollection',features:[feature]});}
+function createStreetLensMap(id,cardId){const el=document.getElementById(id);if(!el)throw new Error('Map container not found: '+id);if(!window.maplibregl)throw new Error('MapLibre failed to load');const map=new maplibregl.Map({container:el,style:STREETLENS_MAP_FIRST?'https://tiles.openfreemap.org/styles/dark':{version:8,sources:{},layers:[]},center:[-75.078,39.916],zoom:13,attributionControl:true,dragRotate:false});map._streetlensCardId=cardId;map._streetlensDashboard=(id==='streetLensDashboardMap');map.addControl(new maplibregl.NavigationControl({showCompass:true,showZoom:true}),'top-left');map.addControl(new maplibregl.ScaleControl({unit:'imperial'}),'bottom-left');map.on('load',()=>{addBasemap(map);addMapLayers(map);fitRing(map);document.getElementById(id==='streetLensModalMap'?'streetLensModalMapLoading':'streetLensDashboardMapLoading')?.classList.add('hidden-map-loading');});map.on('mousemove','streetlens-section-line',e=>{if(!e.features?.length)return;const f=e.features[0],sec=STREETLENS_SECTION_DATA.sections.find(s=>`${s.run.key}::${s.bin}`===f.properties.sectionKey);if(!sec)return;map.getCanvas().style.cursor='pointer';showHover(sec,map,e);});map.on('mousemove','streetlens-section-line-batch1',e=>{if(!e.features?.length)return;const f=e.features[0],sec=STREETLENS_SECTION_DATA.sections.find(s=>`${s.run.key}::${s.bin}`===f.properties.sectionKey);if(!sec)return;map.getCanvas().style.cursor='pointer';showHover(sec,map,e);});map.on('mouseleave','streetlens-section-line',()=>{map.getCanvas().style.cursor='';hideHover(map);});map.on('mouseleave','streetlens-section-line-batch1',()=>{map.getCanvas().style.cursor='';hideHover(map);});map.on('mousemove','streetlens-section-hit-target',e=>{if(!e.features?.length)return;const f=e.features[0],sec=STREETLENS_SECTION_DATA.sections.find(s=>`${s.run.key}::${s.bin}`===f.properties.sectionKey);if(!sec)return;map.getCanvas().style.cursor='pointer';showHover(sec,map,e);});map.on('mouseleave','streetlens-section-hit-target',()=>{map.getCanvas().style.cursor='';hideHover(map);});const sectionFromEvent=e=>{const f=e.features?.[0];return f&&STREETLENS_SECTION_DATA.sections.find(s=>`${s.run.key}::${s.bin}`===f.properties.sectionKey);};const clickSection=e=>{const sec=sectionFromEvent(e);if(!sec)return;STREETLENS_SELECTED_SECTION=sec;highlightSelectedSection(map,sec);if(STREETLENS_MAP_FIRST){updateHoveredSection(sec);const viewBtn=document.getElementById('streetLensViewRoad');if(viewBtn)viewBtn.disabled=false;hideHover(map);}else{updateDashboardDetails(sec);}};const doubleClickSection=e=>{const sec=sectionFromEvent(e);if(!sec||!STREETLENS_MAP_FIRST)return;const q=new URLSearchParams({road:sec.run.name,run:sec.run.key,section:String(sec.bin)});window.location.href='/dashboard?'+q.toString();};map.on('click','streetlens-section-line',clickSection);map.on('click','streetlens-section-line-batch1',clickSection);map.on('click','streetlens-section-hit-target',clickSection);map.on('dblclick','streetlens-section-line',doubleClickSection);map.on('dblclick','streetlens-section-line-batch1',doubleClickSection);map.on('dblclick','streetlens-section-hit-target',doubleClickSection);map.on('mousemove',e=>{const card=document.getElementById(cardId);if(card&&!card.hidden)positionHoverCard(card,map,e);});return map;}
+function populateStreetSearch(){const list=document.getElementById('streetLensStreetList');if(!list)return;const names=[...new Set(STREETLENS_SECTION_DATA.runs.map(r=>r.name))].sort((a,b)=>a.localeCompare(b));list.innerHTML=names.map(n=>`<option value="${escapeHtml(n)}"></option>`).join('');const input=document.getElementById('streetLensFindStreet');const go=()=>{const q=(input?.value||'').trim().toLowerCase();if(!q)return;let hits=STREETLENS_SECTION_DATA.sections.filter(s=>s.run.name.toLowerCase()===q);if(!hits.length)hits=STREETLENS_SECTION_DATA.sections.filter(s=>s.run.name.toLowerCase().includes(q));if(!hits.length){input?.setCustomValidity('No matching Collingswood street found');input?.reportValidity();return;}input?.setCustomValidity('');const b=new maplibregl.LngLatBounds();hits.forEach(s=>s.coords.forEach(c=>b.extend(c)));const map=STREETLENS_MAPS.modal||STREETLENS_MAPS.dashboard;if(map){map.fitBounds(b,{padding:STREETLENS_MAP_FIRST?110:80,maxZoom:18,duration:700});if(hits.length===1){STREETLENS_SELECTED_SECTION=hits[0];highlightSelectedSection(map,hits[0]);updateHoveredSection(hits[0]);}}};input?.addEventListener('change',go);input?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});}
+function setMetric(metric){STREETLENS_METRIC=metric==='pci'?'pci':'sdi';document.getElementById('streetLensModalMetricSDI')?.classList.toggle('active',STREETLENS_METRIC==='sdi');document.getElementById('streetLensModalMetricPCI')?.classList.toggle('active',STREETLENS_METRIC==='pci');document.getElementById('streetLensModalMetricSDI')?.setAttribute('aria-pressed',String(STREETLENS_METRIC==='sdi'));document.getElementById('streetLensModalMetricPCI')?.setAttribute('aria-pressed',String(STREETLENS_METRIC==='pci'));Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();if(STREETLENS_SELECTED_SECTION)updateHoveredSection(STREETLENS_SELECTED_SECTION);else if(STREETLENS_CURRENT_SECTION)updateHoveredSection(STREETLENS_CURRENT_SECTION);}
+async function openMap(fullscreen=false){const modal=document.getElementById('mapModal');if(!modal)return;modal.classList.remove('hidden');if(!STREETLENS_MAPS.modal)STREETLENS_MAPS.modal=createStreetLensMap('streetLensModalMap','streetLensModalHoverCard');setTimeout(()=>STREETLENS_MAPS.modal?.resize(),100);if(fullscreen)await toggleMapFullscreen();}
+async function toggleMapFullscreen(){const modal=document.getElementById('mapModal');if(!modal)return;try{if(!document.fullscreenElement)await modal.requestFullscreen();else await document.exitFullscreen();}catch(e){console.warn('StreetLens fullscreen:',e)}setTimeout(()=>{STREETLENS_MAPS.modal?.resize();},180);}
+function closeMap(e){if(e&&e.target!==e.currentTarget)return;const modal=document.getElementById('mapModal');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});modal?.classList.add('hidden');}
+window.openMap=openMap;window.closeMap=closeMap;
+document.addEventListener('fullscreenchange',()=>setTimeout(()=>STREETLENS_MAPS.modal?.resize(),180));
+document.addEventListener('DOMContentLoaded',async()=>{const fail=e=>console.error('StreetLens segmented map:',e);try{if(!window.maplibregl)throw new Error('MapLibre failed to load from CDN');const r=await fetch("{{ url_for('static', filename='data/road_registry.json') }}",{cache:'no-store'});if(r.ok){const d=await r.json();STREETLENS_ROAD_REGISTRY=d||STREETLENS_ROAD_REGISTRY;STREETLENS_ROADS=Array.isArray(d?.roads)?d.roads:[];}const response=await fetch("{{ url_for('static', filename='data/collingswood_sections.json') }}",{cache:'no-store'});if(!response.ok)throw new Error('section data '+response.status);const data=await response.json();STREETLENS_SECTION_DATA={...data,runs:Array.isArray(data.runs)?data.runs:[],sections:flattenSections(data)};if(!STREETLENS_SECTION_DATA.sections.length)throw new Error('No segmented sections were loaded');populateStreetSearch();updateLegendAndRanking();if(STREETLENS_MAP_FIRST){STREETLENS_MAPS.modal=createStreetLensMap('streetLensModalMap','streetLensModalHoverCard');setTimeout(()=>STREETLENS_MAPS.modal?.resize(),120);}else{STREETLENS_MAPS.dashboard=createStreetLensMap('streetLensDashboardMap','streetLensDashboardHoverCard');const params=new URLSearchParams(window.location.search);const targetRun=params.get('run'),targetSection=params.get('section'),targetRoad=params.get('road');if(targetRun&&targetSection){const selected=STREETLENS_SECTION_DATA.sections.find(sec=>sec.run.key===targetRun&&String(sec.bin)===targetSection)||(targetRoad?STREETLENS_SECTION_DATA.sections.find(sec=>sec.run.name===targetRoad):null);if(selected){STREETLENS_MAPS.dashboard.once('load',()=>{highlightSelectedSection(STREETLENS_MAPS.dashboard,selected);updateDashboardDetails(selected);focusSection(selected);});}}}document.getElementById('streetLensModalMetricSDI')?.addEventListener('click',()=>setMetric('sdi'));document.getElementById('streetLensModalMetricPCI')?.addEventListener('click',()=>setMetric('pci'));const legendToggle=document.getElementById('streetLensToggleLegend');if(legendToggle){legendToggle.checked=false;document.getElementById('streetLensLegendWrap')?.classList.add('legend-hidden');legendToggle.addEventListener('change',e=>{document.getElementById('streetLensLegendWrap')?.classList.toggle('legend-hidden',!e.target.checked);});}document.getElementById('streetLensRankingLimit')?.addEventListener('change',updateLegendAndRanking);document.getElementById('streetLensShowBatch1')?.addEventListener('change',()=>{Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();});document.getElementById('streetLensShowEndPieces')?.addEventListener('change',()=>{Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();});document.getElementById('streetLensDashboardSatellite')?.addEventListener('click',e=>{e.stopPropagation();toggleSatellite(STREETLENS_MAPS.dashboard)});document.getElementById('streetLensDashboardReset')?.addEventListener('click',e=>{e.stopPropagation();resetMap(STREETLENS_MAPS.dashboard)});document.getElementById('streetLensDashboardExpand')?.addEventListener('click',e=>{e.stopPropagation();openMap(false)});document.getElementById('streetLensDashboardFullscreen')?.addEventListener('click',e=>{e.stopPropagation();openMap(true)});document.getElementById('streetLensModalSatellite')?.addEventListener('click',()=>toggleSatellite(STREETLENS_MAPS.modal));document.getElementById('streetLensModalReset')?.addEventListener('click',()=>resetMap(STREETLENS_MAPS.modal));document.getElementById('streetLensModalFullscreen')?.addEventListener('click',toggleMapFullscreen);document.getElementById('streetLensModalClose')?.addEventListener('click',()=>closeMap());document.getElementById('streetLensViewRoad')?.addEventListener('click',()=>{const sec=STREETLENS_SELECTED_SECTION||STREETLENS_CURRENT_SECTION;if(!sec)return;const q=new URLSearchParams({road:sec.run.name,run:sec.run.key,section:String(sec.bin)});window.location.href='/dashboard?'+q.toString();});setMetric('sdi');}catch(e){fail(e);document.querySelectorAll('.streetlens-map-loading').forEach(x=>x.classList.add('hidden-map-loading'));}});
+</script>
+
+<style id="streetlens-map-sidebar-refinement">
+/* Map-first inspection sheet: reference hierarchy with the requested white theme. */
+html.streetlens-map-first #mapModal .streetlens-fullmap-shell{display:grid!important;grid-template-columns:minmax(0,1fr) 432px!important;grid-template-rows:minmax(0,1fr)!important;width:min(1600px,99vw)!important;height:min(960px,98vh)!important;background:#fff!important;border:1px solid #d9d9d9!important;border-radius:4px!important;overflow:hidden!important}
+html.streetlens-map-first #mapModal .streetlens-fullmap-map-wrap{position:relative!important;grid-column:1!important;grid-row:1!important;min-width:0!important;min-height:0!important;background:#101010!important;overflow:hidden!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet{grid-column:2!important;grid-row:1!important;width:auto!important;min-width:0!important;max-width:none!important;height:100%!important;max-height:100%!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important;display:flex!important;flex-direction:column!important;gap:0!important;padding:0!important;background:#fff!important;color:#222!important;border-left:1px solid #ddd!important;font-family:Inter,Arial,sans-serif!important;scrollbar-width:thin;scrollbar-color:#c8c8c8 #f7f7f7}
+html.streetlens-map-first #mapModal .streetlens-map-sheet::-webkit-scrollbar{width:8px}html.streetlens-map-first #mapModal .streetlens-map-sheet::-webkit-scrollbar-thumb{background:#c9c9c9;border-radius:8px;border:2px solid #fff}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head{order:1!important;padding:22px 25px 18px!important;margin:0!important;border-bottom:1px solid #e7e7e7!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-kicker{margin:0 0 10px!important;color:#777!important;font:600 10px/1.4 'JetBrains Mono',monospace!important;letter-spacing:.2em!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head strong{display:block!important;color:#202124!important;font:700 25px/1.15 Inter,Arial,sans-serif!important;letter-spacing:-.04em!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head .map-title-muted{display:none!important}html.streetlens-map-first #mapModal .streetlens-map-sheet-head .map-subtitle{display:block!important;margin-top:6px!important;color:#777!important;font:12px/1.5 Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-label{margin:0 0 11px!important;color:#777!important;font:600 10px/1.4 'JetBrains Mono',monospace!important;letter-spacing:.17em!important;text-transform:uppercase!important}
+html.streetlens-map-first #mapModal .streetlens-sidebar-search{order:2!important;padding:17px 25px 20px!important;border-bottom:1px solid #e7e7e7!important}
+html.streetlens-map-first #mapModal .streetlens-find-input,html.streetlens-map-first #mapModal #streetLensFindStreet{display:block!important;width:100%!important;box-sizing:border-box!important;min-height:46px!important;padding:11px 14px!important;background:#fff!important;color:#222!important;border:1px solid #dcdcdc!important;border-radius:0!important;outline:none!important;font:14px Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-find-input:focus{border-color:#999!important;box-shadow:0 0 0 2px #0000000b!important}
+html.streetlens-map-first #mapModal .streetlens-metric-block{order:3!important;margin:0!important;padding:17px 25px 20px!important;background:#fff!important;border:0!important;border-bottom:1px solid #e7e7e7!important;border-radius:0!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle{display:grid!important;grid-template-columns:1fr 1fr!important;border:1px solid #dedede!important;border-radius:0!important;background:#fff!important;overflow:hidden!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button{min-width:0!important;min-height:76px!important;padding:13px!important;text-align:left!important;background:#fff!important;color:#666!important;border:0!important;border-radius:0!important;font:700 15px Inter,Arial,sans-serif!important;cursor:pointer!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button+button{border-left:1px solid #e3e3e3!important}html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button.active{color:#202124!important;background:#f4f4f4!important;box-shadow:inset 0 2px 0 #333!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button small{display:block!important;margin-top:7px!important;color:#777!important;font:10px/1.45 Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-current-section{order:4!important;padding:18px 25px 16px!important;border-bottom:1px solid #e7e7e7!important;background:#fff!important;color:#222!important}
+html.streetlens-map-first #mapModal .streetlens-selection-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}.streetlens-selection-heading>span{border:1px solid #ddd;padding:4px 8px;color:#666;font:10px 'JetBrains Mono',monospace;white-space:nowrap}
+html.streetlens-map-first #mapModal .streetlens-current-section>strong{display:block!important;margin:7px 0 14px!important;color:#202124!important;font:700 19px/1.25 Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-line{display:flex;align-items:baseline;gap:8px;min-height:52px;flex-wrap:wrap}.streetlens-current-score-line>b{font:700 48px/.98 'JetBrains Mono',monospace;color:#252525;letter-spacing:-.06em}.streetlens-current-score-line>span:nth-child(2){font:13px 'JetBrains Mono',monospace;color:#777}.streetlens-current-score-line .streetlens-condition-chip{margin-left:auto;padding:4px 7px;color:#444;font:11px 'JetBrains Mono',monospace;white-space:nowrap}
+html.streetlens-map-first #mapModal .streetlens-score-scale{height:13px;position:relative;margin-top:10px}.streetlens-score-scale-colors{height:100%;display:flex;overflow:hidden}.streetlens-score-scale-colors span{flex:1}.streetlens-score-scale i{position:absolute;top:-4px;left:0;width:2px;height:21px;background:#fff;border:1px solid #222;box-shadow:0 0 0 1px #fff;transform:translateX(-50%)}
+html.streetlens-map-first #mapModal .streetlens-score-scale-labels{display:flex;justify-content:space-between;padding:5px 0 12px;color:#777;font:9px 'JetBrains Mono',monospace}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:0!important;border:1px solid #e1e1e1!important;background:#fafafa!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid>div{padding:10px 12px!important;background:#fafafa!important;border:0!important;border-radius:0!important;min-width:0}.streetlens-map-first #mapModal .streetlens-current-score-grid>div+div{border-left:1px solid #e1e1e1!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid span{display:block!important;color:#777!important;font:10px 'JetBrains Mono',monospace!important}.streetlens-map-first #mapModal .streetlens-current-score-grid b{display:block!important;margin-top:4px!important;color:#222!important;font:700 18px 'JetBrains Mono',monospace!important}
+html.streetlens-map-first #mapModal .streetlens-current-section>small{display:block!important;margin-top:10px!important;color:#777!important;font:11px/1.5 Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-along-street-block{order:5!important;padding:16px 25px 18px!important;border-bottom:1px solid #e7e7e7!important;background:#fff!important}
+html.streetlens-map-first #mapModal .streetlens-along-street-bar{display:flex;width:100%;height:22px;overflow:hidden;background:#eee}.streetlens-along-street-bar button{flex:1 1 0;min-width:2px;padding:0;border:0;border-right:1px solid #fff8;cursor:pointer}.streetlens-along-street-bar button.selected{outline:2px solid #333;outline-offset:-2px;z-index:1}.streetlens-along-street-meta{margin:8px 0 0;color:#777;font:11px 'JetBrains Mono',monospace}
+html.streetlens-map-first #mapModal .streetlens-legend-control{order:6!important;padding:14px 25px 8px!important;color:#555!important;font:12px Inter,Arial,sans-serif!important}.streetlens-legend-control label,html.streetlens-map-first #mapModal .streetlens-map-options label{display:flex!important;align-items:center!important;gap:8px!important;cursor:pointer}html.streetlens-map-first #mapModal .streetlens-legend-control input,html.streetlens-map-first #mapModal .streetlens-map-options input{accent-color:#355d50!important}
+html.streetlens-map-first #mapModal #streetLensLegendWrap{order:7!important;padding:4px 25px 12px!important}html.streetlens-map-first #mapModal #streetLensLegendWrap.legend-hidden{display:none!important}.streetlens-sheet-legend{display:flex;flex-direction:column;gap:5px}.sheet-lg-row{display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:center;font:12px Inter,sans-serif;color:#333}.sheet-lg-row i{width:9px;height:9px;border-radius:2px}.sheet-lg-row small{color:#888;font-size:10px}
+html.streetlens-map-first #mapModal .streetlens-map-options{order:8!important;padding:12px 25px!important;color:#666!important;font:11px/1.5 Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet>div:has(>#streetLensRoadRanking){order:9!important}html.streetlens-map-first #mapModal .streetlens-ranking-block{order:9!important;padding:14px 25px 0!important;border-top:1px solid #e7e7e7!important}.streetlens-sheet-ranking{max-height:none!important;overflow:visible!important;border-top:1px solid #eee!important;margin-top:6px!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-row{width:100%!important;display:grid!important;grid-template-columns:24px minmax(0,1fr) auto!important;align-items:center!important;gap:8px!important;padding:11px 2px!important;border:0!important;border-bottom:1px solid #ededed!important;color:#333!important;background:#fff!important;border-radius:0!important;text-align:left!important;cursor:pointer!important;font:12px Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-row:hover{background:#f5f5f5!important}html.streetlens-map-first #mapModal .streetlens-ranking-row>b{color:#222!important;font:600 12px 'JetBrains Mono',monospace!important}html.streetlens-map-first #mapModal .streetlens-ranking-row small{display:block!important;color:#777!important;margin-top:3px!important;font:10px Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-foot{order:10!important;padding:12px 25px 18px!important;color:#777!important;border-top:1px solid #e8e8e8!important;font:10px 'JetBrains Mono',monospace!important}
+html.streetlens-map-first #mapModal .streetlens-fullmap-tools{position:absolute!important;top:14px!important;right:14px!important;left:auto!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:wrap!important;gap:7px!important;max-width:calc(100% - 28px)!important;z-index:20!important}
+html.streetlens-map-first #mapModal .streetlens-fullmap-tools button,html.streetlens-map-first #mapModal .streetlens-fullmap-tools a{box-sizing:border-box!important;height:40px!important;min-height:40px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;padding:0 13px!important;border:1px solid #d6d6d6!important;border-radius:3px!important;background:rgba(255,255,255,.96)!important;color:#242424!important;font:600 11px Inter,Arial,sans-serif!important;text-decoration:none!important;white-space:nowrap!important;box-shadow:0 1px 3px #0001!important;cursor:pointer!important}
+html.streetlens-map-first #mapModal .streetlens-fullmap-tools button:hover,html.streetlens-map-first #mapModal .streetlens-fullmap-tools a:hover{background:#f0f0f0!important;border-color:#aaa!important}html.streetlens-map-first #mapModal .streetlens-fullmap-tools svg{width:15px!important;height:15px!important;flex:0 0 auto!important}
+html.streetlens-map-first #mapModal:fullscreen .streetlens-fullmap-shell{width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important;border:0!important;border-radius:0!important;grid-template-columns:minmax(0,1fr) 432px!important}html.streetlens-map-first #mapModal:fullscreen .streetlens-map-sheet{height:100vh!important;max-height:100vh!important}
+@media(max-width:900px){html.streetlens-map-first #mapModal .streetlens-fullmap-shell{grid-template-columns:minmax(0,1fr) 360px!important;width:100vw!important;height:100vh!important;border-radius:0!important}html.streetlens-map-first #mapModal .streetlens-map-sheet-head,html.streetlens-map-first #mapModal .streetlens-sidebar-search,html.streetlens-map-first #mapModal .streetlens-metric-block,html.streetlens-map-first #mapModal .streetlens-current-section,html.streetlens-map-first #mapModal .streetlens-along-street-block,html.streetlens-map-first #mapModal .streetlens-ranking-block{padding-left:17px!important;padding-right:17px!important}}
+@media(max-width:650px){html.streetlens-map-first #mapModal .streetlens-fullmap-shell{grid-template-columns:minmax(0,1fr) 290px!important}html.streetlens-map-first #mapModal .streetlens-map-sheet-head strong{font-size:20px!important}html.streetlens-map-first #mapModal .streetlens-fullmap-tools{top:8px!important;right:8px!important;gap:4px!important}html.streetlens-map-first #mapModal .streetlens-fullmap-tools button,html.streetlens-map-first #mapModal .streetlens-fullmap-tools a{height:34px!important;min-height:34px!important;padding:0 8px!important;font-size:10px!important}}
+</style>
+
+
+<style id="streetlens-reference-dark-sidebar-v5">
+/* Reference-matched dark inspection sidebar: aligned sections, readable contrast, and independent scrolling. */
+html.streetlens-map-first #mapModal .streetlens-fullmap-shell{
+ display:grid!important;grid-template-columns:minmax(0,1fr) 432px!important;grid-template-rows:minmax(0,1fr)!important;
+ width:min(1600px,99vw)!important;height:min(960px,98vh)!important;max-width:none!important;max-height:none!important;
+ background:#101010!important;border:1px solid #292929!important;border-radius:3px!important;overflow:hidden!important
+}
+html.streetlens-map-first #mapModal .streetlens-fullmap-map-wrap{grid-column:1!important;grid-row:1!important;position:relative!important;min-width:0!important;min-height:0!important;overflow:hidden!important;background:#101010!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet{
+ grid-column:2!important;grid-row:1!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:0!important;
+ box-sizing:border-box!important;width:432px!important;min-width:0!important;max-width:none!important;height:100%!important;min-height:0!important;max-height:100%!important;
+ overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding:0!important;margin:0!important;
+ background:#1b1b1b!important;color:#e6e6e6!important;border:0!important;border-left:1px solid #303030!important;border-radius:0!important;box-shadow:none!important;
+ font-family:Inter,Arial,sans-serif!important;scrollbar-width:thin!important;scrollbar-color:#555 #1b1b1b!important
+}
+html.streetlens-map-first #mapModal .streetlens-map-sheet::-webkit-scrollbar{width:8px}
+html.streetlens-map-first #mapModal .streetlens-map-sheet::-webkit-scrollbar-track{background:#1b1b1b}
+html.streetlens-map-first #mapModal .streetlens-map-sheet::-webkit-scrollbar-thumb{background:#555;border:2px solid #1b1b1b;border-radius:8px}
+html.streetlens-map-first #mapModal .streetlens-map-sheet>*{box-sizing:border-box!important;flex:0 0 auto!important;min-width:0!important;max-width:100%!important;position:relative!important;inset:auto!important;transform:none!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head{order:1!important;display:block!important;width:100%!important;padding:22px 25px 18px!important;margin:0!important;background:#1b1b1b!important;border:0!important;border-bottom:1px solid #303030!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-kicker{display:block!important;margin:0 0 10px!important;color:#858585!important;font:600 10px/1.4 'JetBrains Mono',monospace!important;letter-spacing:.2em!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head strong{display:block!important;margin:0!important;color:#f1f1f1!important;font:700 25px/1.15 Inter,Arial,sans-serif!important;letter-spacing:-.04em!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head span{display:block!important;margin-top:6px!important;color:#858585!important;font:12px/1.5 Inter,Arial,sans-serif!important;letter-spacing:0!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-label{display:block!important;margin:0 0 10px!important;color:#858585!important;font:600 10px/1.4 'JetBrains Mono',monospace!important;letter-spacing:.16em!important;text-transform:uppercase!important}
+html.streetlens-map-first #mapModal .streetlens-sidebar-search{order:2!important;width:100%!important;padding:17px 25px 20px!important;margin:0!important;background:#1b1b1b!important;border:0!important;border-bottom:1px solid #303030!important}
+html.streetlens-map-first #mapModal .streetlens-find-input,html.streetlens-map-first #mapModal #streetLensFindStreet{
+ display:block!important;width:100%!important;height:auto!important;min-height:46px!important;box-sizing:border-box!important;padding:11px 14px!important;
+ border:1px solid #333!important;border-radius:0!important;background:#222!important;color:#eee!important;font:14px Inter,Arial,sans-serif!important;box-shadow:none!important
+}
+html.streetlens-map-first #mapModal .streetlens-find-input::placeholder{color:#777!important}
+html.streetlens-map-first #mapModal .streetlens-find-input:focus{border-color:#777!important;outline:1px solid #444!important}
+html.streetlens-map-first #mapModal .streetlens-metric-block{order:3!important;width:100%!important;padding:17px 25px 20px!important;margin:0!important;background:#1b1b1b!important;border:0!important;border-bottom:1px solid #303030!important;border-radius:0!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle{display:grid!important;grid-template-columns:1fr 1fr!important;gap:0!important;width:100%!important;padding:0!important;border:1px solid #333!important;border-radius:0!important;background:#202020!important;overflow:hidden!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button{display:block!important;box-sizing:border-box!important;min-width:0!important;min-height:76px!important;padding:13px!important;text-align:left!important;border:0!important;border-radius:0!important;background:#202020!important;color:#858585!important;font:700 15px Inter,Arial,sans-serif!important;cursor:pointer!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button+button{border-left:1px solid #333!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button.active{background:#242424!important;color:#f1f1f1!important;box-shadow:inset 0 2px 0 #eee!important}
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button small{display:block!important;margin-top:7px!important;color:#858585!important;font:10px/1.45 Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-current-section{order:4!important;display:block!important;width:100%!important;padding:18px 25px 16px!important;margin:0!important;background:#1b1b1b!important;color:#eee!important;border:0!important;border-bottom:1px solid #303030!important;border-radius:0!important}
+html.streetlens-map-first #mapModal .streetlens-selection-heading{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important}
+html.streetlens-map-first #mapModal .streetlens-selection-heading>span{flex:0 0 auto!important;border:1px solid #333!important;padding:4px 8px!important;color:#aaa!important;font:10px 'JetBrains Mono',monospace!important;white-space:nowrap!important}
+html.streetlens-map-first #mapModal .streetlens-current-section>strong{display:block!important;margin:7px 0 12px!important;color:#f1f1f1!important;font:700 19px/1.25 Inter,Arial,sans-serif!important;overflow-wrap:anywhere!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-line{display:flex!important;align-items:baseline!important;gap:8px!important;min-height:0!important;flex-wrap:wrap!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-line>b{color:#f1f1f1!important;font:700 46px/.98 'JetBrains Mono',monospace!important;letter-spacing:-.06em!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-line>span{color:#858585!important;font:11px 'JetBrains Mono',monospace!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-line .streetlens-condition-chip{margin-left:auto!important;padding:4px 7px!important;border:1px solid #333!important;color:#ddd!important;font:11px 'JetBrains Mono',monospace!important;white-space:nowrap!important}
+html.streetlens-map-first #mapModal .streetlens-score-scale{display:block!important;position:relative!important;width:100%!important;height:13px!important;min-height:13px!important;max-height:13px!important;margin:10px 0 0!important;overflow:visible!important}
+html.streetlens-map-first #mapModal .streetlens-score-scale-colors{display:flex!important;position:absolute!important;inset:0!important;width:100%!important;height:13px!important;max-height:13px!important;overflow:hidden!important}
+html.streetlens-map-first #mapModal .streetlens-score-scale-colors span{display:block!important;position:static!important;flex:1 1 0!important;height:13px!important;min-height:13px!important;max-height:13px!important;padding:0!important;margin:0!important}
+html.streetlens-map-first #mapModal .streetlens-score-scale>i{position:absolute!important;top:-4px!important;height:21px!important;width:2px!important;background:#fff!important;border:1px solid #111!important;box-shadow:0 0 0 1px #fff!important;transform:translateX(-50%)!important}
+html.streetlens-map-first #mapModal .streetlens-score-scale-labels{display:flex!important;justify-content:space-between!important;padding:5px 0 12px!important;color:#858585!important;font:9px 'JetBrains Mono',monospace!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:0!important;width:100%!important;border:1px solid #333!important;background:#202020!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid>div{box-sizing:border-box!important;min-width:0!important;padding:10px 12px!important;background:#202020!important;border:0!important;border-radius:0!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid>div+div{border-left:1px solid #333!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid span{display:block!important;color:#858585!important;font:10px 'JetBrains Mono',monospace!important}
+html.streetlens-map-first #mapModal .streetlens-current-score-grid b{display:block!important;margin-top:4px!important;color:#eee!important;font:700 18px 'JetBrains Mono',monospace!important}
+html.streetlens-map-first #mapModal .streetlens-current-section>small{display:block!important;margin-top:10px!important;color:#858585!important;font:11px/1.5 Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-along-street-block{order:5!important;width:100%!important;padding:16px 25px 18px!important;margin:0!important;background:#1b1b1b!important;border-bottom:1px solid #303030!important}
+html.streetlens-map-first #mapModal .streetlens-along-street-bar{display:flex!important;width:100%!important;height:22px!important;overflow:hidden!important;background:#252525!important}
+html.streetlens-map-first #mapModal .streetlens-along-street-bar button{flex:1 1 0!important;min-width:2px!important;padding:0!important;border:0!important;border-right:1px solid #1118!important;cursor:pointer!important}
+html.streetlens-map-first #mapModal .streetlens-along-street-bar button.selected{outline:2px solid #eee!important;outline-offset:-2px!important;z-index:1!important}
+html.streetlens-map-first #mapModal .streetlens-along-street-meta{margin:8px 0 0!important;color:#858585!important;font:11px 'JetBrains Mono',monospace!important}
+html.streetlens-map-first #mapModal .streetlens-legend-control{order:6!important;width:100%!important;padding:14px 25px 8px!important;color:#c4c4c4!important;font:12px Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-legend-control label,html.streetlens-map-first #mapModal .streetlens-map-options label{display:flex!important;align-items:center!important;gap:8px!important;cursor:pointer!important}
+html.streetlens-map-first #mapModal .streetlens-legend-control input,html.streetlens-map-first #mapModal .streetlens-map-options input{accent-color:#62b8a5!important}
+html.streetlens-map-first #mapModal #streetLensLegendWrap{order:7!important;width:100%!important;padding:4px 25px 12px!important;background:#1b1b1b!important}
+html.streetlens-map-first #mapModal #streetLensLegendWrap.legend-hidden{display:none!important}
+html.streetlens-map-first #mapModal .streetlens-sheet-legend{display:flex!important;flex-direction:column!important;gap:7px!important}
+html.streetlens-map-first #mapModal .sheet-lg-row{display:grid!important;grid-template-columns:12px minmax(0,1fr) auto!important;gap:8px!important;align-items:center!important;color:#d5d5d5!important;font:12px Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .sheet-lg-row i{width:9px!important;height:9px!important;border-radius:2px!important}
+html.streetlens-map-first #mapModal .sheet-lg-row small{color:#858585!important;font-size:10px!important}
+html.streetlens-map-first #mapModal .streetlens-map-options{order:8!important;width:100%!important;padding:12px 25px!important;background:#1b1b1b!important;color:#aaa!important;font:11px/1.6 Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-block{order:9!important;width:100%!important;padding:16px 25px 0!important;margin:0!important;background:#1b1b1b!important;border-top:1px solid #303030!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-toolbar{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:12px!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-description{margin:4px 0 0!important;color:#858585!important;font:11px/1.4 Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-limit-label{display:flex!important;align-items:center!important;gap:6px!important;color:#858585!important;font:9px 'JetBrains Mono',monospace!important;white-space:nowrap!important}
+html.streetlens-map-first #mapModal #streetLensRankingLimit{min-width:62px!important;max-width:86px!important;height:30px!important;padding:4px 7px!important;border:1px solid #383838!important;border-radius:2px!important;background:#222!important;color:#eee!important;font:11px Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-sheet-ranking{max-height:none!important;overflow:visible!important;border-top:1px solid #303030!important;margin-top:10px!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-row{width:100%!important;display:grid!important;grid-template-columns:28px minmax(0,1fr) auto!important;align-items:center!important;gap:9px!important;padding:12px 2px!important;border:0!important;border-bottom:1px solid #303030!important;color:#e5e5e5!important;background:#1b1b1b!important;border-radius:0!important;text-align:left!important;cursor:pointer!important;font:12px Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-row:hover{background:#242424!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-row .streetlens-ranking-rank{color:#858585!important;font:11px 'JetBrains Mono',monospace!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-row>b{color:#f1f1f1!important;font:600 12px 'JetBrains Mono',monospace!important}
+html.streetlens-map-first #mapModal .streetlens-ranking-row small{display:block!important;color:#858585!important;margin-top:4px!important;font:10px/1.4 Inter,Arial,sans-serif!important}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-foot{order:10!important;padding:12px 25px 18px!important;color:#858585!important;background:#1b1b1b!important;border-top:1px solid #303030!important;font:10px 'JetBrains Mono',monospace!important}
+html.streetlens-map-first #mapModal .streetlens-fullmap-tools{position:absolute!important;top:14px!important;right:14px!important;left:auto!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:wrap!important;gap:7px!important;max-width:calc(100% - 28px)!important;z-index:20!important}
+html.streetlens-map-first #mapModal .streetlens-fullmap-tools button,html.streetlens-map-first #mapModal .streetlens-fullmap-tools a{box-sizing:border-box!important;height:40px!important;min-height:40px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;padding:0 13px!important;border:1px solid #303030!important;border-radius:3px!important;background:rgba(24,24,24,.96)!important;color:#e5e5e5!important;font:600 11px Inter,Arial,sans-serif!important;text-decoration:none!important;white-space:nowrap!important;box-shadow:none!important;cursor:pointer!important}
+html.streetlens-map-first #mapModal .streetlens-fullmap-tools button:hover,html.streetlens-map-first #mapModal .streetlens-fullmap-tools a:hover{background:#292929!important;border-color:#555!important}
+html.streetlens-map-first #mapModal .streetlens-fullmap-tools svg{width:15px!important;height:15px!important;flex:0 0 auto!important}
+html.streetlens-map-first #mapModal:fullscreen .streetlens-fullmap-shell{width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important;border:0!important;border-radius:0!important;grid-template-columns:minmax(0,1fr) 432px!important}
+html.streetlens-map-first #mapModal:fullscreen .streetlens-map-sheet{width:432px!important;height:100vh!important;max-height:100vh!important}
+@media(max-width:900px){
+ html.streetlens-map-first #mapModal .streetlens-fullmap-shell{grid-template-columns:minmax(0,1fr) minmax(320px,38vw)!important;width:100vw!important;height:100vh!important;border-radius:0!important}
+ html.streetlens-map-first #mapModal .streetlens-map-sheet{width:auto!important}
+ html.streetlens-map-first #mapModal .streetlens-map-sheet-head,html.streetlens-map-first #mapModal .streetlens-sidebar-search,html.streetlens-map-first #mapModal .streetlens-metric-block,html.streetlens-map-first #mapModal .streetlens-current-section,html.streetlens-map-first #mapModal .streetlens-along-street-block,html.streetlens-map-first #mapModal .streetlens-ranking-block,html.streetlens-map-first #mapModal .streetlens-legend-control,html.streetlens-map-first #mapModal .streetlens-map-options{padding-left:17px!important;padding-right:17px!important}
+}
+@media(max-width:650px){
+ html.streetlens-map-first #mapModal .streetlens-fullmap-shell{grid-template-columns:minmax(0,1fr) 290px!important}
+ html.streetlens-map-first #mapModal .streetlens-map-sheet-head strong{font-size:20px!important}
+ html.streetlens-map-first #mapModal .streetlens-fullmap-tools{top:8px!important;right:8px!important;gap:4px!important}
+ html.streetlens-map-first #mapModal .streetlens-fullmap-tools button,html.streetlens-map-first #mapModal .streetlens-fullmap-tools a{height:34px!important;min-height:34px!important;padding:0 8px!important;font-size:10px!important}
+}
+</style>
+
+
+<style id="streetlens-sidebar-dark-authoritative-fix">
+/* One authoritative dark theme for the actual map inspection sidebar. */
+#mapModal .streetlens-map-sheet,
+#mapModal aside.streetlens-map-sheet,
+#mapModal .streetlens-map-sheet *:not(svg):not(path):not(circle):not(line):not(polyline):not(polygon) {
+  color: inherit;
+}
+#mapModal .streetlens-map-sheet {
+  background:#17191c !important; color:#eceff1 !important;
+  border-left:1px solid #34383d !important;
+  box-shadow:none !important; opacity:1 !important;
+  overflow-y:auto !important; overflow-x:hidden !important;
+  scrollbar-color:#555b62 #17191c !important;
+}
+#mapModal .streetlens-map-sheet-head,
+#mapModal .streetlens-sidebar-search,
+#mapModal .streetlens-metric-block,
+#mapModal .streetlens-current-section,
+#mapModal .streetlens-along-street-block,
+#mapModal .streetlens-ranking-block,
+#mapModal .streetlens-map-options,
+#mapModal .streetlens-legend-control,
+#mapModal .streetlens-map-sheet section,
+#mapModal .streetlens-map-sheet .streetlens-section-card,
+#mapModal .streetlens-map-sheet .streetlens-ranking-item,
+#mapModal .streetlens-map-sheet .streetlens-ranking-row {
+  background-color:#17191c !important;
+  color:#eceff1 !important;
+  border-color:#34383d !important;
+  box-shadow:none !important;
+}
+#mapModal .streetlens-map-sheet h1,
+#mapModal .streetlens-map-sheet h2,
+#mapModal .streetlens-map-sheet h3,
+#mapModal .streetlens-map-sheet h4,
+#mapModal .streetlens-map-sheet strong,
+#mapModal .streetlens-map-sheet label,
+#mapModal .streetlens-map-sheet .streetlens-score,
+#mapModal .streetlens-map-sheet .streetlens-section-title {
+  color:#f5f6f7 !important;
+}
+#mapModal .streetlens-map-sheet p,
+#mapModal .streetlens-map-sheet small,
+#mapModal .streetlens-map-sheet .muted,
+#mapModal .streetlens-map-sheet .streetlens-muted,
+#mapModal .streetlens-map-sheet .streetlens-subtitle {
+  color:#aeb4bb !important;
+}
+#mapModal .streetlens-map-sheet input,
+#mapModal .streetlens-map-sheet select,
+#mapModal .streetlens-map-sheet textarea,
+#mapModal .streetlens-map-sheet button:not(.streetlens-condition-chip) {
+  background-color:#24272b !important;
+  color:#f1f3f5 !important;
+  border-color:#41464d !important;
+}
+#mapModal .streetlens-map-sheet input::placeholder { color:#9299a1 !important; }
+#mapModal .streetlens-map-sheet .streetlens-ranking-block,
+#mapModal .streetlens-map-sheet .streetlens-along-street-block { min-width:0 !important; }
+#mapModal .streetlens-map-sheet { min-height:0 !important; height:100% !important; }
+#mapModal .streetlens-map-sheet-head { flex-shrink:0 !important; }
+#mapModal .streetlens-map-sheet .streetlens-ranking-block { padding-bottom:24px !important; }
+#mapModal .streetlens-map-sheet a { color:#8fc7ff; }
+</style>
+
+
+<style id="streetlens-map-sidebar-final-theme">
+/* Single final source of truth for the map-first sidebar. Keep after legacy styles. */
+html.streetlens-map-first #mapModal { background:#080a0c !important; }
+html.streetlens-map-first #mapModal .streetlens-fullmap-shell {
+  display:grid !important; grid-template-columns:minmax(0,1fr) 400px !important;
+  grid-template-rows:minmax(0,1fr) !important; width:100vw !important; height:100vh !important;
+  max-width:none !important; max-height:none !important; margin:0 !important; padding:0 !important;
+  overflow:hidden !important; border:0 !important; border-radius:0 !important;
+  background:#101113 !important; box-shadow:none !important;
+}
+html.streetlens-map-first #mapModal .streetlens-fullmap-map-wrap {
+  grid-column:1 !important; grid-row:1 !important; min-width:0 !important; min-height:0 !important;
+  position:relative !important; overflow:hidden !important; background:#101113 !important;
+}
+html.streetlens-map-first #mapModal .streetlens-map-sheet {
+  grid-column:2 !important; grid-row:1 !important; display:flex !important; flex-direction:column !important;
+  align-items:stretch !important; gap:0 !important; box-sizing:border-box !important; width:auto !important;
+  min-width:0 !important; max-width:none !important; height:100% !important; min-height:0 !important;
+  max-height:100% !important; padding:0 !important; margin:0 !important; overflow-x:hidden !important;
+  overflow-y:auto !important; overscroll-behavior:contain !important; scrollbar-width:thin !important;
+  scrollbar-color:#45484c #191a1c !important; background:#191a1c !important; color:#e8e9eb !important;
+  border:0 !important; border-left:1px solid #303236 !important; border-radius:0 !important;
+  box-shadow:none !important; font-family:Inter,Arial,sans-serif !important;
+}
+html.streetlens-map-first #mapModal .streetlens-map-sheet::-webkit-scrollbar{width:8px}
+html.streetlens-map-first #mapModal .streetlens-map-sheet::-webkit-scrollbar-track{background:#191a1c}
+html.streetlens-map-first #mapModal .streetlens-map-sheet::-webkit-scrollbar-thumb{background:#45484c;border:2px solid #191a1c;border-radius:8px}
+html.streetlens-map-first #mapModal .streetlens-map-sheet * { box-sizing:border-box !important; min-width:0; }
+html.streetlens-map-first #mapModal .streetlens-map-sheet > * {
+  position:relative !important; inset:auto !important; transform:none !important; flex:0 0 auto !important;
+  max-width:100% !important;
+}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head,
+html.streetlens-map-first #mapModal .streetlens-sidebar-search,
+html.streetlens-map-first #mapModal .streetlens-metric-block,
+html.streetlens-map-first #mapModal .streetlens-current-section,
+html.streetlens-map-first #mapModal .streetlens-along-street-block,
+html.streetlens-map-first #mapModal .streetlens-legend-control,
+html.streetlens-map-first #mapModal #streetLensLegendWrap,
+html.streetlens-map-first #mapModal .streetlens-map-options,
+html.streetlens-map-first #mapModal .streetlens-ranking-block,
+html.streetlens-map-first #mapModal .streetlens-map-sheet-foot {
+  width:100% !important; max-width:100% !important; margin:0 !important; border-radius:0 !important;
+  background:#191a1c !important; color:#e8e9eb !important; border-color:#303236 !important;
+  box-shadow:none !important;
+}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head { order:1 !important; padding:22px 22px 17px !important; border-bottom:1px solid #303236 !important; }
+html.streetlens-map-first #mapModal .streetlens-map-sheet-kicker,
+html.streetlens-map-first #mapModal .streetlens-map-sheet-label { display:block !important; color:#8b9097 !important; font:600 10px/1.45 'JetBrains Mono',monospace !important; letter-spacing:.15em !important; text-transform:uppercase !important; margin:0 0 9px !important; }
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head strong { display:block !important; margin:0 !important; color:#f3f4f5 !important; font:700 24px/1.15 Inter,Arial,sans-serif !important; letter-spacing:-.035em !important; }
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head span { display:block !important; margin-top:6px !important; color:#90959b !important; font:12px/1.5 Inter,Arial,sans-serif !important; }
+html.streetlens-map-first #mapModal .streetlens-sidebar-search { order:2 !important; padding:17px 22px 19px !important; border-bottom:1px solid #303236 !important; }
+html.streetlens-map-first #mapModal .streetlens-find-input,
+html.streetlens-map-first #mapModal #streetLensFindStreet,
+html.streetlens-map-first #mapModal #streetLensRankingLimit,
+html.streetlens-map-first #mapModal .streetlens-map-sheet select {
+  display:block !important; width:100% !important; max-width:100% !important; min-width:0 !important;
+  height:40px !important; min-height:40px !important; padding:0 11px !important; margin:0 !important;
+  border:1px solid #393c41 !important; border-radius:4px !important; background:#222428 !important;
+  color:#eceef0 !important; font:12px Inter,Arial,sans-serif !important; box-shadow:none !important;
+}
+html.streetlens-map-first #mapModal .streetlens-find-input::placeholder { color:#858b92 !important; }
+html.streetlens-map-first #mapModal .streetlens-find-input:focus { outline:1px solid #666b72 !important; border-color:#666b72 !important; }
+html.streetlens-map-first #mapModal .streetlens-metric-block { order:3 !important; padding:17px 22px 18px !important; border-bottom:1px solid #303236 !important; }
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle { display:grid !important; grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important; width:100% !important; gap:0 !important; padding:0 !important; overflow:hidden !important; border:1px solid #393c41 !important; border-radius:4px !important; background:#222428 !important; }
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button { display:block !important; width:100% !important; min-width:0 !important; min-height:72px !important; padding:11px 10px !important; text-align:left !important; border:0 !important; border-radius:0 !important; background:#222428 !important; color:#a6abb1 !important; font:700 14px Inter,Arial,sans-serif !important; }
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button+button { border-left:1px solid #393c41 !important; }
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button.active { background:#2c3035 !important; color:#f4f5f6 !important; box-shadow:inset 0 2px 0 #d9dadd !important; }
+html.streetlens-map-first #mapModal .streetlens-map-segment-toggle button small { display:block !important; margin-top:6px !important; color:#969ca3 !important; font:10px/1.4 Inter,Arial,sans-serif !important; }
+html.streetlens-map-first #mapModal .streetlens-current-section { order:4 !important; padding:17px 22px 16px !important; border-bottom:1px solid #303236 !important; }
+html.streetlens-map-first #mapModal .streetlens-selection-heading { display:flex !important; align-items:center !important; justify-content:space-between !important; gap:8px !important; }
+html.streetlens-map-first #mapModal .streetlens-selection-heading>span { flex:0 0 auto !important; padding:4px 7px !important; border:1px solid #393c41 !important; color:#a5aab0 !important; font:9px 'JetBrains Mono',monospace !important; white-space:nowrap !important; }
+html.streetlens-map-first #mapModal #streetLensHoveredRoad { display:block !important; margin:7px 0 11px !important; color:#f2f3f4 !important; font:650 16px/1.3 Inter,Arial,sans-serif !important; overflow-wrap:anywhere !important; }
+html.streetlens-map-first #mapModal .streetlens-current-score-line { display:flex !important; align-items:baseline !important; flex-wrap:wrap !important; gap:7px !important; width:100% !important; max-width:100% !important; min-height:0 !important; }
+html.streetlens-map-first #mapModal .streetlens-current-score-line>b { color:#f1f2f3 !important; font:700 42px/.98 'JetBrains Mono',monospace !important; letter-spacing:-.06em !important; }
+html.streetlens-map-first #mapModal .streetlens-current-score-line>span { color:#90959b !important; font:11px 'JetBrains Mono',monospace !important; }
+html.streetlens-map-first #mapModal .streetlens-current-score-line .streetlens-condition-chip { margin-left:auto !important; padding:4px 6px !important; border:1px solid #393c41 !important; background:transparent !important; color:#e2e4e6 !important; font:10px 'JetBrains Mono',monospace !important; white-space:nowrap !important; }
+/* Keep both score and along-street color bars compact and clipped to the sidebar content width. */
+html.streetlens-map-first #mapModal .streetlens-score-scale { display:block !important; position:relative !important; width:100% !important; max-width:100% !important; height:13px !important; min-height:13px !important; max-height:13px !important; margin:10px 0 0 !important; padding:0 !important; overflow:hidden !important; flex:none !important; }
+html.streetlens-map-first #mapModal .streetlens-score-scale-colors { display:flex !important; position:absolute !important; inset:0 !important; width:100% !important; height:13px !important; max-height:13px !important; overflow:hidden !important; }
+html.streetlens-map-first #mapModal .streetlens-score-scale-colors>span { display:block !important; position:static !important; flex:1 1 0 !important; width:auto !important; min-width:0 !important; height:13px !important; min-height:13px !important; max-height:13px !important; margin:0 !important; padding:0 !important; }
+html.streetlens-map-first #mapModal .streetlens-score-scale>i { position:absolute !important; top:0 !important; bottom:0 !important; width:2px !important; height:13px !important; max-height:13px !important; z-index:2 !important; background:#fff !important; }
+html.streetlens-map-first #mapModal .streetlens-score-scale-labels { display:flex !important; justify-content:space-between !important; gap:0 !important; width:100% !important; max-width:100% !important; overflow:hidden !important; padding:5px 0 10px !important; color:#8b9097 !important; font:9px 'JetBrains Mono',monospace !important; }
+html.streetlens-map-first #mapModal .streetlens-current-score-grid { display:grid !important; grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important; width:100% !important; max-width:100% !important; min-width:0 !important; height:auto !important; min-height:0 !important; gap:0 !important; margin-top:3px !important; background:#222428 !important; border:1px solid #303236 !important; }
+html.streetlens-map-first #mapModal .streetlens-current-score-grid>div { min-width:0 !important; min-height:0 !important; padding:9px 10px !important; background:#222428 !important; border:0 !important; }
+html.streetlens-map-first #mapModal .streetlens-current-score-grid>div+div { border-left:1px solid #303236 !important; }
+html.streetlens-map-first #mapModal .streetlens-current-score-grid span { display:block !important; color:#8b9097 !important; font:10px Inter,Arial,sans-serif !important; }
+html.streetlens-map-first #mapModal .streetlens-current-score-grid b { display:block !important; margin-top:3px !important; color:#f1f2f3 !important; font:700 16px 'JetBrains Mono',monospace !important; overflow-wrap:anywhere !important; }
+html.streetlens-map-first #mapModal #streetLensCurrentSectionMeta { display:block !important; margin-top:8px !important; color:#92979e !important; font:10px/1.45 Inter,Arial,sans-serif !important; }
+html.streetlens-map-first #mapModal .streetlens-along-street-block { order:5 !important; padding:15px 22px 10px !important; }
+html.streetlens-map-first #mapModal .streetlens-along-street-bar,
+html.streetlens-map-first #mapModal #streetLensAlongStreetBar { display:flex !important; align-items:stretch !important; width:100% !important; max-width:100% !important; min-width:0 !important; height:20px !important; min-height:20px !important; max-height:20px !important; margin:0 !important; padding:0 !important; gap:2px !important; overflow:hidden !important; box-sizing:border-box !important; }
+html.streetlens-map-first #mapModal #streetLensAlongStreetBar>button { display:block !important; flex:1 1 0 !important; width:auto !important; min-width:0 !important; max-width:none !important; height:20px !important; min-height:20px !important; max-height:20px !important; margin:0 !important; padding:0 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; }
+html.streetlens-map-first #mapModal #streetLensAlongStreetBar>button.selected { outline:1px solid #f1f2f3 !important; outline-offset:-2px !important; }
+html.streetlens-map-first #mapModal .streetlens-along-street-meta { margin:7px 0 0 !important; color:#92979e !important; font:10px/1.4 'JetBrains Mono',monospace !important; }
+html.streetlens-map-first #mapModal .streetlens-legend-control { order:6 !important; padding:12px 22px 7px !important; color:#b8bdc3 !important; font:11px Inter,Arial,sans-serif !important; }
+html.streetlens-map-first #mapModal .streetlens-legend-control label,
+html.streetlens-map-first #mapModal .streetlens-map-options label { display:flex !important; align-items:center !important; gap:8px !important; color:#b8bdc3 !important; cursor:pointer !important; }
+html.streetlens-map-first #mapModal .streetlens-legend-control input,
+html.streetlens-map-first #mapModal .streetlens-map-options input { accent-color:#62b8a5 !important; }
+html.streetlens-map-first #mapModal #streetLensLegendWrap { order:7 !important; padding:7px 22px 12px !important; }
+html.streetlens-map-first #mapModal #streetLensLegendWrap.legend-hidden { display:none !important; }
+html.streetlens-map-first #mapModal .streetlens-sheet-legend { display:flex !important; flex-direction:column !important; gap:7px !important; width:100% !important; max-width:100% !important; }
+html.streetlens-map-first #mapModal .sheet-lg-row { display:grid !important; grid-template-columns:10px minmax(0,1fr) auto !important; align-items:center !important; gap:8px !important; width:100% !important; color:#e0e2e5 !important; font:11px Inter,Arial,sans-serif !important; }
+html.streetlens-map-first #mapModal .sheet-lg-row small { color:#92979e !important; }
+html.streetlens-map-first #mapModal .streetlens-map-options { order:8 !important; padding:10px 22px 12px !important; color:#aeb3b9 !important; font:10px/1.6 Inter,Arial,sans-serif !important; }
+html.streetlens-map-first #mapModal .streetlens-ranking-block { order:9 !important; padding:16px 22px 18px !important; border-top:1px solid #303236 !important; }
+html.streetlens-map-first #mapModal .streetlens-ranking-toolbar { display:flex !important; align-items:center !important; justify-content:space-between !important; gap:10px !important; width:100% !important; }
+html.streetlens-map-first #mapModal .streetlens-ranking-toolbar>div { min-width:0 !important; }
+html.streetlens-map-first #mapModal .streetlens-ranking-description { margin:3px 0 0 !important; color:#92979e !important; font:10px/1.4 Inter,Arial,sans-serif !important; }
+html.streetlens-map-first #mapModal .streetlens-ranking-limit-label { display:flex !important; align-items:center !important; gap:6px !important; color:#92979e !important; font:9px 'JetBrains Mono',monospace !important; white-space:nowrap !important; }
+html.streetlens-map-first #mapModal #streetLensRankingLimit { width:68px !important; min-width:68px !important; max-width:68px !important; height:30px !important; min-height:30px !important; padding:0 6px !important; border-radius:3px !important; }
+html.streetlens-map-first #mapModal .streetlens-sheet-ranking { display:flex !important; flex-direction:column !important; gap:0 !important; width:100% !important; max-width:100% !important; max-height:none !important; overflow:visible !important; margin-top:9px !important; border-top:1px solid #303236 !important; }
+html.streetlens-map-first #mapModal .streetlens-ranking-row { display:grid !important; grid-template-columns:24px minmax(0,1fr) auto !important; align-items:center !important; gap:8px !important; width:100% !important; min-width:0 !important; min-height:43px !important; padding:10px 2px !important; border:0 !important; border-bottom:1px solid #303236 !important; border-radius:0 !important; background:transparent !important; color:#e0e2e5 !important; text-align:left !important; cursor:pointer !important; font:12px Inter,Arial,sans-serif !important; }
+html.streetlens-map-first #mapModal .streetlens-ranking-row:hover { background:#24262a !important; color:#fff !important; }
+html.streetlens-map-first #mapModal .streetlens-ranking-rank { color:#858b92 !important; font:10px 'JetBrains Mono',monospace !important; }
+html.streetlens-map-first #mapModal .streetlens-ranking-name { display:block !important; min-width:0 !important; overflow:hidden !important; text-overflow:ellipsis !important; white-space:nowrap !important; color:#e0e2e5 !important; font-size:12px !important; }
+html.streetlens-map-first #mapModal .streetlens-ranking-name small { display:block !important; margin-top:3px !important; color:#92979e !important; font:10px/1.3 Inter,Arial,sans-serif !important; }
+html.streetlens-map-first #mapModal .streetlens-ranking-row>b { color:#f1f2f3 !important; font:600 11px 'JetBrains Mono',monospace !important; white-space:nowrap !important; }
+html.streetlens-map-first #mapModal .streetlens-map-sheet-foot { order:10 !important; padding:12px 22px 18px !important; color:#858b92 !important; border-top:1px solid #303236 !important; font:10px 'JetBrains Mono',monospace !important; }
+html.streetlens-map-first #mapModal .streetlens-fullmap-tools { position:absolute !important; top:14px !important; right:14px !important; left:auto !important; display:flex !important; align-items:center !important; justify-content:flex-end !important; flex-wrap:nowrap !important; gap:6px !important; max-width:calc(100% - 28px) !important; z-index:900 !important; }
+html.streetlens-map-first #mapModal .streetlens-fullmap-tools button,
+html.streetlens-map-first #mapModal .streetlens-fullmap-tools a { display:inline-flex !important; align-items:center !important; justify-content:center !important; gap:6px !important; height:38px !important; min-height:38px !important; box-sizing:border-box !important; padding:0 11px !important; margin:0 !important; border:1px solid #36393d !important; border-radius:4px !important; background:rgba(25,26,28,.96) !important; color:#e7e8ea !important; box-shadow:none !important; font:600 11px Inter,Arial,sans-serif !important; text-decoration:none !important; white-space:nowrap !important; cursor:pointer !important; }
+html.streetlens-map-first #mapModal .streetlens-fullmap-tools button:hover,
+html.streetlens-map-first #mapModal .streetlens-fullmap-tools a:hover { background:#2a2c30 !important; border-color:#555a60 !important; }
+html.streetlens-map-first #mapModal .streetlens-fullmap-tools .map-signout-form { display:inline-flex !important; margin:0 !important; padding:0 !important; }
+html.streetlens-map-first #mapModal:fullscreen .streetlens-fullmap-shell { width:100vw !important; height:100vh !important; grid-template-columns:minmax(0,1fr) 400px !important; }
+@media(max-width:900px){
+ html.streetlens-map-first #mapModal .streetlens-fullmap-shell { grid-template-columns:minmax(0,1fr) 350px !important; }
+ html.streetlens-map-first #mapModal .streetlens-map-sheet-head,
+ html.streetlens-map-first #mapModal .streetlens-sidebar-search,
+ html.streetlens-map-first #mapModal .streetlens-metric-block,
+ html.streetlens-map-first #mapModal .streetlens-current-section,
+ html.streetlens-map-first #mapModal .streetlens-along-street-block,
+ html.streetlens-map-first #mapModal .streetlens-legend-control,
+ html.streetlens-map-first #mapModal #streetLensLegendWrap,
+ html.streetlens-map-first #mapModal .streetlens-map-options,
+ html.streetlens-map-first #mapModal .streetlens-ranking-block { padding-left:16px !important; padding-right:16px !important; }
+}
+@media(max-width:650px){
+ html.streetlens-map-first #mapModal .streetlens-fullmap-shell { grid-template-columns:minmax(0,1fr) 300px !important; }
+ html.streetlens-map-first #mapModal .streetlens-map-sheet-head strong { font-size:20px !important; }
+ html.streetlens-map-first #mapModal .streetlens-fullmap-tools { top:8px !important; right:8px !important; gap:4px !important; flex-wrap:wrap !important; }
+ html.streetlens-map-first #mapModal .streetlens-fullmap-tools button,html.streetlens-map-first #mapModal .streetlens-fullmap-tools a { height:32px !important; min-height:32px !important; padding:0 7px !important; font-size:10px !important; }
+}
+
+/* Outrank the older, more-specific v19–v22 selectors that caused the score bar to stretch. */
+html.streetlens-map-first #mapModal .streetlens-map-sheet > .streetlens-current-section {
+  padding:17px 22px 16px !important; margin:0 !important; width:100% !important;
+  max-width:100% !important; min-width:0 !important; background:#191a1c !important;
+  border:0 !important; border-bottom:1px solid #303236 !important; border-radius:0 !important;
+}
+html.streetlens-map-first #mapModal .streetlens-map-sheet > .streetlens-current-section .streetlens-score-scale {
+  display:block !important; position:relative !important; width:100% !important; max-width:100% !important;
+  height:13px !important; min-height:13px !important; max-height:13px !important; overflow:hidden !important;
+}
+html.streetlens-map-first #mapModal .streetlens-map-sheet > .streetlens-current-section .streetlens-score-scale-colors {
+  display:flex !important; position:absolute !important; inset:0 !important; width:100% !important;
+  height:13px !important; max-height:13px !important; overflow:hidden !important;
+}
+html.streetlens-map-first #mapModal .streetlens-map-sheet-head:before { content:none !important; display:none !important; }
+
+</style>
+
+</body>
+</html>
+
+
+
+<style id="streetlens-interaction-fixes">
+html.streetlens-map-first #mapModal .streetlens-metric-action-row{display:flex;align-items:stretch;gap:8px;width:100%;min-width:0}
+html.streetlens-map-first #mapModal .streetlens-metric-action-row .streetlens-map-segment-toggle{flex:1;min-width:0}
+html.streetlens-map-first #mapModal .streetlens-view-road{flex:0 0 auto;align-self:stretch;padding:0 14px;border:1px solid #3b4744;border-radius:5px;background:#17211f;color:#e8ecea;font:600 11px Inter,Arial,sans-serif;cursor:pointer;white-space:nowrap}
+html.streetlens-map-first #mapModal .streetlens-view-road:hover:not(:disabled){background:#263632;border-color:#62b8a5}
+html.streetlens-map-first #mapModal .streetlens-view-road:disabled{opacity:.42;cursor:not-allowed}
+.streetlens-header-back-map{display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid #344640;border-radius:7px;background:#20352f;color:#dce9e5;text-decoration:none;font:600 12px Inter,sans-serif}
+.streetlens-header-back-map:hover{background:#2d5146}
+@media(max-width:650px){html.streetlens-map-first #mapModal .streetlens-metric-action-row{flex-direction:row;align-items:stretch;gap:6px}html.streetlens-map-first #mapModal .streetlens-metric-action-row .streetlens-map-segment-toggle{flex:1 1 auto;min-width:0}html.streetlens-map-first #mapModal .streetlens-view-road{min-height:36px;padding:0 10px;font-size:10px}}
+
+html.streetlens-map-first #mapModal .streetlens-sidebar-search{width:100%!important;min-width:0!important;box-sizing:border-box!important}
+html.streetlens-map-first #mapModal .streetlens-sidebar-search .streetlens-find-input,
+html.streetlens-map-first #mapModal .streetlens-sidebar-search #streetLensFindStreet{margin:0!important;max-width:100%!important;box-sizing:border-box!important}
+</style>
