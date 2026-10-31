@@ -177,49 +177,81 @@ function initStreetLensRoadViewer(){
         if(img.complete&&img.naturalWidth)start();else img.addEventListener('load',start,{once:true});
     }
 
+    // Keep a rolling preload window around the frame nearest the viewer center.
+    // Images and their annotations are requested together; loaded frames remain cached
+    // in the DOM so scrolling back does not trigger another download.
+    const PRELOAD_RADIUS = 3;
+
+    function preloadFrame(index, selectionId){
+        if(selectionId !== currentSelection) return;
+        const figure = strip.querySelector(`.streetlens-road-frame[data-frame-index="${index}"]`);
+        if(!figure) return;
+        const frame = figure._streetLensFrame;
+        const img = figure.querySelector('img');
+        if(!img) return;
+
+        if(!img.getAttribute('src') && img.dataset.src){
+            img.loading = 'eager';
+            img.fetchPriority = Math.abs(index - getActiveFrameIndex()) <= 1 ? 'high' : 'auto';
+            img.src = img.dataset.src;
+        }
+
+        // Warm the annotation cache at the same time as the image request.
+        // attachFrame() draws it once the image has decoded.
+        if(frame?.annotation) loadAnnotation(frame).catch(()=>{});
+    }
+
+    function getActiveFrameIndex(){
+        const frames=getFrames();
+        if(!frames.length) return 0;
+        const scale=levels[zoomIndex];
+        const center=(viewer.scrollTop + viewer.clientHeight/2) / scale;
+        let active=0;
+        frames.forEach((frame,i)=>{
+            const top=frame.offsetTop;
+            const bottom=top+frame.offsetHeight;
+            if(center>=top && center<bottom) active=i;
+        });
+        return active;
+    }
+
+    function preloadWindow(centerIndex, selectionId=currentSelection){
+        if(selectionId !== currentSelection) return;
+        const first=Math.max(0,centerIndex-PRELOAD_RADIUS);
+        const last=Math.min(currentFrames.length-1,centerIndex+PRELOAD_RADIUS);
+        for(let i=first;i<=last;i++) preloadFrame(i,selectionId);
+    }
+
     function render(frames){
         const selectionId=++currentSelection;
         currentFrames=Array.isArray(frames)?frames:[];
         strip.innerHTML='';
         resetZoom();
         if(annotationNote){
-            if(!currentFrames.length)annotationNote.textContent='Select a road section to view its inspection frames and annotations.';
-            else if(currentFrames.some(frame=>frame.annotation))annotationNote.textContent='Loading selected road frames and matching annotations…';
+            if(!currentFrames.length) annotationNote.textContent='Select a road section to view its inspection frames and annotations.';
+            else if(currentFrames.some(frame=>frame.annotation)) annotationNote.textContent='Loading nearby frames and matching annotations…';
             else annotationNote.textContent='Frames loaded. Annotation paths are not yet mapped for this road.';
         }
         if(!currentFrames.length){
             strip.classList.add('hidden');
-            if(pending)pending.classList.remove('hidden');
-            if(status)status.textContent='—';
+            if(pending) pending.classList.remove('hidden');
+            if(status) status.textContent='—';
             return;
         }
         strip.classList.remove('hidden');
-        if(pending)pending.classList.add('hidden');
-
-        const observer=('IntersectionObserver' in window)?new IntersectionObserver(entries=>{
-            entries.forEach(entry=>{
-                if(!entry.isIntersecting)return;
-                const figure=entry.target;
-                observer.unobserve(figure);
-                const img=figure.querySelector('img');
-                if(img&&img.dataset.src&&!img.src){img.src=img.dataset.src;}
-                if(img&&img.complete&&img.naturalWidth){attachFrame(figure._streetLensFrame,figure,img,figure.querySelector('canvas'),selectionId);}
-            });
-        },{root:viewer,rootMargin:'240px 0px'}):null;
+        if(pending) pending.classList.add('hidden');
 
         currentFrames.forEach((frame,index)=>{
             const figure=document.createElement('figure');
             figure.className='streetlens-road-frame';
             figure.dataset.frameIndex=index;
-            // Reserve the frame's real aspect ratio before its lazy image request starts.
-            // Without this, zero-height placeholders can all intersect the observer and
-            // trigger downloads for the entire dataset at once.
             const frameWidth=Number(frame.image_width||1640);
             const frameHeight=Number(frame.image_height||787);
-            if(frameWidth>0&&frameHeight>0)figure.style.aspectRatio=`${frameWidth} / ${frameHeight}`;
+            if(frameWidth>0&&frameHeight>0) figure.style.aspectRatio=`${frameWidth} / ${frameHeight}`;
             figure.dataset.stationStart=frame.station_start??'';
             figure.dataset.stationEnd=frame.station_end??'';
             figure._streetLensFrame=frame;
+
             const img=document.createElement('img');
             const imagePath=frame.image||(`/static/images/${frame.file}`);
             img.alt=`Pavement inspection frame ${frame.frame_id||frame.frame||index+1}`;
@@ -229,23 +261,30 @@ function initStreetLensRoadViewer(){
             img.dataset.src=imagePath;
             img.addEventListener('load',()=>attachFrame(frame,figure,img,figure.querySelector('canvas'),selectionId),{once:true});
             img.addEventListener('error',()=>{
-                if(selectionId!==currentSelection)return;
-                const warning=document.createElement('span');warning.className='streetlens-frame-error';warning.textContent='Image unavailable';figure.appendChild(warning);
+                if(selectionId!==currentSelection) return;
+                const warning=document.createElement('span');
+                warning.className='streetlens-frame-error';
+                warning.textContent='Image unavailable';
+                figure.appendChild(warning);
             },{once:true});
-            const canvas=document.createElement('canvas');canvas.className='streetlens-frame-overlay';canvas.setAttribute('aria-hidden','true');
+
+            const canvas=document.createElement('canvas');
+            canvas.className='streetlens-frame-overlay';
+            canvas.setAttribute('aria-hidden','true');
             const caption=document.createElement('figcaption');
-            const left=document.createElement('span');left.textContent=`#${frame.frame_id||frame.frame||String(index+1).padStart(4,'0')}`;
+            const left=document.createElement('span');
+            left.textContent=`#${frame.frame_id||frame.frame||String(index+1).padStart(4,'0')}`;
             const right=document.createElement('span');
-            if(Number.isFinite(Number(frame.station_start))&&Number.isFinite(Number(frame.station_end)))right.textContent=`${Number(frame.station_start).toFixed(2)}–${Number(frame.station_end).toFixed(2)} ft`;
+            if(Number.isFinite(Number(frame.station_start))&&Number.isFinite(Number(frame.station_end))) right.textContent=`${Number(frame.station_start).toFixed(2)}–${Number(frame.station_end).toFixed(2)} ft`;
             else right.textContent='Road frame';
-            caption.append(left,right);figure.append(img,canvas,caption);strip.appendChild(figure);
-            if(observer)observer.observe(figure);else img.src=imagePath;
+            caption.append(left,right);
+            figure.append(img,canvas,caption);
+            strip.appendChild(figure);
         });
-        const imgs=[...strip.querySelectorAll('img')];
-        let refreshed=false;
-        const once=()=>{if(!refreshed){refreshed=true;requestAnimationFrame(updateStatus);}};
-        if(imgs.every(img=>img.complete))once();else imgs.forEach(img=>img.addEventListener('load',once,{once:true}));
+
         updateStatus();
+        // Start the first frame plus the next three immediately.
+        preloadWindow(0,selectionId);
     }
 
     async function loadRoadDataset(indexPath,roadName){
