@@ -248,17 +248,25 @@ function initStreetLensRoadViewer(){
         updateStatus();
     }
 
-    async function loadSampleDataset(){
-        if(annotationNote)annotationNote.textContent='Loading Penn Ave N frame index…';
+    async function loadRoadDataset(indexPath,roadName){
+        if(annotationNote)annotationNote.textContent=`Loading ${roadName||'selected road'} inspection frames…`;
         try{
-            const response=await fetch('/static/data/penn_ave_n_sample_frames.json',{cache:'no-store'});
+            const response=await fetch(indexPath,{cache:'no-store'});
             if(!response.ok)throw new Error(`Dataset index request failed (${response.status})`);
             const data=await response.json();
             render(data.frames||[]);
+            if(annotationNote)annotationNote.textContent=(data.frames||[]).length
+                ? `${roadName||data.road_name||'Selected road'} · ${data.frames.length} inspection frames loaded`
+                : `No inspection frames are currently available for ${roadName||'this road'}.`;
+            return data;
         }catch(error){
             render([]);
-            if(annotationNote)annotationNote.textContent=`Could not load Penn Ave N dataset: ${error.message}`;
+            if(annotationNote)annotationNote.textContent=`Could not load ${roadName||'road'} dataset: ${error.message}`;
+            return null;
         }
+    }
+    async function loadSampleDataset(){
+        return loadRoadDataset('/static/data/penn_ave_n_sample_frames.json','Penn Ave N · sample');
     }
 
     if(datasetSelect)datasetSelect.addEventListener('change',()=>{
@@ -290,6 +298,15 @@ function initStreetLensRoadViewer(){
     window.streetLensLoadRoadFrames=(frames)=>{
         if(datasetSelect)datasetSelect.value='map';
         render(frames);
+    };
+    window.streetLensLoadRoadDataset=(indexPath,roadName)=>{
+        if(datasetSelect)datasetSelect.value='map';
+        return loadRoadDataset(indexPath,roadName);
+    };
+    window.streetLensClearRoadFrames=(message)=>{
+        if(datasetSelect)datasetSelect.value='map';
+        render([]);
+        if(annotationNote&&message)annotationNote.textContent=message;
     };
 }
 
