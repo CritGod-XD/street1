@@ -180,7 +180,9 @@ function initStreetLensRoadViewer(){
     // Keep a rolling preload window around the frame nearest the viewer center.
     // Images and their annotations are requested together; loaded frames remain cached
     // in the DOM so scrolling back does not trigger another download.
-    const PRELOAD_RADIUS = 3;
+    // Keep a larger directional buffer so the user does not catch up with downloads.
+    const PRELOAD_AHEAD = 12;
+    const PRELOAD_BEHIND = 4;
 
     function preloadFrame(index, selectionId){
         if(selectionId !== currentSelection) return;
@@ -215,10 +217,12 @@ function initStreetLensRoadViewer(){
         return active;
     }
 
-    function preloadWindow(centerIndex, selectionId=currentSelection){
+    function preloadWindow(centerIndex, selectionId=currentSelection, direction=1){
         if(selectionId !== currentSelection) return;
-        const first=Math.max(0,centerIndex-PRELOAD_RADIUS);
-        const last=Math.min(currentFrames.length-1,centerIndex+PRELOAD_RADIUS);
+        const behind=direction < 0 ? PRELOAD_AHEAD : PRELOAD_BEHIND;
+        const ahead=direction < 0 ? PRELOAD_BEHIND : PRELOAD_AHEAD;
+        const first=Math.max(0,centerIndex-behind);
+        const last=Math.min(currentFrames.length-1,centerIndex+ahead);
         for(let i=first;i<=last;i++) preloadFrame(i,selectionId);
     }
 
@@ -331,12 +335,16 @@ function initStreetLensRoadViewer(){
 
     if(zoomInBtn)zoomInBtn.addEventListener('click',()=>setScale(zoomIndex+1));
     let preloadScrollFrame=0;
+    let previousScrollTop=viewer.scrollTop;
     viewer.addEventListener('scroll',()=>{
         updateStatus();
         if(preloadScrollFrame) cancelAnimationFrame(preloadScrollFrame);
         preloadScrollFrame=requestAnimationFrame(()=>{
             preloadScrollFrame=0;
-            preloadWindow(getActiveFrameIndex(),currentSelection);
+            const currentTop=viewer.scrollTop;
+            const direction=currentTop >= previousScrollTop ? 1 : -1;
+            previousScrollTop=currentTop;
+            preloadWindow(getActiveFrameIndex(),currentSelection,direction);
         });
     },{passive:true});
     window.addEventListener('resize',()=>updateStatus());
