@@ -562,7 +562,7 @@
 <div><span>Latitude</span><b id="streetLensSelectedLatitude">—</b></div>
 <div><span>Longitude</span><b id="streetLensSelectedLongitude">—</b></div>
 </div></div>
-<div class="analytics-card breakdown streetlens-breakdown-card"><h2>Distress breakdown</h2>{% for d in distress %}<div class="distress-row"><div class="distress-line"><span><i class="swatch" data-color="{{ d.color }}"></i>{{ d.label }}</span><b>{{ d.pct }}%</b></div><div class="bar"><span style="width: {{ d.pct }}%; background: {{ d.color }};"></span></div><p>{{ d.sub }}</p></div>{% endfor %}</div></section>
+<div class="analytics-card breakdown streetlens-breakdown-card"><h2>Road condition metrics</h2><div id="streetLensDistressBreakdown"><p class="streetlens-breakdown-empty">Select a road to view its measured condition data.</p></div></div></section>
 </main>
 
 </div>
@@ -641,7 +641,7 @@ let STREETLENS_SECTION_DATA=null; let STREETLENS_METRIC='sdi'; let STREETLENS_CU
 let STREETLENS_MAPS={};
 const STREETLENS_COLORS={failed:'#5b1136',serious:'#a31631',vpoor:'#dc4a2c',poor:'#f39a32',fair:'#f1d451',sat:'#62b8a5',good:'#1f6f9c'};
 const STREETLENS_PCI_CLASSES=[[85,'Good','good','85–100'],[70,'Satisfactory','sat','70–85'],[55,'Fair','fair','55–70'],[40,'Poor','poor','40–55'],[25,'Very Poor','vpoor','25–40'],[10,'Serious','serious','10–25'],[-1,'Failed','failed','0–10']];
-const STREETLENS_SDI_CLASSES=[[4.5,'4.5 and up','good',''],[4.0,'4.0 – 4.5','sat',''],[3.5,'3.5 – 4.0','fair',''],[3.0,'3.0 – 3.5','poor',''],[-1,'Under 3.0','serious','']];
+const STREETLENS_SDI_CLASSES=[[3.5,'Good','good','3.5 and above'],[2.4,'Fair','fair','Above 2.4 and below 3.5'],[-1,'Poor','poor','2.4 and below']];
 function classify(metric,value){const v=Number(value);if(!Number.isFinite(v))return null;return(metric==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES).find(c=>v>=c[0])||null;}
 function conditionText(metric,value){const c=classify(metric,value);return c?c[1]:'No data';}
 function fmt1(v){return Number.isFinite(Number(v))?Number(v).toFixed(1):'–'}
@@ -707,7 +707,60 @@ function showHover(sec,map,e){updateHoveredSection(sec);updateDashboardDetails(s
 function positionHoverCard(card,map,e){const p=e?.point||{x:map.getContainer().clientWidth/2,y:map.getContainer().clientHeight/2},size={x:map.getContainer().clientWidth,y:map.getContainer().clientHeight};const w=card.offsetWidth||280,h=card.offsetHeight||210;let x=p.x+16,y=p.y+16;if(x+w>size.x-10)x=p.x-w-16;if(y+h>size.y-10)y=p.y-h-16;card.style.left=Math.max(10,x)+'px';card.style.top=Math.max(10,y)+'px';}
 function hideHover(map){const card=document.getElementById(map._streetlensCardId);if(card)card.hidden=true;}
 function updateHoveredSection(sec){if(!sec)return;STREETLENS_CURRENT_SECTION=sec;const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val};const metric=STREETLENS_METRIC==='sdi'?'SDI':'PCI',other=STREETLENS_METRIC==='sdi'?'PCI':'SDI';const current=STREETLENS_METRIC==='sdi'?sec.sdi:sec.pci,otherValue=STREETLENS_METRIC==='sdi'?sec.pci:sec.sdi;set('streetLensHoveredRoad',`${sec.run.name} · Section ${sec.bin}`);set('streetLensCurrentMetricLabel',metric);set('streetLensCurrentMetricValue',STREETLENS_METRIC==='sdi'?fmt2(current):fmt1(current));set('streetLensCurrentOtherMetricLabel',other);set('streetLensCurrentOtherMetricValue',STREETLENS_METRIC==='sdi'?fmt1(otherValue):fmt2(otherValue));set('streetLensCurrentCondition',conditionText(STREETLENS_METRIC,current));set('streetLensCurrentSectionMeta',`${n0(sec.f0)}–${n0(sec.f1)} ft · ${n0(sec.len)} ft section`);const condition=document.getElementById('streetLensCurrentCondition');const cls=classify(STREETLENS_METRIC,current);if(condition)condition.style.color=cls?STREETLENS_COLORS[cls[2]]:'#68736d';}
-function updateDashboardDetails(sec){if(!sec)return;updateHoveredSection(sec);const pci=Number(sec.pci),sdi=Number(sec.sdi);animateOverallScore(pci,conditionText('pci',pci));const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val};set('streetLensSelectedRoad',sec.run.name+` · Section ${sec.bin}`);set('streetLensSelectedPci',fmt1(pci));set('streetLensSelectedSdi',fmt2(sdi));const lat=sec.g?.[0]?.[0],lon=sec.g?.[0]?.[1];set('streetLensSelectedLatitude',Number.isFinite(lat)?lat.toFixed(6)+'°':'—');set('streetLensSelectedLongitude',Number.isFinite(lon)?lon.toFixed(6)+'°':'—');const frames=STREETLENS_ROADS.filter(r=>String(r.name||'').toLowerCase()===String(sec.run.name||'').toLowerCase()).flatMap(r=>r.frames||[]);if(window.streetLensLoadRoadFrames)window.streetLensLoadRoadFrames(frames);}
+function weightedAverage(sections,key){
+ const valid=sections.filter(s=>Number.isFinite(Number(s[key]))&&Number(s.len)>0);
+ const length=valid.reduce((sum,s)=>sum+Number(s.len),0);
+ return length?valid.reduce((sum,s)=>sum+Number(s[key])*Number(s.len),0)/length:null;
+}
+function sumMetric(sections,key){return sections.reduce((sum,s)=>sum+(Number(s[key])||0),0);}
+function renderRoadMetrics(sec,sections,scope){
+ const host=document.getElementById('streetLensDistressBreakdown');if(!host)return;
+ const metrics=[
+  {label:'Crack instances',value:sumMetric(sections,'cr'),suffix:'',color:'#ff5b52'},
+  {label:'Crack length',value:sumMetric(sections,'crft'),suffix:' ft',color:'#d36b55'},
+  {label:'Distressed area',value:weightedAverage(sections,'dpct'),suffix:'%',color:'#d1a13c'},
+  {label:'Potholes',value:sumMetric(sections,'pot'),suffix:'',color:'#ff9500'},
+  {label:'Maintenance patches',value:sumMetric(sections,'pat'),suffix:'',color:'#0a84ff'}
+ ];
+ host.innerHTML=metrics.map(m=>{
+  const value=m.value===null||!Number.isFinite(m.value)?'—':(m.suffix==='%'?m.value.toFixed(1):m.suffix===' ft'?m.value.toFixed(1):Math.round(m.value).toLocaleString())+m.suffix;
+  const pct=m.suffix==='%'?Math.max(0,Math.min(100,m.value||0)):0;
+  return `<div class="distress-row"><div class="distress-line"><span><i class="swatch" style="background:${m.color}"></i>${m.label}</span><b>${value}</b></div><div class="bar"><span style="width:${pct}%;background:${m.color}"></span></div><p>${scope} · ${sections.length} section${sections.length===1?'':'s'} included</p></div>`;
+ }).join('');
+}
+function resolveRoadFrames(sec){
+ const runKey=String(sec.run.key||'').toLowerCase(),roadName=String(sec.run.name||'').trim().toLowerCase();
+ // This is the only Collingswood run currently mapped to an uploaded frame index.
+ if(roadName==='penn ave n'||runKey.includes('penn ave n')){
+  if(window.streetLensLoadRoadDataset)window.streetLensLoadRoadDataset('/static/data/penn_ave_n_sample_frames.json','Penn Ave N (10-frame sample)');
+  return;
+ }
+ const registryRoad=STREETLENS_ROADS.find(r=>String(r.name||'').trim().toLowerCase()===roadName);
+ if(registryRoad&&Array.isArray(registryRoad.frames)&&registryRoad.frames.length){
+  window.streetLensLoadRoadFrames?.(registryRoad.frames);
+  const note=document.getElementById('streetLensAnnotationNote');if(note)note.textContent=`${sec.run.name} · ${registryRoad.frames.length} registered inspection frames loaded`;
+ }else{
+  window.streetLensClearRoadFrames?.(`No inspection image dataset is registered for ${sec.run.name} yet. Road metrics below are still loaded from the pavement survey.`);
+ }
+}
+function updateDashboardDetails(sec){
+ if(!sec)return;
+ updateHoveredSection(sec);
+ const roadSections=STREETLENS_SECTION_DATA.sections.filter(s=>s.run.key===sec.run.key).sort((a,b)=>Number(a.bin)-Number(b.bin));
+ const roadPci=weightedAverage(roadSections,'pci'),roadSdi=weightedAverage(roadSections,'sdi');
+ const roadLength=roadSections.reduce((sum,s)=>sum+(Number(s.len)||0),0);
+ const pci=roadPci??Number(sec.pci),sdi=roadSdi??Number(sec.sdi);
+ animateOverallScore(pci,conditionText('pci',pci));
+ const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val};
+ set('streetLensSelectedRoad',sec.run.name+` · Section ${sec.bin}`);
+ set('streetLensSelectedPci',fmt1(pci));set('streetLensSelectedSdi',fmt2(sdi));
+ const lat=sec.g?.[0]?.[0],lon=sec.g?.[0]?.[1];
+ set('streetLensSelectedLatitude',Number.isFinite(lat)?lat.toFixed(6)+'°':'—');
+ set('streetLensSelectedLongitude',Number.isFinite(lon)?lon.toFixed(6)+'°':'—');
+ const title=document.querySelector('.streetlens-breakdown-card h2');if(title)title.textContent='Whole-road condition metrics';
+ renderRoadMetrics(sec,roadSections,`Whole road · ${n0(roadLength)} ft`);
+ resolveRoadFrames(sec);
+}
 function updateLegendAndRanking(){const legend=document.getElementById('streetLensModalLegend');if(legend){const rows=STREETLENS_METRIC==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES;legend.innerHTML=rows.map(c=>`<div class="sheet-lg-row"><i style="background:${STREETLENS_COLORS[c[2]]}"></i><span>${c[1]}</span><small>${c[3]}</small></div>`).join('');}const label=document.getElementById('streetLensModalLegendLabel');if(label)label.textContent=STREETLENS_METRIC==='sdi'?'SDI of the section':'PCI rating (ASTM D6433)';const rankLabel=document.getElementById('streetLensRankingLabel');if(rankLabel)rankLabel.textContent=`All sections ranked by ${STREETLENS_METRIC.toUpperCase()}`;const box=document.getElementById('streetLensRoadRanking');if(!box||!STREETLENS_SECTION_DATA)return;const vals=STREETLENS_SECTION_DATA.sections.filter(sectionVisible);const sorted=[...vals].sort((a,b)=>STREETLENS_METRIC==='sdi'?Number(a.sdi)-Number(b.sdi):Number(a.pci)-Number(b.pci));box.innerHTML=sorted.map((s,i)=>`<button class="streetlens-ranking-row" data-section-key="${escapeHtml(s.run.key)}::${s.bin}"><span>${i+1}</span><span>${escapeHtml(s.run.name)}<small>Section ${s.bin} · ${n0(s.f0)}–${n0(s.f1)} ft</small></span><b>${STREETLENS_METRIC==='sdi'?fmt2(s.sdi):fmt1(s.pci)}</b></button>`).join('');box.querySelectorAll('[data-section-key]').forEach(btn=>btn.onclick=()=>{const s=STREETLENS_SECTION_DATA.sections.find(x=>`${x.run.key}::${x.bin}`===btn.dataset.sectionKey);if(s)focusSection(s)});const count=document.getElementById('streetLensRoadCount');if(count)count.textContent=`${STREETLENS_SECTION_DATA.sections.length} mapped sections · ${STREETLENS_SECTION_DATA.runs.length} street runs`;}
 function focusSection(sec){Object.values(STREETLENS_MAPS).forEach(map=>{if(!map)return;const b=new maplibregl.LngLatBounds();sec.coords.forEach(c=>b.extend(c));map.fitBounds(b,{padding:80,maxZoom:18,duration:650});});}
 function refreshMap(map){if(!map||!map.loaded())return;syncVisibility(map);}
