@@ -330,7 +330,15 @@ function initStreetLensRoadViewer(){
     },{passive:false});
 
     if(zoomInBtn)zoomInBtn.addEventListener('click',()=>setScale(zoomIndex+1));
-    viewer.addEventListener('scroll',updateStatus,{passive:true});
+    let preloadScrollFrame=0;
+    viewer.addEventListener('scroll',()=>{
+        updateStatus();
+        if(preloadScrollFrame) cancelAnimationFrame(preloadScrollFrame);
+        preloadScrollFrame=requestAnimationFrame(()=>{
+            preloadScrollFrame=0;
+            preloadWindow(getActiveFrameIndex(),currentSelection);
+        });
+    },{passive:true});
     window.addEventListener('resize',()=>updateStatus());
 
     streetLensRoadViewerState={render,updateStatus,setScale,fitWholeRoad};
