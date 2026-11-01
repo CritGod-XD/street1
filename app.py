@@ -155,6 +155,14 @@ def login():
     return render_template("login.html")
 
 
+@app.route("/login-preview", methods=["GET"])
+def login_preview():
+    """Standalone visual concept; existing authentication remains unchanged."""
+    if session.get("user_id"):
+        return redirect(url_for("map_home"))
+    return render_template("login_preview.html")
+
+
 @app.route("/login", methods=["POST"])
 def login_submit():
     identifier = (request.form.get("username") or "").strip()
