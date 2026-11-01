@@ -1280,6 +1280,44 @@ html.streetlens-map-first #mapModal .map-signout-form button:hover .streetlens-t
   opacity:1!important;
 }
 </style>
+
+<style id="streetlens-score-meter-upgrade">
+/* Larger, high-contrast score meter: make the active position immediately readable. */
+html.streetlens-map-first #mapModal .streetlens-current-score-line{margin-bottom:4px!important}
+html.streetlens-map-first #mapModal .streetlens-score-scale{
+  height:24px!important;min-height:24px!important;max-height:24px!important;
+  margin:13px 0 0!important;border-radius:7px!important;overflow:visible!important;
+  background:#202a30!important;box-shadow:inset 0 0 0 1px #ffffff22,0 3px 10px #0005!important;
+}
+html.streetlens-map-first #mapModal .streetlens-score-scale-colors{
+  height:24px!important;max-height:24px!important;border-radius:7px!important;overflow:hidden!important;
+  box-shadow:inset 0 1px 2px #0005!important;
+}
+html.streetlens-map-first #mapModal .streetlens-score-scale-colors>span{
+  height:24px!important;min-height:24px!important;max-height:24px!important;filter:saturate(1.08)!important;
+}
+html.streetlens-map-first #mapModal .streetlens-score-scale>i{
+  top:-5px!important;bottom:-5px!important;width:5px!important;height:34px!important;max-height:34px!important;
+  border:2px solid #fff!important;border-radius:5px!important;background:#101820!important;
+  box-shadow:0 0 0 2px #071014,0 0 12px 3px #ffffffa8!important;z-index:5!important;
+}
+html.streetlens-map-first #mapModal .streetlens-score-scale-labels{
+  padding:8px 1px 13px!important;color:#c0cbd0!important;font:600 11px 'JetBrains Mono',monospace!important;
+}
+html.streetlens-map-first #mapModal .streetlens-score-scale-labels span{
+  position:relative!important;min-width:12px!important;text-align:center!important;text-shadow:0 1px 3px #000!important;
+}
+html.streetlens-map-first #mapModal .streetlens-score-scale-labels span:not(:first-child):not(:last-child)::before{
+  content:""!important;position:absolute!important;left:50%!important;top:-8px!important;
+  height:4px!important;width:1px!important;background:#ffffff75!important;
+}
+@media(max-width:760px){
+ html.streetlens-map-first #mapModal .streetlens-score-scale{height:20px!important;min-height:20px!important;max-height:20px!important}
+ html.streetlens-map-first #mapModal .streetlens-score-scale-colors,html.streetlens-map-first #mapModal .streetlens-score-scale-colors>span{height:20px!important;min-height:20px!important;max-height:20px!important}
+ html.streetlens-map-first #mapModal .streetlens-score-scale>i{height:30px!important;max-height:30px!important}
+}
+</style>
+
 </body>
 </html>
 
