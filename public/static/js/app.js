@@ -25,7 +25,7 @@ function initStreetLensRoadViewer(){
     const enabledLabels=()=>new Set(categoryInputs.filter(input=>input.checked).map(input=>input.dataset.annotationLabel));
     if(!viewer||!strip)return;
 
-    const levels=[0.08,0.12,0.18,0.25,0.35,0.50,0.70,0.85,1.0,1.25,1.5,1.75,2.0,2.5,3.0];
+    const levels=[0.50,0.65,0.80,1.0,1.25,1.5,1.75,2.0,2.5,3.0];
     let zoomIndex=levels.indexOf(1);
 
     function getFrames(){ return [...strip.querySelectorAll('.streetlens-road-frame')]; }
@@ -60,7 +60,8 @@ function initStreetLensRoadViewer(){
         const contentY=(viewer.scrollTop+ay)/oldScale;
 
         zoomIndex=nextIndex;
-        strip.style.transform=`scale(${newScale})`;
+        strip.style.zoom=String(newScale);
+        strip.style.transform='none';
         strip.style.width='100%';
         strip.style.marginBottom='0';
         strip.dataset.scale=String(newScale);
@@ -86,7 +87,8 @@ function initStreetLensRoadViewer(){
         const oldScale=levels[zoomIndex];
         zoomIndex=closest;
         const scale=levels[zoomIndex];
-        strip.style.transform=`scale(${scale})`;
+        strip.style.zoom=String(scale);
+        strip.style.transform='none';
         strip.style.width='100%';
         strip.style.marginBottom='0';
         strip.dataset.scale=String(scale);
@@ -98,7 +100,8 @@ function initStreetLensRoadViewer(){
 
     function resetZoom(){
         zoomIndex=levels.indexOf(1);
-        strip.style.transform='scale(1)';
+        strip.style.zoom='1';
+        strip.style.transform='none';
         strip.style.width='100%';
         strip.style.marginBottom='0';
         strip.dataset.scale='1';
@@ -226,7 +229,7 @@ function initStreetLensRoadViewer(){
         for(let i=first;i<=last;i++) preloadFrame(i,selectionId);
     }
 
-    function render(frames){
+    function render(frames,roadScores={}){
         const selectionId=++currentSelection;
         currentFrames=Array.isArray(frames)?frames:[];
         strip.innerHTML='';
@@ -282,7 +285,10 @@ function initStreetLensRoadViewer(){
             if(Number.isFinite(Number(frame.station_start))&&Number.isFinite(Number(frame.station_end))) right.textContent=`${Number(frame.station_start).toFixed(2)}–${Number(frame.station_end).toFixed(2)} ft`;
             else right.textContent='Road frame';
             caption.append(left,right);
-            figure.append(img,canvas,caption);
+            const scoreBadge=document.createElement('div');scoreBadge.className='streetlens-frame-scores';
+            const framePci=frame.pci??frame.detector_psci??roadScores.pci;const frameSdi=frame.sdi??roadScores.sdi;
+            scoreBadge.innerHTML=`<span>PCI <b>${Number.isFinite(Number(framePci))?Number(framePci).toFixed(1):'—'}</b></span><span>SDI <b>${Number.isFinite(Number(frameSdi))?Number(frameSdi).toFixed(2):'—'}</b></span>`;
+            figure.append(img,canvas,caption,scoreBadge);
             strip.appendChild(figure);
         });
 
@@ -350,9 +356,9 @@ function initStreetLensRoadViewer(){
     window.addEventListener('resize',()=>updateStatus());
 
     streetLensRoadViewerState={render,updateStatus,setScale,fitWholeRoad};
-    window.streetLensLoadRoadFrames=(frames)=>{
+    window.streetLensLoadRoadFrames=(frames,roadScores={})=>{
         if(datasetSelect)datasetSelect.value='map';
-        render(frames);
+        render(frames,roadScores);
     };
     window.streetLensLoadRoadDataset=(indexPath,roadName)=>{
         if(datasetSelect)datasetSelect.value='map';
