@@ -9,17 +9,20 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 <style>
 html,body{margin:0;min-height:100%;background:#0e0e0e;color:#e0e0e0;font-family:'Outfit',sans-serif}
-.sl-login-page{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;overflow:hidden;background:#0e0e0e;position:relative;isolation:isolate}\n.sl-login-page:before,.sl-login-page:after{content:\"\";position:absolute;border:1px solid #ffffff0a;border-radius:50%;z-index:-1;pointer-events:none}\n.sl-login-page:before{width:600px;height:600px;left:-390px;bottom:-390px;box-shadow:0 0 0 55px #ffffff05,0 0 0 110px #ffffff03}\n.sl-login-page:after{width:480px;height:480px;right:-340px;top:-330px;box-shadow:0 0 0 45px #a8d9f006}
-.sl-login-header{padding:clamp(22px,3.2vw,46px) clamp(20px,4.5vw,68px) 0}
+.sl-login-page{height:100vh;height:100svh;min-height:560px;display:flex;flex-direction:column;overflow:hidden;background:#0e0e0e;position:relative;isolation:isolate;padding:clamp(24px,3.2vw,48px) clamp(24px,3.2vw,50px) clamp(22px,3vw,42px)}
+.sl-login-page:before,.sl-login-page:after{content:\"\";position:absolute;border:1px solid #ffffff0a;border-radius:50%;z-index:-1;pointer-events:none}
+.sl-login-page:before{width:600px;height:600px;left:-390px;bottom:-390px;box-shadow:0 0 0 55px #ffffff05,0 0 0 110px #ffffff03}
+.sl-login-page:after{width:480px;height:480px;right:-340px;top:-330px;box-shadow:0 0 0 45px #a8d9f006}
+.sl-login-header{padding:0;position:relative;z-index:1}
 .sl-brand{display:flex;align-items:center;gap:16px;width:max-content;max-width:100%;text-decoration:none}
 .sl-brand-icon{width:56px;height:56px;flex:none;filter:drop-shadow(0 5px 12px #0007)}
 .sl-brand-copy{display:flex;flex-direction:column;gap:13px;min-width:0}
 .sl-brand-name{font:700 clamp(36px,4vw,52px)/.95 Outfit,sans-serif;letter-spacing:-.065em;color:#f3f7fa}
 .sl-brand-name span{color:#4ba5df}
 .sl-mission{max-width:700px;padding:1px 0 1px 18px;border-left:2px solid #84cc16;color:#94a3b8;font:400 13px/1.65 'DM Sans',sans-serif}
-.sl-login-main{flex:1;display:grid;place-items:center;padding:20px 24px 38px}
+.sl-login-main{flex:1;min-height:0;display:grid;place-items:center;padding:22px 0 0;position:relative;z-index:1}
 .sl-login-grid{width:min(1080px,100%);display:grid;grid-template-columns:minmax(0,1.2fr) minmax(330px,.78fr);gap:clamp(24px,5vw,78px);align-items:center}
-.sl-road-panel{height:min(65vh,570px);min-height:340px;position:relative;display:grid;place-items:center;overflow:visible}
+.sl-road-panel{height:min(68vh,610px);min-height:360px;position:relative;display:grid;place-items:center;overflow:visible}
 .sl-road-svg{width:100%;height:100%;overflow:visible}
 .sl-road-edge{fill:none;stroke:#405968;stroke-width:106;stroke-linecap:round;stroke-linejoin:round;opacity:.28}
 .sl-road-base{fill:none;stroke:#252525;stroke-width:88;stroke-linecap:round;stroke-linejoin:round}
@@ -57,20 +60,20 @@ html,body{margin:0;min-height:100%;background:#0e0e0e;color:#e0e0e0;font-family:
 .sl-register{display:block;text-align:center;text-decoration:none;padding:12px;border:1px solid #2a2a2a;border-radius:6px;color:#e0e0e0;font:600 13px 'DM Sans',sans-serif}
 .sl-register:hover{background:#1c1c1c;border-color:#3a3a3a}
 .sl-login-foot{display:block;text-align:center;margin-top:22px;color:#64748b;font:10px 'JetBrains Mono',monospace;letter-spacing:.08em}
-@media(max-width:800px){
- .sl-login-header{padding:22px 24px 0}.sl-brand-icon{width:46px;height:46px}.sl-brand-copy{gap:9px}
+@media(max-width:850px){
+ .sl-login-page{padding:22px 24px}.sl-brand-icon{width:46px;height:46px}.sl-brand-copy{gap:14px}
  .sl-brand-name{font-size:42px}.sl-mission{max-width:580px;font-size:12px}
  .sl-login-grid{grid-template-columns:minmax(0,1fr) minmax(300px,.95fr);gap:15px}
- .sl-road-panel{height:52vh;min-height:290px}.sl-login-card{padding:25px}
+ .sl-road-panel{height:55vh;min-height:300px}.sl-login-card{padding:25px}
 }
 @media(max-width:650px){
- .sl-login-page{overflow:visible}.sl-login-header{padding:20px 18px 0}
+ .sl-login-page{height:auto;min-height:100svh;overflow:visible;padding:22px 18px 30px}
  .sl-brand{gap:11px;align-items:flex-start}.sl-brand-icon{width:40px;height:40px}
  .sl-brand-name{font-size:36px}.sl-brand-copy{gap:8px}
  .sl-mission{max-width:calc(100vw - 78px);font-size:11px;line-height:1.5;padding-left:11px}
- .sl-login-main{padding:8px 18px 28px}
+ .sl-login-main{padding:10px 0 0}
  .sl-login-grid{display:flex;flex-direction:column;gap:0}
- .sl-road-panel{order:0;width:100%;height:30vh;min-height:180px;max-height:260px}
+ .sl-road-panel{order:0;width:100%;height:34vh;min-height:190px;max-height:280px}
  .sl-login-card{order:1;max-width:460px;justify-self:auto;padding:24px;width:100%}
 }
 @media(prefers-reduced-motion:reduce){.sl-submit{transition:none}}
