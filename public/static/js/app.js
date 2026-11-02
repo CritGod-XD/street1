@@ -308,7 +308,7 @@ function initStreetLensRoadViewer(){
             // legacy absolute /static paths continue to work unchanged.
             const resolveAsset=(value)=>{
                 if(!value)return value;
-                try{return new URL(value,indexPath,window.location.href).toString();}
+                try{return new URL(value,new URL(indexPath,window.location.href)).toString();}
                 catch(_){return value;}
             };
             data.frames=(data.frames||[]).map(frame=>({
