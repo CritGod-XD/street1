@@ -71,9 +71,16 @@ def main() -> None:
             if not path.is_file():
                 missing_images.append(rel)
 
+    # Road imagery is optional at build time. Some registry entries describe
+    # inspection runs whose image payloads are stored separately or have not
+    # been uploaded to this deployment. Missing images must not block the map
+    # and dashboard from deploying; the UI can show an unavailable-image state.
     if missing_images:
         sample = ", ".join(missing_images[:8])
-        raise RuntimeError(f"Missing {len(missing_images)} road image(s): {sample}")
+        print(
+            f"Warning: {len(missing_images)} optional road image(s) are not bundled "
+            f"with this deployment: {sample}"
+        )
 
     # Keep validation aligned with the current MapLibre implementation.
     # The dashboard intentionally uses compact declarations such as
