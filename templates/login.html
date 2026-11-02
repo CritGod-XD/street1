@@ -9,10 +9,10 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 <style>
 html,body{margin:0;min-height:100%;background:#0e0e0e;color:#e0e0e0;font-family:'Outfit',sans-serif}
-.sl-login-page{height:100vh;height:100svh;min-height:560px;display:flex;flex-direction:column;overflow:hidden;background:#0e0e0e;position:relative;isolation:isolate;padding:clamp(24px,3.2vw,48px) clamp(24px,3.2vw,50px) clamp(22px,3vw,42px)}
+.sl-login-page{height:100vh;height:100svh;min-height:560px;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(ellipse at 0% 100%,rgba(132,204,22,.055),transparent 34%),radial-gradient(ellipse at 100% 0%,rgba(75,165,223,.075),transparent 34%),#0e0e0e;position:relative;isolation:isolate;padding:clamp(24px,3.2vw,48px) clamp(24px,3.2vw,50px) clamp(22px,3vw,42px)}
 .sl-login-page:before,.sl-login-page:after{content:\"\";position:absolute;border:1px solid #ffffff0a;border-radius:50%;z-index:0;pointer-events:none}
-.sl-login-page:before{width:600px;height:600px;left:-390px;bottom:-390px;box-shadow:0 0 0 55px #ffffff05,0 0 0 110px #ffffff03}
-.sl-login-page:after{width:480px;height:480px;right:-340px;top:-330px;box-shadow:0 0 0 45px #a8d9f006}
+.sl-login-page:before{width:600px;height:600px;left:-390px;bottom:-390px;box-shadow:0 0 0 55px rgba(148,163,184,.09),0 0 0 110px rgba(148,163,184,.055)}
+.sl-login-page:after{width:480px;height:480px;right:-340px;top:-330px;border-color:rgba(75,165,223,.2);box-shadow:0 0 0 45px rgba(75,165,223,.075),0 0 0 90px rgba(75,165,223,.035)}
 .sl-login-header{padding:0;position:relative;z-index:1}
 .sl-brand{display:flex;align-items:center;gap:16px;width:max-content;max-width:100%;text-decoration:none}
 .sl-brand-icon{width:56px;height:56px;flex:none;filter:drop-shadow(0 5px 12px #0007)}
