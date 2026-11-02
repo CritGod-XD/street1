@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 <style>
 html,body{margin:0;min-height:100%;background:#0e0e0e;color:#e0e0e0;font-family:'Outfit',sans-serif}
-.sl-login-page{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;overflow:hidden;background:#0e0e0e}
+.sl-login-page{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;overflow:hidden;background:#0e0e0e;position:relative;isolation:isolate}\n.sl-login-page:before,.sl-login-page:after{content:\"\";position:absolute;border:1px solid #ffffff0a;border-radius:50%;z-index:-1;pointer-events:none}\n.sl-login-page:before{width:600px;height:600px;left:-390px;bottom:-390px;box-shadow:0 0 0 55px #ffffff05,0 0 0 110px #ffffff03}\n.sl-login-page:after{width:480px;height:480px;right:-340px;top:-330px;box-shadow:0 0 0 45px #a8d9f006}
 .sl-login-header{padding:clamp(22px,3.2vw,46px) clamp(20px,4.5vw,68px) 0}
 .sl-brand{display:flex;align-items:center;gap:16px;width:max-content;max-width:100%;text-decoration:none}
 .sl-brand-icon{width:56px;height:56px;flex:none;filter:drop-shadow(0 5px 12px #0007)}
@@ -27,7 +27,7 @@ html,body{margin:0;min-height:100%;background:#0e0e0e;color:#e0e0e0;font-family:
 .sl-road-center{fill:none;stroke:#84cc16;stroke-width:4;stroke-dasharray:18 18;stroke-linecap:round}
 .sl-road-progress{fill:none;stroke:#84cc16;stroke-width:5;stroke-linecap:round;filter:drop-shadow(0 0 8px #84cc16)}
 .sl-travelling-lens{filter:drop-shadow(0 10px 18px #000b)}
-.sl-login-card{width:100%;max-width:430px;justify-self:end;box-sizing:border-box;padding:clamp(26px,3vw,38px);background:#161616;border:1px solid #272727;border-radius:8px;box-shadow:0 24px 70px #0008;position:relative}
+.sl-login-card{width:100%;max-width:430px;justify-self:end;box-sizing:border-box;padding:clamp(26px,3vw,38px);background:#161616;border:1px solid #272727;border-radius:16px;box-shadow:0 24px 70px #0008;position:relative}
 .sl-login-card:before{content:"";position:absolute;left:29px;top:-1px;width:72px;height:2px;background:#84cc16}
 .sl-login-card h1{font:600 28px Outfit;margin:0 0 7px;color:#e0e0e0;letter-spacing:-.02em}
 .sl-login-sub{margin:0 0 25px;color:#94a3b8;font:13px/1.6 'DM Sans',sans-serif}
