@@ -1,0 +1,1090 @@
+{
+  "version": 1,
+  "format": "streetlens-road-folder",
+  "road_id": "penn-ave-n-sample",
+  "road_name": "Penn Ave N",
+  "source": "Migrated from existing Penn Ave N image and annotation assets",
+  "frame_count": 120,
+  "frames": [
+    {
+      "frame_id": "section_0001",
+      "frame": "0001",
+      "image": "section_0001.png",
+      "annotation": "section_0001.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": 28
+    },
+    {
+      "frame_id": "section_0002",
+      "frame": "0002",
+      "image": "section_0002.png",
+      "annotation": "section_0002.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": 19
+    },
+    {
+      "frame_id": "section_0003",
+      "frame": "0003",
+      "image": "section_0003.png",
+      "annotation": "section_0003.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": 26
+    },
+    {
+      "frame_id": "section_0004",
+      "frame": "0004",
+      "image": "section_0004.png",
+      "annotation": "section_0004.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": 25
+    },
+    {
+      "frame_id": "section_0005",
+      "frame": "0005",
+      "image": "section_0005.png",
+      "annotation": "section_0005.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": 73
+    },
+    {
+      "frame_id": "section_0006",
+      "frame": "0006",
+      "image": "section_0006.png",
+      "annotation": "section_0006.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": 25
+    },
+    {
+      "frame_id": "section_0007",
+      "frame": "0007",
+      "image": "section_0007.png",
+      "annotation": "section_0007.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": 12
+    },
+    {
+      "frame_id": "section_0008",
+      "frame": "0008",
+      "image": "section_0008.png",
+      "annotation": "section_0008.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": 9
+    },
+    {
+      "frame_id": "section_0009",
+      "frame": "0009",
+      "image": "section_0009.png",
+      "annotation": "section_0009.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": 17
+    },
+    {
+      "frame_id": "section_0010",
+      "frame": "0010",
+      "image": "section_0010.png",
+      "annotation": "section_0010.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": 8
+    },
+    {
+      "frame_id": "section_0011",
+      "frame": "0011",
+      "image": "section_0011.png",
+      "annotation": "section_0011.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0012",
+      "frame": "0012",
+      "image": "section_0012.png",
+      "annotation": "section_0012.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0013",
+      "frame": "0013",
+      "image": "section_0013.png",
+      "annotation": "section_0013.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0014",
+      "frame": "0014",
+      "image": "section_0014.png",
+      "annotation": "section_0014.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0015",
+      "frame": "0015",
+      "image": "section_0015.png",
+      "annotation": "section_0015.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0016",
+      "frame": "0016",
+      "image": "section_0016.png",
+      "annotation": "section_0016.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0017",
+      "frame": "0017",
+      "image": "section_0017.png",
+      "annotation": "section_0017.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0018",
+      "frame": "0018",
+      "image": "section_0018.png",
+      "annotation": "section_0018.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0019",
+      "frame": "0019",
+      "image": "section_0019.png",
+      "annotation": "section_0019.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0020",
+      "frame": "0020",
+      "image": "section_0020.png",
+      "annotation": "section_0020.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0021",
+      "frame": "0021",
+      "image": "section_0021.png",
+      "annotation": "section_0021.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0022",
+      "frame": "0022",
+      "image": "section_0022.png",
+      "annotation": "section_0022.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0023",
+      "frame": "0023",
+      "image": "section_0023.png",
+      "annotation": "section_0023.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0024",
+      "frame": "0024",
+      "image": "section_0024.png",
+      "annotation": "section_0024.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0025",
+      "frame": "0025",
+      "image": "section_0025.png",
+      "annotation": "section_0025.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0026",
+      "frame": "0026",
+      "image": "section_0026.png",
+      "annotation": "section_0026.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0027",
+      "frame": "0027",
+      "image": "section_0027.png",
+      "annotation": "section_0027.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0028",
+      "frame": "0028",
+      "image": "section_0028.png",
+      "annotation": "section_0028.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0029",
+      "frame": "0029",
+      "image": "section_0029.png",
+      "annotation": "section_0029.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0030",
+      "frame": "0030",
+      "image": "section_0030.png",
+      "annotation": "section_0030.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0031",
+      "frame": "0031",
+      "image": "section_0031.png",
+      "annotation": "section_0031.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0032",
+      "frame": "0032",
+      "image": "section_0032.png",
+      "annotation": "section_0032.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0033",
+      "frame": "0033",
+      "image": "section_0033.png",
+      "annotation": "section_0033.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0034",
+      "frame": "0034",
+      "image": "section_0034.png",
+      "annotation": "section_0034.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0035",
+      "frame": "0035",
+      "image": "section_0035.png",
+      "annotation": "section_0035.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0036",
+      "frame": "0036",
+      "image": "section_0036.png",
+      "annotation": "section_0036.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0037",
+      "frame": "0037",
+      "image": "section_0037.png",
+      "annotation": "section_0037.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0038",
+      "frame": "0038",
+      "image": "section_0038.png",
+      "annotation": "section_0038.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0039",
+      "frame": "0039",
+      "image": "section_0039.png",
+      "annotation": "section_0039.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0040",
+      "frame": "0040",
+      "image": "section_0040.png",
+      "annotation": "section_0040.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0041",
+      "frame": "0041",
+      "image": "section_0041.png",
+      "annotation": "section_0041.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0042",
+      "frame": "0042",
+      "image": "section_0042.png",
+      "annotation": "section_0042.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0043",
+      "frame": "0043",
+      "image": "section_0043.png",
+      "annotation": "section_0043.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0044",
+      "frame": "0044",
+      "image": "section_0044.png",
+      "annotation": "section_0044.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0045",
+      "frame": "0045",
+      "image": "section_0045.png",
+      "annotation": "section_0045.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0046",
+      "frame": "0046",
+      "image": "section_0046.png",
+      "annotation": "section_0046.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0047",
+      "frame": "0047",
+      "image": "section_0047.png",
+      "annotation": "section_0047.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0048",
+      "frame": "0048",
+      "image": "section_0048.png",
+      "annotation": "section_0048.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0049",
+      "frame": "0049",
+      "image": "section_0049.png",
+      "annotation": "section_0049.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0050",
+      "frame": "0050",
+      "image": "section_0050.png",
+      "annotation": "section_0050.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0051",
+      "frame": "0051",
+      "image": "section_0051.png",
+      "annotation": "section_0051.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0052",
+      "frame": "0052",
+      "image": "section_0052.png",
+      "annotation": "section_0052.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0053",
+      "frame": "0053",
+      "image": "section_0053.png",
+      "annotation": "section_0053.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0054",
+      "frame": "0054",
+      "image": "section_0054.png",
+      "annotation": "section_0054.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0055",
+      "frame": "0055",
+      "image": "section_0055.png",
+      "annotation": "section_0055.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0056",
+      "frame": "0056",
+      "image": "section_0056.png",
+      "annotation": "section_0056.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0057",
+      "frame": "0057",
+      "image": "section_0057.png",
+      "annotation": "section_0057.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0058",
+      "frame": "0058",
+      "image": "section_0058.png",
+      "annotation": "section_0058.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0059",
+      "frame": "0059",
+      "image": "section_0059.png",
+      "annotation": "section_0059.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0060",
+      "frame": "0060",
+      "image": "section_0060.png",
+      "annotation": "section_0060.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0061",
+      "frame": "0061",
+      "image": "section_0061.png",
+      "annotation": "section_0061.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0062",
+      "frame": "0062",
+      "image": "section_0062.png",
+      "annotation": "section_0062.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0063",
+      "frame": "0063",
+      "image": "section_0063.png",
+      "annotation": "section_0063.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0064",
+      "frame": "0064",
+      "image": "section_0064.png",
+      "annotation": "section_0064.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0065",
+      "frame": "0065",
+      "image": "section_0065.png",
+      "annotation": "section_0065.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0066",
+      "frame": "0066",
+      "image": "section_0066.png",
+      "annotation": "section_0066.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0067",
+      "frame": "0067",
+      "image": "section_0067.png",
+      "annotation": "section_0067.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0068",
+      "frame": "0068",
+      "image": "section_0068.png",
+      "annotation": "section_0068.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0069",
+      "frame": "0069",
+      "image": "section_0069.png",
+      "annotation": "section_0069.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0070",
+      "frame": "0070",
+      "image": "section_0070.png",
+      "annotation": "section_0070.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0071",
+      "frame": "0071",
+      "image": "section_0071.png",
+      "annotation": "section_0071.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0072",
+      "frame": "0072",
+      "image": "section_0072.png",
+      "annotation": "section_0072.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0073",
+      "frame": "0073",
+      "image": "section_0073.png",
+      "annotation": "section_0073.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0074",
+      "frame": "0074",
+      "image": "section_0074.png",
+      "annotation": "section_0074.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0075",
+      "frame": "0075",
+      "image": "section_0075.png",
+      "annotation": "section_0075.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0076",
+      "frame": "0076",
+      "image": "section_0076.png",
+      "annotation": "section_0076.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0077",
+      "frame": "0077",
+      "image": "section_0077.png",
+      "annotation": "section_0077.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0078",
+      "frame": "0078",
+      "image": "section_0078.png",
+      "annotation": "section_0078.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0079",
+      "frame": "0079",
+      "image": "section_0079.png",
+      "annotation": "section_0079.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0080",
+      "frame": "0080",
+      "image": "section_0080.png",
+      "annotation": "section_0080.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0081",
+      "frame": "0081",
+      "image": "section_0081.png",
+      "annotation": "section_0081.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0082",
+      "frame": "0082",
+      "image": "section_0082.png",
+      "annotation": "section_0082.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0083",
+      "frame": "0083",
+      "image": "section_0083.png",
+      "annotation": "section_0083.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0084",
+      "frame": "0084",
+      "image": "section_0084.png",
+      "annotation": "section_0084.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0085",
+      "frame": "0085",
+      "image": "section_0085.png",
+      "annotation": "section_0085.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0086",
+      "frame": "0086",
+      "image": "section_0086.png",
+      "annotation": "section_0086.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0087",
+      "frame": "0087",
+      "image": "section_0087.png",
+      "annotation": "section_0087.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0088",
+      "frame": "0088",
+      "image": "section_0088.png",
+      "annotation": "section_0088.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0089",
+      "frame": "0089",
+      "image": "section_0089.png",
+      "annotation": "section_0089.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0090",
+      "frame": "0090",
+      "image": "section_0090.png",
+      "annotation": "section_0090.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0091",
+      "frame": "0091",
+      "image": "section_0091.png",
+      "annotation": "section_0091.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0092",
+      "frame": "0092",
+      "image": "section_0092.png",
+      "annotation": "section_0092.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0093",
+      "frame": "0093",
+      "image": "section_0093.png",
+      "annotation": "section_0093.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0094",
+      "frame": "0094",
+      "image": "section_0094.png",
+      "annotation": "section_0094.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0095",
+      "frame": "0095",
+      "image": "section_0095.png",
+      "annotation": "section_0095.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0096",
+      "frame": "0096",
+      "image": "section_0096.png",
+      "annotation": "section_0096.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0097",
+      "frame": "0097",
+      "image": "section_0097.png",
+      "annotation": "section_0097.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0098",
+      "frame": "0098",
+      "image": "section_0098.png",
+      "annotation": "section_0098.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0099",
+      "frame": "0099",
+      "image": "section_0099.png",
+      "annotation": "section_0099.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0100",
+      "frame": "0100",
+      "image": "section_0100.png",
+      "annotation": "section_0100.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0101",
+      "frame": "0101",
+      "image": "section_0101.png",
+      "annotation": "section_0101.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0102",
+      "frame": "0102",
+      "image": "section_0102.png",
+      "annotation": "section_0102.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0103",
+      "frame": "0103",
+      "image": "section_0103.png",
+      "annotation": "section_0103.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0104",
+      "frame": "0104",
+      "image": "section_0104.png",
+      "annotation": "section_0104.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0105",
+      "frame": "0105",
+      "image": "section_0105.png",
+      "annotation": "section_0105.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0106",
+      "frame": "0106",
+      "image": "section_0106.png",
+      "annotation": "section_0106.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0107",
+      "frame": "0107",
+      "image": "section_0107.png",
+      "annotation": "section_0107.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0108",
+      "frame": "0108",
+      "image": "section_0108.png",
+      "annotation": "section_0108.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0109",
+      "frame": "0109",
+      "image": "section_0109.png",
+      "annotation": "section_0109.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0110",
+      "frame": "0110",
+      "image": "section_0110.png",
+      "annotation": "section_0110.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0111",
+      "frame": "0111",
+      "image": "section_0111.png",
+      "annotation": "section_0111.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0112",
+      "frame": "0112",
+      "image": "section_0112.png",
+      "annotation": "section_0112.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0113",
+      "frame": "0113",
+      "image": "section_0113.png",
+      "annotation": "section_0113.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0114",
+      "frame": "0114",
+      "image": "section_0114.png",
+      "annotation": "section_0114.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0115",
+      "frame": "0115",
+      "image": "section_0115.png",
+      "annotation": "section_0115.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0116",
+      "frame": "0116",
+      "image": "section_0116.png",
+      "annotation": "section_0116.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0117",
+      "frame": "0117",
+      "image": "section_0117.png",
+      "annotation": "section_0117.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0118",
+      "frame": "0118",
+      "image": "section_0118.png",
+      "annotation": "section_0118.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0119",
+      "frame": "0119",
+      "image": "section_0119.png",
+      "annotation": "section_0119.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    },
+    {
+      "frame_id": "section_0120",
+      "frame": "0120",
+      "image": "section_0120.png",
+      "annotation": "section_0120.json",
+      "image_width": 1640,
+      "image_height": 787,
+      "shape_count": null
+    }
+  ]
+}

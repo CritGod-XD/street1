@@ -1,0 +1,241 @@
+{
+  "version": "5.7.0",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "C",
+      "points": [
+        [
+          98.0,
+          30.0
+        ],
+        [
+          73.0,
+          28.0
+        ],
+        [
+          51.0,
+          36.0
+        ],
+        [
+          31.0,
+          50.0
+        ],
+        [
+          10.0,
+          51.0
+        ],
+        [
+          10.0,
+          104.0
+        ],
+        [
+          14.0,
+          94.0
+        ],
+        [
+          14.0,
+          86.0
+        ],
+        [
+          25.0,
+          69.0
+        ],
+        [
+          55.0,
+          48.0
+        ],
+        [
+          69.0,
+          46.0
+        ],
+        [
+          78.0,
+          39.0
+        ],
+        [
+          97.0,
+          34.0
+        ]
+      ],
+      "group_id": null,
+      "description": null,
+      "shape_type": "polygon",
+      "flags": {},
+      "mask": null
+    },
+    {
+      "label": "C",
+      "points": [
+        [
+          10.0,
+          172.0
+        ],
+        [
+          11.0,
+          193.0
+        ],
+        [
+          20.0,
+          188.0
+        ],
+        [
+          11.0,
+          180.0
+        ]
+      ],
+      "group_id": null,
+      "description": null,
+      "shape_type": "polygon",
+      "flags": {},
+      "mask": null
+    },
+    {
+      "label": "C",
+      "points": [
+        [
+          481.0,
+          339.0
+        ],
+        [
+          481.0,
+          358.0
+        ],
+        [
+          486.0,
+          368.0
+        ],
+        [
+          495.0,
+          377.0
+        ],
+        [
+          497.0,
+          390.0
+        ],
+        [
+          506.0,
+          403.0
+        ],
+        [
+          506.0,
+          416.0
+        ],
+        [
+          512.0,
+          427.0
+        ],
+        [
+          513.0,
+          436.0
+        ],
+        [
+          517.0,
+          440.0
+        ],
+        [
+          517.0,
+          447.0
+        ],
+        [
+          522.0,
+          449.0
+        ],
+        [
+          523.0,
+          445.0
+        ],
+        [
+          520.0,
+          440.0
+        ],
+        [
+          519.0,
+          430.0
+        ],
+        [
+          520.0,
+          419.0
+        ],
+        [
+          516.0,
+          408.0
+        ],
+        [
+          516.0,
+          401.0
+        ],
+        [
+          510.0,
+          392.0
+        ],
+        [
+          505.0,
+          374.0
+        ],
+        [
+          486.0,
+          350.0
+        ]
+      ],
+      "group_id": null,
+      "description": null,
+      "shape_type": "polygon",
+      "flags": {},
+      "mask": null
+    }
+  ],
+  "imagePath": "section_0130.png",
+  "imageData": null,
+  "imageHeight": 787,
+  "imageWidth": 1640,
+  "road_analysis_meta": {
+    "section_index": 130,
+    "px_per_in": 10.0,
+    "mp_start": 0.16147411616161617,
+    "mp_end": 0.16271622474747477,
+    "ft_start": 852.5833333333334,
+    "ft_end": 859.1416666666668,
+    "psci": 97.9,
+    "sdi": null,
+    "ndi": null,
+    "ldi": null,
+    "rut_mm": null,
+    "lat": 39.9155154,
+    "lon": -75.05825459999998,
+    "speed_mph": 18.342907573337552,
+    "pitch_deg": -47.426139829741714,
+    "roll_deg": -8.175361758651803,
+    "gyro_z": 0.0049702217520186396,
+    "obd_speed_kph": 29.0,
+    "obd_rpm": 0.0,
+    "obd_engine_load_pct": 0.0,
+    "obd_coolant_temp_c": 85.0,
+    "obd_throttle_pct": 19.215686274509803,
+    "edited": false,
+    "needs_reanalysis": false,
+    "excluded": false,
+    "x_min_road": 0.0,
+    "x_max_road": 72.0,
+    "x_ipm_min": -38.370779397093465,
+    "stitch": {
+      "px_per_in": 10.0,
+      "band_on": true,
+      "band_start_in": 54.7,
+      "near_band_in": 12.0,
+      "native_across_px_per_in": 6.76,
+      "native_along_px_per_in": 12.38,
+      "predicted_lane_ft": 13.0,
+      "lane_width_ft": 13.67,
+      "trim_edges": true,
+      "trim_col0": 514,
+      "edge_feather_px": 3,
+      "lateral_mode": "straight",
+      "roi_mode": "Full",
+      "detector": "ORB",
+      "chunked": true,
+      "chunk_ft": 6.56,
+      "homography": "JimmyKia1080.json"
+    }
+  }
+}

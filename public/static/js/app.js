@@ -328,7 +328,7 @@ function initStreetLensRoadViewer(){
         }
     }
     async function loadSampleDataset(){
-        return loadRoadDataset('/static/data/penn_ave_n_sample_frames.json','Penn Ave N · sample');
+        return loadRoadDataset('/static/roads/penn_ave_n_sample/index.json','Penn Ave N · sample');
     }
 
     if(datasetSelect)datasetSelect.addEventListener('change',()=>{

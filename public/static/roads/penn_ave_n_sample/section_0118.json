@@ -1,0 +1,333 @@
+{
+  "version": "5.7.0",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "C",
+      "points": [
+        [
+          1444.0,
+          62.0
+        ],
+        [
+          1445.0,
+          66.0
+        ],
+        [
+          1449.0,
+          69.0
+        ],
+        [
+          1450.0,
+          63.0
+        ]
+      ],
+      "group_id": null,
+      "description": null,
+      "shape_type": "polygon",
+      "flags": {},
+      "mask": null
+    },
+    {
+      "label": "C",
+      "points": [
+        [
+          1464.0,
+          100.0
+        ],
+        [
+          1464.0,
+          115.0
+        ],
+        [
+          1461.0,
+          123.0
+        ],
+        [
+          1456.0,
+          128.0
+        ],
+        [
+          1451.0,
+          146.0
+        ],
+        [
+          1457.0,
+          163.0
+        ],
+        [
+          1454.0,
+          180.0
+        ],
+        [
+          1456.0,
+          193.0
+        ],
+        [
+          1460.0,
+          191.0
+        ],
+        [
+          1463.0,
+          185.0
+        ],
+        [
+          1463.0,
+          172.0
+        ],
+        [
+          1460.0,
+          164.0
+        ],
+        [
+          1463.0,
+          144.0
+        ],
+        [
+          1472.0,
+          129.0
+        ],
+        [
+          1474.0,
+          121.0
+        ]
+      ],
+      "group_id": null,
+      "description": null,
+      "shape_type": "polygon",
+      "flags": {},
+      "mask": null
+    },
+    {
+      "label": "C",
+      "points": [
+        [
+          1456.0,
+          199.0
+        ],
+        [
+          1450.0,
+          220.0
+        ],
+        [
+          1450.0,
+          230.0
+        ],
+        [
+          1458.0,
+          241.0
+        ],
+        [
+          1460.0,
+          258.0
+        ],
+        [
+          1464.0,
+          266.0
+        ],
+        [
+          1470.0,
+          269.0
+        ],
+        [
+          1459.0,
+          233.0
+        ],
+        [
+          1455.0,
+          227.0
+        ],
+        [
+          1459.0,
+          200.0
+        ]
+      ],
+      "group_id": null,
+      "description": null,
+      "shape_type": "polygon",
+      "flags": {},
+      "mask": null
+    },
+    {
+      "label": "C",
+      "points": [
+        [
+          1455.0,
+          301.0
+        ],
+        [
+          1454.0,
+          305.0
+        ],
+        [
+          1459.0,
+          311.0
+        ],
+        [
+          1464.0,
+          332.0
+        ],
+        [
+          1471.0,
+          332.0
+        ],
+        [
+          1463.0,
+          310.0
+        ]
+      ],
+      "group_id": null,
+      "description": null,
+      "shape_type": "polygon",
+      "flags": {},
+      "mask": null
+    },
+    {
+      "label": "C",
+      "points": [
+        [
+          1432.0,
+          488.0
+        ],
+        [
+          1426.0,
+          489.0
+        ],
+        [
+          1423.0,
+          503.0
+        ],
+        [
+          1413.0,
+          522.0
+        ],
+        [
+          1414.0,
+          537.0
+        ],
+        [
+          1423.0,
+          570.0
+        ],
+        [
+          1419.0,
+          579.0
+        ],
+        [
+          1410.0,
+          590.0
+        ],
+        [
+          1408.0,
+          607.0
+        ],
+        [
+          1403.0,
+          620.0
+        ],
+        [
+          1403.0,
+          632.0
+        ],
+        [
+          1409.0,
+          637.0
+        ],
+        [
+          1412.0,
+          632.0
+        ],
+        [
+          1414.0,
+          592.0
+        ],
+        [
+          1421.0,
+          583.0
+        ],
+        [
+          1425.0,
+          572.0
+        ],
+        [
+          1420.0,
+          514.0
+        ],
+        [
+          1424.0,
+          505.0
+        ],
+        [
+          1424.0,
+          499.0
+        ],
+        [
+          1428.0,
+          494.0
+        ],
+        [
+          1432.0,
+          493.0
+        ]
+      ],
+      "group_id": null,
+      "description": null,
+      "shape_type": "polygon",
+      "flags": {},
+      "mask": null
+    }
+  ],
+  "imagePath": "section_0118.png",
+  "imageData": null,
+  "imageHeight": 787,
+  "imageWidth": 1640,
+  "road_analysis_meta": {
+    "section_index": 118,
+    "px_per_in": 10.0,
+    "mp_start": 0.14656881313131315,
+    "mp_end": 0.1478109217171717,
+    "ft_start": 773.8833333333333,
+    "ft_end": 780.4416666666666,
+    "psci": 98.1,
+    "sdi": null,
+    "ndi": null,
+    "ldi": null,
+    "rut_mm": null,
+    "lat": 39.9151623,
+    "lon": -75.0584225,
+    "speed_mph": 18.096844941329955,
+    "pitch_deg": -47.917315140654125,
+    "roll_deg": 0.8037562300522892,
+    "gyro_z": -0.02044306577132275,
+    "obd_speed_kph": 29.0,
+    "obd_rpm": 0.0,
+    "obd_engine_load_pct": 0.0,
+    "obd_coolant_temp_c": 84.0,
+    "obd_throttle_pct": 19.215686274509803,
+    "edited": false,
+    "needs_reanalysis": false,
+    "excluded": false,
+    "x_min_road": 0.0,
+    "x_max_road": 72.0,
+    "x_ipm_min": -38.370779397093465,
+    "stitch": {
+      "px_per_in": 10.0,
+      "band_on": true,
+      "band_start_in": 54.7,
+      "near_band_in": 12.0,
+      "native_across_px_per_in": 6.76,
+      "native_along_px_per_in": 12.38,
+      "predicted_lane_ft": 13.0,
+      "lane_width_ft": 13.67,
+      "trim_edges": true,
+      "trim_col0": 514,
+      "edge_feather_px": 3,
+      "lateral_mode": "straight",
+      "roi_mode": "Full",
+      "detector": "ORB",
+      "chunked": true,
+      "chunk_ft": 6.56,
+      "homography": "JimmyKia1080.json"
+    }
+  }
+}
