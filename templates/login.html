@@ -74,6 +74,26 @@ body{background:#0e0e0e;color:#e0e0e0;font-family:'DM Sans',sans-serif}
  .login{order:1;max-width:460px;justify-self:auto;padding:24px;width:100%}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Desktop composition refinement: give the preview more breathing room */
+@media (min-width: 851px) and (min-height: 700px){
+ .page{padding:clamp(28px,3vw,42px) clamp(30px,4vw,62px) 30px}
+ .brand{gap:15px}
+ .brand-mark{width:52px;height:52px}
+ .brand-copy{gap:14px}
+ .brand-name{font-size:clamp(36px,3.8vw,52px)}
+ .brand-mission{max-width:650px;font-size:13px;line-height:1.7}
+ .content{width:min(100%,1010px);margin:0 auto;grid-template-columns:minmax(0,1.2fr) minmax(310px,.78fr);gap:clamp(20px,4vw,58px);padding-top:12px}
+ .road-panel{height:min(61vh,550px);min-height:330px}
+ .login{max-width:400px;padding:clamp(25px,2.4vw,34px);border-radius:14px}
+ .login h1{font-size:27px}
+ .sub{margin-bottom:23px}
+ .field{margin:15px 0}
+ .field input{padding:12px 13px}
+ .options{margin:14px 0 19px}
+ .submit{padding:13px}
+ .footnote{margin-top:19px}
+}
 </style>
 </head>
 <body>
