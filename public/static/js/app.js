@@ -12,11 +12,11 @@ function initStreetLensRoadViewer(){
     const viewer=document.getElementById('streetLensRoadScroll');
     const strip=document.getElementById('streetLensRoadStrip');
     const status=document.getElementById('streetLensFrameStatus');
-    const zoomInBtn=document.getElementById('streetLensRoadZoomIn');
-    const zoomLabel=document.getElementById('streetLensRoadZoomLabel');
     const pending=document.getElementById('streetLensRoadPending');
     const datasetSelect=document.getElementById('streetLensDatasetSelect');
     const annotationNote=document.getElementById('streetLensAnnotationNote');
+    const framesToggle=document.getElementById('streetLensFramesToggle');
+    let framesVisible=false;
     const categoryInputs=[...document.querySelectorAll('[data-annotation-label]')];
     let currentSelection=0;
     let currentFrames=[];
@@ -25,16 +25,14 @@ function initStreetLensRoadViewer(){
     const enabledLabels=()=>new Set(categoryInputs.filter(input=>input.checked).map(input=>input.dataset.annotationLabel));
     if(!viewer||!strip)return;
 
-    const levels=[0.50,0.65,0.80,1.0,1.25,1.5,1.75,2.0,2.5,3.0];
-    let zoomIndex=levels.indexOf(1);
+
 
     function getFrames(){ return [...strip.querySelectorAll('.streetlens-road-frame')]; }
 
     function updateStatus(){
         const frames=getFrames();
         if(!frames.length){ if(status)status.textContent='—'; return; }
-        const scale=levels[zoomIndex];
-        const center=(viewer.scrollTop + viewer.clientHeight/2) / scale;
+        const center=viewer.scrollTop + viewer.clientHeight/2;
         let active=0;
         frames.forEach((frame,i)=>{
             const top=frame.offsetTop;
@@ -42,73 +40,6 @@ function initStreetLensRoadViewer(){
             if(center>=top && center<bottom) active=i;
         });
         if(status)status.textContent=`${active+1} / ${frames.length}`;
-    }
-
-    function setScale(index, anchor){
-        const frames=getFrames();
-        if(!frames.length) return;
-        const oldScale=levels[zoomIndex];
-        const nextIndex=Math.max(0,Math.min(levels.length-1,index));
-        const newScale=levels[nextIndex];
-        if(oldScale===newScale) return;
-
-        // Anchor the exact image point under the mouse while zooming.
-        const rect=viewer.getBoundingClientRect();
-        const ax=anchor ? anchor.x-rect.left : viewer.clientWidth/2;
-        const ay=anchor ? anchor.y-rect.top : viewer.clientHeight/2;
-        const contentX=(viewer.scrollLeft+ax)/oldScale;
-        const contentY=(viewer.scrollTop+ay)/oldScale;
-
-        zoomIndex=nextIndex;
-        strip.style.zoom=String(newScale);
-        strip.style.transform='none';
-        strip.style.width='100%';
-        strip.style.marginBottom='0';
-        strip.dataset.scale=String(newScale);
-        if(zoomLabel)zoomLabel.textContent=`${Math.round(newScale*100)}%`;
-
-        requestAnimationFrame(()=>{
-            viewer.scrollLeft=Math.max(0,contentX*newScale-ax);
-            viewer.scrollTop=Math.max(0,contentY*newScale-ay);
-            updateStatus();
-        });
-    }
-
-    function fitWholeRoad(){
-        const frames=getFrames();
-        if(!frames.length)return;
-        const naturalHeight=frames.reduce((sum,f)=>sum+f.offsetHeight,0);
-        if(!naturalHeight)return;
-        const available=Math.max(120,viewer.clientHeight-12);
-        // Fit the complete inspected corridor vertically while preserving its proportions.
-        const target=Math.max(0.08,Math.min(0.85,available/naturalHeight));
-        let closest=0;
-        levels.forEach((v,i)=>{ if(Math.abs(v-target)<Math.abs(levels[closest]-target)) closest=i; });
-        const oldScale=levels[zoomIndex];
-        zoomIndex=closest;
-        const scale=levels[zoomIndex];
-        strip.style.zoom=String(scale);
-        strip.style.transform='none';
-        strip.style.width='100%';
-        strip.style.marginBottom='0';
-        strip.dataset.scale=String(scale);
-        if(zoomLabel)zoomLabel.textContent=`${Math.round(scale*100)}%`;
-        viewer.scrollTop=0;
-        viewer.scrollLeft=0;
-        updateStatus();
-    }
-
-    function resetZoom(){
-        zoomIndex=levels.indexOf(1);
-        strip.style.zoom='1';
-        strip.style.transform='none';
-        strip.style.width='100%';
-        strip.style.marginBottom='0';
-        strip.dataset.scale='1';
-        if(zoomLabel)zoomLabel.textContent='100%';
-        viewer.scrollTop=0;
-        viewer.scrollLeft=0;
-        updateStatus();
     }
 
     function drawAnnotations(canvas, annotation, image){
@@ -209,8 +140,7 @@ function initStreetLensRoadViewer(){
     function getActiveFrameIndex(){
         const frames=getFrames();
         if(!frames.length) return 0;
-        const scale=levels[zoomIndex];
-        const center=(viewer.scrollTop + viewer.clientHeight/2) / scale;
+        const center=viewer.scrollTop + viewer.clientHeight/2;
         let active=0;
         frames.forEach((frame,i)=>{
             const top=frame.offsetTop;
@@ -233,7 +163,9 @@ function initStreetLensRoadViewer(){
         const selectionId=++currentSelection;
         currentFrames=Array.isArray(frames)?frames:[];
         strip.innerHTML='';
-        resetZoom();
+        framesVisible=false;
+        strip.classList.add('hidden');
+        if(framesToggle){framesToggle.textContent='Frames: Off';framesToggle.setAttribute('aria-expanded','false');}
         if(annotationNote){
             if(!currentFrames.length) annotationNote.textContent='Select a road section to view its inspection frames and annotations.';
             else if(currentFrames.some(frame=>frame.annotation)) annotationNote.textContent='Loading nearby frames and matching annotations…';
@@ -288,7 +220,8 @@ function initStreetLensRoadViewer(){
             const scoreBadge=document.createElement('div');scoreBadge.className='streetlens-frame-scores';
             const framePci=frame.pci??frame.detector_psci??roadScores.pci;const frameSdi=frame.sdi??roadScores.sdi;
             scoreBadge.innerHTML=`<span>PCI <b>${Number.isFinite(Number(framePci))?Number(framePci).toFixed(1):'—'}</b></span><span>SDI <b>${Number.isFinite(Number(frameSdi))?Number(frameSdi).toFixed(2):'—'}</b></span>`;
-            figure.append(img,canvas,caption,scoreBadge);
+            const imageWrap=document.createElement('div');imageWrap.className='streetlens-frame-image';imageWrap.append(img,canvas,caption);
+            figure.append(imageWrap,scoreBadge);
             strip.appendChild(figure);
         });
 
@@ -331,15 +264,8 @@ function initStreetLensRoadViewer(){
         });
     }));
 
-    // Normal wheel = scroll through the road. Ctrl + wheel = zoom at the cursor.
-    viewer.addEventListener('wheel',(event)=>{
-        if(!event.ctrlKey)return;
-        event.preventDefault();
-        const direction=event.deltaY<0 ? 1 : -1;
-        setScale(zoomIndex+direction,{x:event.clientX,y:event.clientY});
-    },{passive:false});
+    framesToggle?.addEventListener('click',()=>{framesVisible=!framesVisible;strip.classList.toggle('hidden',!framesVisible);framesToggle.textContent=framesVisible?'Frames: On':'Frames: Off';framesToggle.setAttribute('aria-expanded',String(framesVisible));});
 
-    if(zoomInBtn)zoomInBtn.addEventListener('click',()=>setScale(zoomIndex+1));
     let preloadScrollFrame=0;
     let previousScrollTop=viewer.scrollTop;
     viewer.addEventListener('scroll',()=>{
@@ -355,7 +281,7 @@ function initStreetLensRoadViewer(){
     },{passive:true});
     window.addEventListener('resize',()=>updateStatus());
 
-    streetLensRoadViewerState={render,updateStatus,setScale,fitWholeRoad};
+    streetLensRoadViewerState={render,updateStatus};
     window.streetLensLoadRoadFrames=(frames,roadScores={})=>{
         if(datasetSelect)datasetSelect.value='map';
         render(frames,roadScores);
