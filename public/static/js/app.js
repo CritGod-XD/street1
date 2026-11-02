@@ -29,10 +29,16 @@ function initStreetLensRoadViewer(){
 
     function getFrames(){ return [...strip.querySelectorAll('.streetlens-road-frame')]; }
 
+    const levels=[0.08,0.12,0.18,0.25,0.35,0.50,0.70,0.85,1.0,1.25,1.5,1.75,2.0,2.5,3.0];
+    let zoomIndex=levels.indexOf(1);
+
+    function getFrames(){ return [...strip.querySelectorAll('.streetlens-road-frame')]; }
+
     function updateStatus(){
         const frames=getFrames();
         if(!frames.length){ if(status)status.textContent='—'; return; }
-        const center=viewer.scrollTop + viewer.clientHeight/2;
+        const scale=levels[zoomIndex];
+        const center=(viewer.scrollTop + viewer.clientHeight/2) / scale;
         let active=0;
         frames.forEach((frame,i)=>{
             const top=frame.offsetTop;
@@ -40,6 +46,70 @@ function initStreetLensRoadViewer(){
             if(center>=top && center<bottom) active=i;
         });
         if(status)status.textContent=`${active+1} / ${frames.length}`;
+    }
+
+    function setScale(index, anchor){
+        const frames=getFrames();
+        if(!frames.length) return;
+        const oldScale=levels[zoomIndex];
+        const nextIndex=Math.max(0,Math.min(levels.length-1,index));
+        const newScale=levels[nextIndex];
+        if(oldScale===newScale) return;
+
+        // Anchor the exact image point under the mouse while zooming.
+        const rect=viewer.getBoundingClientRect();
+        const ax=anchor ? anchor.x-rect.left : viewer.clientWidth/2;
+        const ay=anchor ? anchor.y-rect.top : viewer.clientHeight/2;
+        const contentX=(viewer.scrollLeft+ax)/oldScale;
+        const contentY=(viewer.scrollTop+ay)/oldScale;
+
+        zoomIndex=nextIndex;
+        strip.style.transform=`scale(${newScale})`;strip.style.transformOrigin='top left';
+        strip.style.width='100%';
+        strip.style.marginBottom='0';
+        strip.dataset.scale=String(newScale);
+        if(zoomLabel)zoomLabel.textContent=`${Math.round(newScale*100)}%`;
+
+        requestAnimationFrame(()=>{
+            viewer.scrollLeft=Math.max(0,contentX*newScale-ax);
+            viewer.scrollTop=Math.max(0,contentY*newScale-ay);
+            updateStatus();
+        });
+    }
+
+    function fitWholeRoad(){
+        const frames=getFrames();
+        if(!frames.length)return;
+        const naturalHeight=frames.reduce((sum,f)=>sum+f.offsetHeight,0);
+        if(!naturalHeight)return;
+        const available=Math.max(120,viewer.clientHeight-12);
+        // Fit the complete inspected corridor vertically while preserving its proportions.
+        const target=Math.max(0.08,Math.min(0.85,available/naturalHeight));
+        let closest=0;
+        levels.forEach((v,i)=>{ if(Math.abs(v-target)<Math.abs(levels[closest]-target)) closest=i; });
+        const oldScale=levels[zoomIndex];
+        zoomIndex=closest;
+        const scale=levels[zoomIndex];
+        strip.style.transform=`scale(${scale})`;strip.style.transformOrigin='top left';
+        strip.style.width='100%';
+        strip.style.marginBottom='0';
+        strip.dataset.scale=String(scale);
+        if(zoomLabel)zoomLabel.textContent=`${Math.round(scale*100)}%`;
+        viewer.scrollTop=0;
+        viewer.scrollLeft=0;
+        updateStatus();
+    }
+
+    function resetZoom(){
+        zoomIndex=levels.indexOf(1);
+        strip.style.transform='scale(1)';strip.style.transformOrigin='top left';
+        strip.style.width='100%';
+        strip.style.marginBottom='0';
+        strip.dataset.scale='1';
+        if(zoomLabel)zoomLabel.textContent='100%';
+        viewer.scrollTop=0;
+        viewer.scrollLeft=0;
+        updateStatus();
     }
 
     function drawAnnotations(canvas, annotation, image){
@@ -140,7 +210,8 @@ function initStreetLensRoadViewer(){
     function getActiveFrameIndex(){
         const frames=getFrames();
         if(!frames.length) return 0;
-        const center=viewer.scrollTop + viewer.clientHeight/2;
+        const scale=levels[zoomIndex];
+        const center=(viewer.scrollTop + viewer.clientHeight/2) / scale;
         let active=0;
         frames.forEach((frame,i)=>{
             const top=frame.offsetTop;
@@ -217,11 +288,7 @@ function initStreetLensRoadViewer(){
             if(Number.isFinite(Number(frame.station_start))&&Number.isFinite(Number(frame.station_end))) right.textContent=`${Number(frame.station_start).toFixed(2)}–${Number(frame.station_end).toFixed(2)} ft`;
             else right.textContent='Road frame';
             caption.append(left,right);
-            const scoreBadge=document.createElement('div');scoreBadge.className='streetlens-frame-scores';
-            const framePci=frame.pci??frame.detector_psci??roadScores.pci;const frameSdi=frame.sdi??roadScores.sdi;
-            scoreBadge.innerHTML=`<span>PCI <b>${Number.isFinite(Number(framePci))?Number(framePci).toFixed(1):'—'}</b></span><span>SDI <b>${Number.isFinite(Number(frameSdi))?Number(frameSdi).toFixed(2):'—'}</b></span>`;
-            const imageWrap=document.createElement('div');imageWrap.className='streetlens-frame-image';imageWrap.append(img,canvas,caption);
-            figure.append(imageWrap,scoreBadge);
+            figure.append(img,canvas,caption);
             strip.appendChild(figure);
         });
 
@@ -266,6 +333,17 @@ function initStreetLensRoadViewer(){
 
     framesToggle?.addEventListener('click',()=>{framesVisible=!framesVisible;strip.classList.toggle('hidden',!framesVisible);framesToggle.textContent=framesVisible?'Frames: On':'Frames: Off';framesToggle.setAttribute('aria-expanded',String(framesVisible));});
 
+    // Intercept trackpad pinch / Ctrl+wheel before the browser can zoom the whole page.
+    viewer.addEventListener('wheel',(event)=>{
+        if(!event.ctrlKey && !event.metaKey)return;
+        event.preventDefault();
+        event.stopPropagation();
+        const direction=event.deltaY<0 ? 1 : -1;
+        setScale(zoomIndex+direction,{x:event.clientX,y:event.clientY});
+    },{passive:false,capture:true});
+    const zoomInBtn=document.getElementById('streetLensRoadZoomIn');
+    if(zoomInBtn)zoomInBtn.addEventListener('click',()=>setScale(zoomIndex+1));
+
     let preloadScrollFrame=0;
     let previousScrollTop=viewer.scrollTop;
     viewer.addEventListener('scroll',()=>{
@@ -281,7 +359,7 @@ function initStreetLensRoadViewer(){
     },{passive:true});
     window.addEventListener('resize',()=>updateStatus());
 
-    streetLensRoadViewerState={render,updateStatus};
+    streetLensRoadViewerState={render,updateStatus,setScale,fitWholeRoad};
     window.streetLensLoadRoadFrames=(frames,roadScores={})=>{
         if(datasetSelect)datasetSelect.value='map';
         render(frames,roadScores);
