@@ -303,8 +303,21 @@ function initStreetLensRoadViewer(){
             const response=await fetch(indexPath,{cache:'no-store'});
             if(!response.ok)throw new Error(`Dataset index request failed (${response.status})`);
             const data=await response.json();
-            render(data.frames||[]);
-            if(annotationNote)annotationNote.textContent=(data.frames||[]).length
+            // Combined-road-folder format: index.json sits beside the image and
+            // annotation files. Resolve relative names against the index URL;
+            // legacy absolute /static paths continue to work unchanged.
+            const resolveAsset=(value)=>{
+                if(!value)return value;
+                try{return new URL(value,indexPath,window.location.href).toString();}
+                catch(_){return value;}
+            };
+            data.frames=(data.frames||[]).map(frame=>({
+                ...frame,
+                image:resolveAsset(frame.image||frame.file),
+                annotation:resolveAsset(frame.annotation||frame.json)
+            }));
+            render(data.frames);
+            if(annotationNote)annotationNote.textContent=data.frames.length
                 ? `${roadName||data.road_name||'Selected road'} · ${data.frames.length} inspection frames loaded`
                 : `No inspection frames are currently available for ${roadName||'this road'}.`;
             return data;
