@@ -24,7 +24,6 @@ function initStreetLensRoadViewer(){
     const imageCache=new Map();
     const enabledLabels=()=>new Set(categoryInputs.filter(input=>input.checked).map(input=>input.dataset.annotationLabel));
     const annotationToolbar=document.getElementById('streetLensAnnotationToolbar');
-    const pinAnnotationToolbar=()=>{if(annotationToolbar)annotationToolbar.style.top=`${viewer.scrollTop+48}px`;};
     const allAnnotationsButton=annotationToolbar?.querySelector('[data-annotation-all]');
     const categoryButtons=[...(annotationToolbar?.querySelectorAll('[data-annotation-toggle]')||[])];
     const syncAnnotationToolbar=()=>{
@@ -396,9 +395,7 @@ function initStreetLensRoadViewer(){
 
     let preloadScrollFrame=0;
     let previousScrollTop=viewer.scrollTop;
-    pinAnnotationToolbar();
     viewer.addEventListener('scroll',()=>{
-        pinAnnotationToolbar();
         updateStatus();
         if(preloadScrollFrame) cancelAnimationFrame(preloadScrollFrame);
         preloadScrollFrame=requestAnimationFrame(()=>{
@@ -409,7 +406,7 @@ function initStreetLensRoadViewer(){
             preloadWindow(getActiveFrameIndex(),currentSelection,direction);
         });
     },{passive:true});
-    window.addEventListener('resize',()=>{pinAnnotationToolbar();updateStatus();});
+    window.addEventListener('resize',updateStatus);
 
     streetLensRoadViewerState={render,updateStatus,setScale,fitWholeRoad};
     window.streetLensLoadRoadFrames=(frames,roadScores={})=>{
