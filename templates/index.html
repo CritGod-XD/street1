@@ -310,10 +310,20 @@
         .streetlens-road-strip.hidden { display:none !important; }
 
         .streetlens-dataset-select{max-width:145px;height:28px;padding:0 6px;background:#111;color:#ccc;border:1px solid #303030;border-radius:5px;font:10px Inter,sans-serif;min-width:0}
-        .streetlens-annotation-controls{display:flex;flex-wrap:wrap;gap:7px 12px;padding:10px 2px 4px;flex:0 0 auto}
-        .streetlens-annotation-controls label{display:inline-flex;align-items:center;gap:5px;color:#aaa;font:9px Inter,sans-serif;cursor:pointer}
-        .streetlens-annotation-controls input{accent-color:#ddd;width:11px;height:11px;margin:0}
-        .streetlens-annotation-controls i{display:inline-block;width:7px;height:7px;border-radius:2px}
+        .streetlens-annotation-controls{display:none!important}
+        .streetlens-annotation-state{display:none!important}
+        .streetlens-annotation-float{position:absolute;top:14px;left:14px;z-index:30;display:flex;flex-direction:column;width:54px;background:rgba(17,17,17,.96);border:1px solid #343434;border-radius:3px;box-shadow:0 5px 18px #0008;overflow:hidden;backdrop-filter:blur(8px)}
+        .streetlens-annotation-tool{position:relative;width:52px;height:52px;display:flex;align-items:center;justify-content:center;gap:4px;padding:0 6px;border:0;border-bottom:1px solid #303030;background:#171717;color:#d8d8d8;cursor:pointer;transition:background .15s,color .15s}
+        .streetlens-annotation-tool:last-child{border-bottom:0}
+        .streetlens-annotation-tool:hover{background:#242424}
+        .streetlens-annotation-tool:focus-visible{outline:2px solid #eee;outline-offset:-3px}
+        .streetlens-annotation-tool svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+        .streetlens-annotation-tool .annotation-count{position:absolute;right:5px;bottom:5px;font:9px 'JetBrains Mono',monospace;color:#aaa}
+        .streetlens-annotation-tool.crack{color:#ff5147}.streetlens-annotation-tool.pothole{color:#ff9d19}.streetlens-annotation-tool.patch{color:#168cff}.streetlens-annotation-tool.sealant{color:#f2c83d}
+        .streetlens-annotation-tool:not(.is-active){color:#666;background:#111}
+        .streetlens-annotation-tool:not(.is-active) svg{opacity:.45}
+        .streetlens-annotation-tool[data-annotation-all]:not(.is-active){color:#777}
+        @media(max-width:700px){.streetlens-annotation-float{top:9px;left:9px;width:46px}.streetlens-annotation-tool{width:44px;height:46px}.streetlens-annotation-tool svg{width:20px;height:20px}}
         .streetlens-annotation-note{min-height:15px;padding:3px 2px 0;color:#666;font:9px Inter,sans-serif;flex:0 0 auto}
         .streetlens-road-frame{position:relative;overflow:hidden;aspect-ratio:1640/787}
         .streetlens-road-frame img{width:100%;height:100%;object-fit:contain}
@@ -532,6 +542,23 @@
 </aside>
 <section class="streetlens-ml-column"><section class="ml-card streetlens-ml-card">
 <div class="streetlens-road-scroll" id="streetLensRoadScroll" aria-label="Scrollable road inspection view">
+<div class="streetlens-annotation-float" id="streetLensAnnotationToolbar" role="toolbar" aria-label="Annotation visibility">
+  <button type="button" class="streetlens-annotation-tool is-active" data-annotation-all aria-label="Show all annotations" aria-pressed="true" title="Show all annotations">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="3"/></svg>
+  </button>
+  <button type="button" class="streetlens-annotation-tool is-active crack" data-annotation-toggle="C" aria-label="Toggle cracks" aria-pressed="true" title="Cracks">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 2 4 6-3 3 5 5-3 6"/></svg><span class="annotation-count" data-annotation-count="C">0</span>
+  </button>
+  <button type="button" class="streetlens-annotation-tool is-active pothole" data-annotation-toggle="P" aria-label="Toggle potholes" aria-pressed="true" title="Potholes">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="8.5" ry="5.5"/><ellipse cx="12" cy="12" rx="3" ry="2"/></svg><span class="annotation-count" data-annotation-count="P">0</span>
+  </button>
+  <button type="button" class="streetlens-annotation-tool is-active patch" data-annotation-toggle="M" aria-label="Toggle maintenance patches" aria-pressed="true" title="Maintenance / patches">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m12 0h4M2 15h4m12 0h4"/></svg><span class="annotation-count" data-annotation-count="M">0</span>
+  </button>
+  <button type="button" class="streetlens-annotation-tool is-active sealant" data-annotation-toggle="S" aria-label="Toggle sealant" aria-pressed="true" title="Sealant">
+    <svg viewBox="0 0 24 24"><path d="M2 13c3-7 6 7 10 0s7 7 10 0"/></svg><span class="annotation-count" data-annotation-count="S">0</span>
+  </button>
+</div>
 <div class="streetlens-road-toolbar" aria-label="Road image controls">
 <span class="streetlens-frame-status" id="streetLensFrameStatus">—</span>
 <span class="streetlens-road-dataset-label" aria-live="polite">Selected road dataset</span>
@@ -546,10 +573,10 @@
 </div>
 </div>
 <div class="streetlens-annotation-controls" aria-label="Annotation categories">
-  <label><input type="checkbox" data-annotation-label="C" checked><i style="background:#ff3b30"></i>Crack</label>
-  <label><input type="checkbox" data-annotation-label="P" checked><i style="background:#ff9500"></i>Pothole</label>
-  <label><input type="checkbox" data-annotation-label="M" checked><i style="background:#0a84ff"></i>Maintenance / patches</label>
-  <label><input type="checkbox" data-annotation-label="S" checked><i style="background:#ffd60a"></i>Sealant</label>
+  <input class="streetlens-annotation-state" type="checkbox" data-annotation-label="C" checked aria-label="Cracks">
+  <input class="streetlens-annotation-state" type="checkbox" data-annotation-label="P" checked aria-label="Potholes">
+  <input class="streetlens-annotation-state" type="checkbox" data-annotation-label="M" checked aria-label="Maintenance patches">
+  <input class="streetlens-annotation-state" type="checkbox" data-annotation-label="S" checked aria-label="Sealant">
 </div>
 <div class="streetlens-annotation-note" id="streetLensAnnotationNote" role="status">Select a road section to view its inspection frames and annotations.</div></section></section>
 <section class="right-column streetlens-right-column"><div class="analytics-card score streetlens-score-card"><h2>Overall distress score</h2><div class="gauge"><svg viewBox="0 0 220 130"><path d="M35 105 A75 75 0 0 1 185 105" fill="none" stroke="#2a2a2a" stroke-width="14" stroke-linecap="round"/><path d="M35 105 A75 75 0 0 1 185 105" fill="none" id="streetLensGaugeProgress" stroke="#c1543d" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 236"/><text id="streetLensScoreValue" x="110" y="95" text-anchor="middle" fill="#f1f1f1" font-size="36" font-weight="700" font-family="Outfit">—</text><text x="110" y="113" text-anchor="middle" fill="#777" font-size="9" font-family="Inter">PCI: 100 = best condition</text></svg></div><div id="streetLensCondition" class="condition">CONDITION: —</div><div id="streetLensRoadSummary" class="pills road-summary">
