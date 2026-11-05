@@ -1,135 +1,218 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>StreetLens · Register</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"><style>
-        /* Authentication */
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StreetLens — Create account</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#0e0e0e;--blue:#84cc16;--yellow:#84cc16;--muted:#94a3b8}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden}
+body{background:#0e0e0e;color:#e0e0e0;font-family:'DM Sans',sans-serif}
+.page{height:100svh;min-height:560px;display:flex;flex-direction:column;padding:clamp(24px,3.2vw,48px) clamp(24px,3.2vw,50px) clamp(22px,3vw,42px);position:relative;isolation:isolate}
+.page:before,.page:after{content:"";position:absolute;border:1px solid #ffffff0a;border-radius:50%;z-index:-1;pointer-events:none}
+.page:before{width:600px;height:600px;left:-390px;bottom:-390px;box-shadow:0 0 0 55px #ffffff05,0 0 0 110px #ffffff03}
+.page:after{width:480px;height:480px;right:-340px;top:-330px;box-shadow:0 0 0 45px #a8d9f006}
+.brand{display:flex;align-items:center;gap:17px;text-decoration:none;width:max-content;max-width:100%}
+.brand-mark{width:58px;height:58px;flex:none;filter:drop-shadow(0 5px 12px #0007)}
+.brand-copy{display:flex;flex-direction:column;gap:19px;min-width:0}
+.brand-name{font:700 clamp(38px,4.5vw,58px)/1 Outfit,sans-serif;letter-spacing:-.065em;color:#e0e0e0}
+.brand-name span{color:#4ba5df}
+.brand-mission{display:block;position:relative;max-width:690px;padding:2px 0 2px 21px;border-left:2px solid #84cc16;color:#aab9c3;font:400 15px/1.9 'DM Sans',sans-serif;letter-spacing:0}
+.content{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(330px,.78fr);align-items:center;gap:clamp(24px,5vw,78px);padding-top:22px}
+.road-panel{height:min(68vh,610px);min-height:360px;position:relative;display:grid;place-items:center;overflow:visible}
+.road-svg{width:100%;height:100%;overflow:visible}
+.road-edge{fill:none;stroke:#405968;stroke-width:106;stroke-linecap:round;stroke-linejoin:round;opacity:.28}
+.road-base{fill:none;stroke:#252525;stroke-width:88;stroke-linecap:round;stroke-linejoin:round}
+.road-highlight{fill:none;stroke:#555555;stroke-width:2;stroke-dasharray:4 14;stroke-linecap:round}
+.road-center{fill:none;stroke:var(--yellow);stroke-width:4;stroke-dasharray:18 18;stroke-linecap:round}
+.road-progress{fill:none;stroke:#84cc16;stroke-width:5;stroke-linecap:round;filter:drop-shadow(0 0 8px #84cc16)}
+.lens{filter:drop-shadow(0 10px 18px #000b)}
+.login{width:100%;max-width:430px;justify-self:end;background:#161616;border:1px solid #272727;border-radius:16px;padding:clamp(27px,3vw,40px);box-shadow:0 24px 70px #0008;position:relative}
+.login:before{content:"";position:absolute;left:30px;top:-1px;width:76px;height:2px;background:var(--yellow)}
+.login h1{font:600 29px Outfit;margin:0 0 8px;letter-spacing:-.025em}
+.sub{margin:0 0 28px;color:#94a3b8;font-size:13px;line-height:1.6}
+.auth-form{display:block}
+.field{display:block;margin:18px 0;color:#94a3b8;font-size:12px;font-weight:600}
+.field input{display:block;width:100%;margin-top:8px;padding:14px 13px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:7px;color:#fff;font:14px 'DM Sans';outline:none;transition:border-color .2s,box-shadow .2s}
+.field input:focus{border-color:#84cc16;box-shadow:0 0 0 2px #84cc1626}
+.password-wrap{position:relative;display:block}
+.password-wrap input{padding-right:48px}
+.password-toggle{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:0;background:transparent;color:#94a3b8;display:grid;place-items:center;cursor:pointer;border-radius:4px}
+.password-toggle:hover{color:#e0e0e0;background:#ffffff0c}
+.password-toggle svg{width:19px;height:19px;pointer-events:none}
+.eye-off{display:none}
+.password-toggle[aria-pressed="true"] .eye{display:none}
+.password-toggle[aria-pressed="true"] .eye-off{display:block}
+.options{display:flex;align-items:center;justify-content:space-between;margin:17px 0 23px;font-size:12px;color:#94a3b8}
+.remember{display:flex;align-items:center;gap:8px}.remember input{accent-color:var(--blue)}
+.options button{border:0;background:none;color:#84cc16;font:inherit;cursor:pointer}
+.submit{width:100%;padding:14px;border:0;border-radius:7px;background:#84cc16;color:#0a0f1e;font:700 14px Outfit;cursor:pointer;transition:transform .2s,background .2s}
+.submit:hover{background:#a3e635;transform:translateY(-1px)}
+.register{display:block;text-align:center;margin-top:14px;padding:12px;border:1px solid #2a2a2a;border-radius:7px;text-decoration:none;color:#e0e0e0;font-size:13px;transition:border-color .2s}
+.register:hover{border-color:#84cc16}
+.footnote{text-align:center;margin-top:23px;color:#64748b;font:10px 'JetBrains Mono';letter-spacing:.1em}
+.flash{margin:0 0 16px;padding:11px 13px;border-radius:7px;font-size:12px;line-height:1.5;border:1px solid #ffffff18}
+.flash.error{background:#dc46461f;border-color:#dc46464d;color:#ffaaa0}
+.flash.success{background:#46b4641f;border-color:#46b4644d;color:#9be0aa}
+.flash.info{background:#4682dc1f;border-color:#4682dc4d;color:#a8c8ff}
+.register-card{max-width:440px;padding:clamp(22px,2.4vw,32px)}
+.register-card h1{font-size:27px}
+.register-card .sub{margin-bottom:17px}
+.register-card .field{margin:12px 0}
+.register-card .field input{padding:11px 13px}
+.register-card .options{margin:12px 0 16px}
+.register-card .submit{padding:12px}
+.register-card .footnote{margin-top:15px}
+.register-card .flash{margin-bottom:10px;padding:9px 11px}
+@media(max-width:850px){.register-card{padding:22px}}
+@media(max-width:650px){.register-card{transform:translateY(-10px);margin-bottom:-10px}}
 
-        .auth-message {
-            margin: 0 0 18px;
-            padding: 12px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            line-height: 1.4;
-            border: 1px solid rgba(255,255,255,.08);
-        }
+@media(max-width:850px){
+ .page{padding:22px 24px}.brand-mark{width:46px;height:46px}.brand-name{font-size:42px}
+ .brand-copy{gap:14px}.brand-mission{max-width:560px;font-size:13px;line-height:1.7}
+ .content{grid-template-columns:1fr minmax(300px,.9fr);gap:15px}
+ .road-panel{height:55vh;min-height:300px}.login{padding:25px}
+}
+@media(max-width:650px){
+ html,body{height:auto;min-height:100%;overflow:auto}
+ .page{height:auto;min-height:100svh;padding:22px 18px 30px}
+ .brand{gap:11px}.brand-mark{width:40px;height:40px}.brand-name{font-size:36px}
+ .brand-copy{gap:9px}.brand-mission{max-width:calc(100vw - 82px);font-size:11px;line-height:1.55;padding-left:12px}
+ .content{display:flex;flex-direction:column;gap:0;padding-top:10px}
+ .road-panel{order:0;width:100%;height:34vh;min-height:190px;max-height:280px}
+ .login{order:1;max-width:460px;justify-self:auto;padding:24px;width:100%;transform:translateY(-20px) scale(1.02);transform-origin:top center;margin-bottom:-20px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-        .auth-message.error {
-            background: rgba(220, 70, 70, .12);
-            border-color: rgba(220, 70, 70, .3);
-            color: #ffaaa0;
-        }
-
-        .auth-message.success {
-            background: rgba(70, 180, 100, .12);
-            border-color: rgba(70, 180, 100, .3);
-            color: #9be0aa;
-        }
-
-        .auth-message.info {
-            background: rgba(70, 130, 220, .12);
-            border-color: rgba(70, 130, 220, .3);
-            color: #a8c8ff;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .password-wrapper {
-            position: relative;
-            width: 100%;
-        }
-
-        .password-wrapper input {
-            width: 100%;
-            padding-right: 48px;
-            box-sizing: border-box;
-        }
-
-        .password-toggle {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 30px;
-            height: 30px;
-            padding: 0;
-            border: 0;
-            background: transparent;
-            color: #777;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .password-toggle:hover {
-            color: #ddd;
-        }
-
-        .register-view .password-toggle {
-            padding: 0;
-        }
-
-        .password-toggle svg {
-            width: 18px;
-            height: 18px;
-            pointer-events: none;
-        }
-
-        .password-toggle .eye-off {
-            display: none;
-        }
-
-        .password-toggle.revealed .eye {
-            display: none;
-        }
-
-        .password-toggle.revealed .eye-off {
-            display: block;
-        }
-
-        .auth-form label {
-            display: block;
-        }
-
-        .auth-form input[type="text"],
-        .auth-form input[type="email"],
-        .auth-form input[type="password"] {
-            margin-top: 7px;
-        }
-
-        .login-card input[type="email"] {
-            width: 100%;
-            padding: 12px 14px;
-            border-radius: 8px;
-            background: #ffffff0f;
-            border: 1px solid #ffffff1a;
-            color: #f1f5f9;
-            outline: 0;
-        }
-
-        .register-view h3 {
-            margin-bottom: 8px;
-        }
-
-        .register-view p {
-            line-height: 1.5;
-        }
-
-        .auth-form small {
-            display: block;
-            margin-top: 18px;
-        }
-
-        .signout-form {
-            display: inline;
-            margin: 0;
-            padding: 0;
-        }
-
-        .signout {
-            border: 0;
-            background: transparent;
-            cursor: pointer;
-            font: inherit;
-        }
-    
-</style></head><body><div class="login-page"><div class="login-topbar"><div class="brand-mark">⌁</div><span class="apcd">StreetLens</span><span class="divider"></span><span class="top-note">Pavement Crack Detection &amp; Road Condition Analysis</span></div><main class="login-main"><div class="login-grid"><section class="login-intro"><h1>Automated<br>Pavement<br><span>Condition</span><br>Detector</h1><p>Real-time crack detection and distress classification for highway infrastructure. Powered by computer vision and deep learning.</p><ul><li>AI-powered crack detection</li><li>Distress severity scoring</li><li>GPS-tagged inspection logs</li></ul></section><section class="login-card"><h2>Create an account</h2><p>Register for access to the StreetLens pavement inspection dashboard.</p>{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-container">{% for category,message in messages %}<div class="auth-message {{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}{% endwith %}<form action="{{ url_for('register') }}" method="POST" class="auth-form"><label>Username<input name="username" type="text" minlength="3" maxlength="32" required></label><label>Email<input name="email" type="email" required></label><label>Password<input name="password" type="password" autocomplete="new-password" required></label><label>Confirm password<input name="confirm_password" type="password" autocomplete="new-password" required></label><button class="login-btn" type="submit">Create account</button><a class="register-btn" href="{{ url_for('login') }}">Back to login</a></form><small>DOT Infrastructure Division · Secure Access Portal</small></section></div></main><footer>© 2026 StreetLens Platform · v2.4.1</footer></div></body></html>
+/* Desktop composition refinement: give the preview more breathing room */
+@media (min-width: 851px) and (min-height: 700px){
+ .page{padding:clamp(28px,3vw,42px) clamp(30px,4vw,62px) 30px}
+ .brand{gap:15px}
+ .brand-mark{width:52px;height:52px}
+ .brand-copy{gap:14px}
+ .brand-name{font-size:clamp(36px,3.8vw,52px)}
+ .brand-mission{max-width:650px;font-size:13px;line-height:1.7}
+ .content{width:min(100%,1010px);margin:0 auto;grid-template-columns:minmax(0,1.2fr) minmax(310px,.78fr);gap:clamp(20px,4vw,58px);padding-top:12px}
+ .road-panel{height:min(61vh,550px);min-height:330px}
+ .login{max-width:400px;padding:clamp(25px,2.4vw,34px);border-radius:14px;transform:translateX(88px) scale(1.02);transform-origin:center center}
+ .login h1{font-size:27px}
+ .sub{margin-bottom:23px}
+ .field{margin:15px 0}
+ .field input{padding:12px 13px}
+ .options{margin:14px 0 19px}
+ .submit{padding:13px}
+ .footnote{margin-top:19px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+ <a class="brand" href="{{ url_for('login') }}" aria-label="StreetLens">
+  <svg class="brand-mark" viewBox="0 0 64 64" role="img" aria-label="StreetLens lens and road mark">
+   <path d="M16 47 C26 53 42 54 54 46" fill="none" stroke="#4ba5df" stroke-width="3" stroke-linecap="round"/>
+   <path d="M11 52 C25 58 43 58 58 49" fill="none" stroke="#8fbd3c" stroke-width="2.4" stroke-linecap="round"/>
+   <path d="M10 40 L3 48 Q1 51 5 55 L10 59 Q13 61 16 57 L23 49" fill="#24658d" stroke="#b7dff3" stroke-width="2"/>
+   <circle cx="31" cy="26" r="22" fill="#0d1b25" stroke="#9ab5c5" stroke-width="2.5"/>
+   <circle cx="31" cy="26" r="17.5" fill="#d7edf8" stroke="#4ba5df" stroke-width="1.4"/>
+   <path d="M15 27 Q31 14 47 27 L47 37 L15 37Z" fill="#8dbd54"/>
+   <path d="M25 42 C20 35 25 31 30 27 C35 23 34 18 31 14" fill="none" stroke="#28343d" stroke-width="10" stroke-linecap="round"/>
+   <path d="M25 42 C20 35 25 31 30 27 C35 23 34 18 31 14" fill="none" stroke="#f2c52b" stroke-width="1.7" stroke-dasharray="4 4"/>
+   <circle cx="41" cy="14" r="3" fill="#f3c629"/>
+  </svg>
+  <span class="brand-copy"><span class="brand-name">Street<span>Lens</span></span><span class="brand-mission">Our mission: Deliver intelligent transportation solutions that improve infrastructure decision making while remaining accessible and affordable for all communities.</span></span>
+ </a>
+ <main class="content">
+  <section class="road-panel" aria-label="Animated road inspection lens">
+   <svg class="road-svg" viewBox="0 0 1000 650" role="img" aria-label="A magnifying lens travels along a winding road">
+    <path id="roadPath" class="road-edge" d="M90 590 C210 510 170 420 350 365 S620 390 580 260 S650 100 900 75"/>
+    <path class="road-base" d="M90 590 C210 510 170 420 350 365 S620 390 580 260 S650 100 900 75"/>
+    <path class="road-highlight" d="M90 590 C210 510 170 420 350 365 S620 390 580 260 S650 100 900 75"/>
+    <path class="road-center" d="M90 590 C210 510 170 420 350 365 S620 390 580 260 S650 100 900 75"/>
+    <path id="roadProgress" class="road-progress" d="M90 590 C210 510 170 420 350 365 S620 390 580 260 S650 100 900 75"/>
+    <g id="travellingLens" class="lens" transform="translate(90 590)">
+     <path d="M-30 30 L-47 48" stroke="#1f5f87" stroke-width="13" stroke-linecap="round"/>
+     <path d="M-30 30 L-47 48" stroke="#9bc9e3" stroke-width="3" stroke-linecap="round"/>
+     <circle r="35" fill="#08121a" stroke="#a9c6d7" stroke-width="5"/>
+     <circle r="27" fill="#cfe8f5" stroke="#4ba5df" stroke-width="2"/>
+     <path d="M-23 6 Q0-17 23 6 V22 H-23Z" fill="#8bbd50"/>
+     <path d="M-6 24 C-16 10 3 4 5-5 S7-17 1-23" fill="none" stroke="#2b343b" stroke-width="13" stroke-linecap="round"/>
+     <path d="M-6 24 C-16 10 3 4 5-5 S7-17 1-23" fill="none" stroke="#f2c52b" stroke-width="2.2" stroke-dasharray="5 5"/>
+     <circle cx="14" cy="-17" r="4" fill="#f3c629"/>
+    </g>
+   </svg>
+  </section>
+  <section class="login register-card" aria-label="Create account">
+   <h1>Create your StreetLens account</h1>
+   <p class="sub">Register to access road inspections, pavement condition scores and analytics.</p>
+   {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+     {% for category,message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+     {% endfor %}
+    {% endif %}
+   {% endwith %}
+   <form class="auth-form" action="{{ url_for('register') }}" method="POST">
+    <label class="field">Username
+     <input name="username" type="text" minlength="3" maxlength="32" autocomplete="username" placeholder="Choose a username" required>
+    </label>
+    <label class="field">Email address
+     <input name="email" type="email" autocomplete="email" placeholder="Enter your email address" required>
+    </label>
+    <label class="field">Password
+     <span class="password-wrap">
+      <input id="registerPassword" name="password" type="password" autocomplete="new-password" placeholder="Create a password" required>
+      <button type="button" class="password-toggle" data-password-toggle="registerPassword" aria-label="Show password" aria-pressed="false" title="Show password">
+       <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+       <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3 3.9"/><path d="M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1 0 1.9-.2 2.8-.5"/></svg>
+      </button>
+     </span>
+    </label>
+    <label class="field">Confirm password
+     <span class="password-wrap">
+      <input id="confirmPassword" name="confirm_password" type="password" autocomplete="new-password" placeholder="Re-enter your password" required>
+      <button type="button" class="password-toggle" data-password-toggle="confirmPassword" aria-label="Show password" aria-pressed="false" title="Show password">
+       <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+       <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3 3.9"/><path d="M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1 0 1.9-.2 2.8-.5"/></svg>
+      </button>
+     </span>
+    </label>
+    <button class="submit" type="submit">Create account</button>
+    <a class="register" href="{{ url_for('login') }}">Already have an account? Sign in</a>
+   </form>
+   <div class="footnote">STREETLENS · INSPECTION ACCESS</div>
+  </section>
+ </main>
+</div>
+<script>
+(()=>{
+ document.querySelectorAll('[data-password-toggle]').forEach(toggle=>{
+  const input=document.getElementById(toggle.dataset.passwordToggle);
+  if(!input)return;
+  toggle.addEventListener('click',()=>{
+   const reveal=input.type==='password';
+   input.type=reveal?'text':'password';
+   toggle.setAttribute('aria-pressed',String(reveal));
+   toggle.setAttribute('aria-label',reveal?'Hide password':'Show password');
+   toggle.title=reveal?'Hide password':'Show password';
+  });
+ });
+ const path=document.getElementById('roadPath'),progress=document.getElementById('roadProgress'),lens=document.getElementById('travellingLens');
+ if(!path||!progress||!lens)return;
+ const length=path.getTotalLength();progress.style.strokeDasharray=length;progress.style.strokeDashoffset=length;
+ const start=performance.now(),duration=10500;
+ function animate(now){
+  const t=((now-start)%duration)/duration,p=t<.88?t/.88:1-(t-.88)/.12;
+  const point=path.getPointAtLength(length*p),next=path.getPointAtLength(Math.min(length,length*p+2));
+  const angle=Math.atan2(next.y-point.y,next.x-point.x)*180/Math.PI;
+  lens.setAttribute('transform','translate('+point.x+' '+point.y+') rotate('+angle+')');
+  progress.style.strokeDashoffset=length*(1-p);requestAnimationFrame(animate);
+ }
+ if(!matchMedia('(prefers-reduced-motion: reduce)').matches)requestAnimationFrame(animate);
+ else{const point=path.getPointAtLength(length*.38);lens.setAttribute('transform','translate('+point.x+' '+point.y+')');progress.style.strokeDashoffset=length*.62;}
+})();
+</script>
+</body>
+</html>
