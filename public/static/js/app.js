@@ -390,8 +390,8 @@ function initStreetLensRoadViewer(){
         const direction=event.deltaY<0 ? 1 : -1;
         setScale(zoomIndex+direction,{x:event.clientX,y:event.clientY});
     },{passive:false,capture:true});
-    const zoomInBtn=document.getElementById('streetLensRoadZoomIn');
-    if(zoomInBtn)zoomInBtn.addEventListener('click',()=>setScale(zoomIndex+1));
+    const zoomResetBtn=document.getElementById('streetLensRoadZoomReset');
+    if(zoomResetBtn)zoomResetBtn.addEventListener('click',resetZoom);
 
     let preloadScrollFrame=0;
     let previousScrollTop=viewer.scrollTop;
