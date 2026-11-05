@@ -313,7 +313,7 @@
         .streetlens-annotation-controls{display:none!important}
         .streetlens-annotation-state{display:none!important}
         /* Sticky toolbar stays pinned to the viewer while its image strip scrolls. */
-        .streetlens-annotation-float{position:sticky;top:12px;float:right;margin:48px 12px -222px auto;z-index:40;display:flex;flex-direction:column;width:38px;background:rgba(17,17,17,.96);border:1px solid #343434;border-radius:4px;box-shadow:0 4px 14px #0008;overflow:hidden;backdrop-filter:blur(8px);pointer-events:auto}
+         .streetlens-annotation-float{position:absolute;top:48px;right:12px;left:auto;margin:0;z-index:40;display:flex;flex-direction:column;width:38px;background:rgba(17,17,17,.96);border:1px solid #343434;border-radius:4px;box-shadow:0 4px 14px #0008;overflow:hidden;backdrop-filter:blur(8px);pointer-events:auto}
         .streetlens-annotation-tool{position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;padding:0;border:0;border-bottom:1px solid #303030;background:#171717;color:#ddd;cursor:pointer;transition:background .15s,color .15s}
         .streetlens-annotation-tool:last-child{border-bottom:0}
         .streetlens-annotation-tool:hover{background:#292929}
@@ -327,7 +327,7 @@
         .streetlens-image-tracker{display:flex;justify-content:flex-start;align-items:center;gap:4px;min-height:22px;padding:3px 9px;background:#111;border:1px solid #292929;border-top:0;border-radius:0 0 5px 5px;color:#777;font:9px 'JetBrains Mono',monospace}
         .streetlens-road-toolbar{display:flex;align-items:center;gap:6px;padding:0 0 8px}
         .streetlens-road-ctrl-hint{margin-left:auto;color:#666;font:9px Inter,sans-serif}
-        @media(max-width:700px){.streetlens-annotation-float{top:8px;margin-right:8px;width:34px}.streetlens-annotation-tool{width:32px;height:32px}.streetlens-annotation-tool svg{width:17px;height:17px}}        .streetlens-road-frame{position:relative;overflow:hidden;aspect-ratio:1640/787}
+        @media(max-width:700px){.streetlens-annotation-float{top:40px;right:8px;width:34px}.streetlens-annotation-tool{width:32px;height:32px}.streetlens-annotation-tool svg{width:17px;height:17px}}        .streetlens-road-frame{position:relative;overflow:hidden;aspect-ratio:1640/787}
         .streetlens-road-frame img{width:100%;height:100%;object-fit:contain}
         .streetlens-road-frame .streetlens-frame-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
         .streetlens-road-frame .streetlens-frame-error{position:absolute;left:7px;bottom:7px;padding:4px 6px;background:#260f0fe8;border:1px solid #6d2929;color:#ffb0a8;font:9px Inter,sans-serif;line-height:1.3}
@@ -606,7 +606,7 @@
   <input class="streetlens-annotation-state" type="checkbox" data-annotation-label="M" checked aria-label="Maintenance patches">
   <input class="streetlens-annotation-state" type="checkbox" data-annotation-label="S" checked aria-label="Sealant">
 </div>
-<div class="streetlens-annotation-note" id="streetLensAnnotationNote" role="status">Select a road section to view its inspection frames and annotations.</div></section></section>
+</section></section>
 <section class="right-column streetlens-right-column"><div class="analytics-card score streetlens-score-card"><h2>Overall distress score</h2><div class="gauge"><svg viewBox="0 0 220 130"><path d="M35 105 A75 75 0 0 1 185 105" fill="none" stroke="#2a2a2a" stroke-width="14" stroke-linecap="round"/><path d="M35 105 A75 75 0 0 1 185 105" fill="none" id="streetLensGaugeProgress" stroke="#c1543d" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 236"/><text id="streetLensScoreValue" x="110" y="95" text-anchor="middle" fill="#f1f1f1" font-size="36" font-weight="700" font-family="Outfit">—</text><text x="110" y="113" text-anchor="middle" fill="#777" font-size="9" font-family="Inter">PCI: 100 = best condition</text></svg></div><div id="streetLensCondition" class="condition">CONDITION: —</div><div id="streetLensRoadSummary" class="pills road-summary">
 <div class="road-summary-wide"><span>Street name</span><b id="streetLensSelectedRoad">—</b></div>
 <div><span>PCI</span><b id="streetLensSelectedPci">—</b></div>
