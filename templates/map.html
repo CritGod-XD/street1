@@ -598,6 +598,20 @@ html.streetlens-map-first #mapModal .maplibregl-ctrl-attrib a{color:#c0d8d0!impo
 @media(max-width:760px){html.streetlens-map-first #mapModal .streetlens-fullmap-shell{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(45vh,1fr) minmax(40vh,45vh)!important}html.streetlens-map-first #mapModal .streetlens-map-sheet{width:100%!important;padding:14px 16px!important;border-top:1px solid #26343a!important;border-left:0!important}html.streetlens-map-first #mapModal .streetlens-map-sheet-head:before{margin-bottom:8px!important}html.streetlens-map-first #mapModal .streetlens-map-sheet-head{padding-bottom:10px!important}html.streetlens-map-first #mapModal .streetlens-map-sheet-head strong{font-size:19px!important}}
 </style>
 
+<style id="streetlens-dashboard-left-column-sizing-fix">
+/* Preserve the original dashboard mini-map size; let the ranking use remaining column space. */
+@media (min-width:1001px){
+  .streetlens-left-column{display:flex!important;flex-direction:column!important;min-height:calc(100vh - 68px)!important;box-sizing:border-box!important;overflow:hidden!important}
+  .streetlens-left-column .route-section{flex:0 0 auto!important}
+  .streetlens-left-column .streetlens-main-map-card{height:300px!important;min-height:300px!important;max-height:300px!important;flex:0 0 300px!important}
+  .streetlens-left-column .streetlens-mini-ranking{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+  .streetlens-left-column .streetlens-mini-ranking-list{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}
+}
+@media(max-width:1000px){
+  .streetlens-left-column{display:block!important;height:auto!important;max-height:none!important;overflow:visible!important}
+  .streetlens-left-column .streetlens-main-map-card{height:300px!important;min-height:300px!important;max-height:300px!important}
+}
+</style>
 </head>
 <body>
 
