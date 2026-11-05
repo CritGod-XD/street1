@@ -340,12 +340,24 @@
         .streetlens-dashboard-legend { left:12px; bottom:12px; max-width:240px; grid-template-columns:1fr; }
         .streetlens-dashboard-legend .lg-row { display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap; }
         .streetlens-dashboard-legend .lg-row span:last-child { color:#888; }
-        .streetlens-mini-ranking{margin-top:12px;padding:13px 13px 10px;background:#141414;border:1px solid #2b2b2b;border-radius:8px;color:#f0f0f0;min-height:0}
+        /* Keep the left dashboard column inside the desktop viewport. */
+        @media(min-width:1001px){
+          .streetlens-left-column{height:calc(100vh - 68px);max-height:calc(100vh - 68px);min-height:0;box-sizing:border-box;overflow:hidden}
+          .streetlens-main-map-card{height:clamp(190px,28vh,260px);flex:0 0 auto}
+          .streetlens-mini-ranking{flex:1 1 auto;min-height:0;max-height:calc(100vh - 355px);display:flex;flex-direction:column;overflow:hidden}
+          .streetlens-mini-ranking-list{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior:contain}
+          .streetlens-mini-ranking-list::-webkit-scrollbar{display:none;width:0;height:0}
+        }
+        .streetlens-mini-ranking{margin-top:10px;padding:11px 12px 9px;background:#141414;border:1px solid #2b2b2b;border-radius:8px;color:#f0f0f0;min-height:0;box-sizing:border-box}
         .streetlens-mini-ranking-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
         .streetlens-mini-ranking-head h3{margin:3px 0 0;font:700 17px 'Outfit',Inter,sans-serif;letter-spacing:-.3px}
         .streetlens-mini-eyebrow{color:#a2b7ad;font:700 8px Inter,sans-serif;letter-spacing:1.2px}
         .streetlens-mini-ranking-head>a{width:27px;height:27px;display:grid;place-items:center;border:1px solid #353535;border-radius:6px;background:#171717;color:#ddd;text-decoration:none;font-size:14px}
-        .streetlens-mini-ranking-sub{margin:5px 0 9px;color:#969696;font-size:9px}
+        .streetlens-mini-ranking-controls{display:flex;align-items:center;gap:6px;margin:5px 0 8px;flex:0 0 auto}
+        .streetlens-mini-ranking-sub{margin:0 auto 0 0;color:#969696;font-size:9px}
+        .streetlens-mini-count-label{color:#777;font:9px Inter,sans-serif}
+        .streetlens-mini-count{height:25px;padding:0 6px;border:1px solid #343434;border-radius:5px;background:#191919;color:#ddd;font:9px Inter,sans-serif;outline:none}
+        .streetlens-mini-count:focus{border-color:#70877d}
         .streetlens-mini-ranking-list{display:grid;gap:3px;max-height:250px;overflow:auto;padding-right:2px}
         .streetlens-mini-ranking-row{display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:7px;width:100%;padding:7px 6px;border:1px solid transparent;border-bottom-color:#252525;border-radius:5px;background:transparent;color:#eee;text-decoration:none}
         .streetlens-mini-ranking-row:hover{background:#1c1c1c;border-color:#3a3a3a}
@@ -359,7 +371,7 @@
         .streetlens-mini-ranking-more{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:8px 2px 1px;border-top:1px solid #2b2b2b;color:#a2b7ad;text-decoration:none;font-size:10px;font-weight:600}
         .streetlens-mini-ranking-more:hover{color:#fff}
         .streetlens-mini-ranking-loading{padding:12px 4px;color:#888;font-size:10px}
-        @media(max-width:1000px){.streetlens-mini-ranking-list{max-height:300px}}
+        @media(max-width:1000px){.streetlens-left-column{height:auto;max-height:none;overflow:visible}.streetlens-mini-ranking{max-height:none}.streetlens-mini-ranking-list{max-height:300px;scrollbar-width:none;-ms-overflow-style:none}.streetlens-mini-ranking-list::-webkit-scrollbar{display:none;width:0;height:0}}
         .streetlens-ranking-card { padding-bottom:10px; }
         .streetlens-ranking-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
         .streetlens-ranking-head h2 { margin:0; }
@@ -562,7 +574,7 @@
 
 <section class="streetlens-mini-ranking" aria-label="Road PCI ranking">
   <div class="streetlens-mini-ranking-head"><div><span class="streetlens-mini-eyebrow">PAVEMENT CONDITION</span><h3>Road ranking</h3></div><a href="{{ url_for('road_ranking') }}" aria-label="Open full road ranking">↗</a></div>
-  <p class="streetlens-mini-ranking-sub">Lowest PCI · priority roads</p>
+  <div class="streetlens-mini-ranking-controls"><p class="streetlens-mini-ranking-sub">Lowest PCI · priority roads</p><label class="streetlens-mini-count-label" for="streetLensMiniRankingCount">Show</label><select id="streetLensMiniRankingCount" class="streetlens-mini-count" aria-label="Number of roads to display"><option value="10" selected>10 roads</option><option value="25">25 roads</option><option value="50">50 roads</option></select></div>
   <div class="streetlens-mini-ranking-list" id="streetLensMiniRanking"><div class="streetlens-mini-ranking-loading">Loading road scores…</div></div>
   <a class="streetlens-mini-ranking-more" href="{{ url_for('road_ranking') }}">View all road rankings <span>→</span></a>
 </section>
@@ -823,7 +835,9 @@ function updateDashboardDetails(sec){
 function renderDashboardMiniRanking(){
  const box=document.getElementById('streetLensMiniRanking');
  if(!box||!STREETLENS_SECTION_DATA?.runs)return;
- const runs=STREETLENS_SECTION_DATA.runs.filter(run=>Number.isFinite(Number(run.pci))).sort((a,b)=>Number(a.pci)-Number(b.pci)).slice(0,7);
+ const countSelect=document.getElementById('streetLensMiniRankingCount');
+ const limit=Math.max(1,Math.min(50,Number(countSelect?.value)||10));
+ const runs=STREETLENS_SECTION_DATA.runs.filter(run=>Number.isFinite(Number(run.pci))).sort((a,b)=>Number(a.pci)-Number(b.pci)).slice(0,limit);
  const colorFor=pci=>{const c=classify('pci',pci);return c?STREETLENS_COLORS[c[2]]:'#777'};
  box.innerHTML=runs.map((run,i)=>{
   const pci=Math.max(0,Math.min(100,Number(run.pci)));
@@ -847,7 +861,7 @@ async function toggleMapFullscreen(){const modal=document.getElementById('mapMod
 function closeMap(e){if(e&&e.target!==e.currentTarget)return;const modal=document.getElementById('mapModal');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});modal?.classList.add('hidden');}
 window.openMap=openMap;window.closeMap=closeMap;
 document.addEventListener('fullscreenchange',()=>setTimeout(()=>STREETLENS_MAPS.modal?.resize(),180));
-document.addEventListener('DOMContentLoaded',async()=>{const fail=e=>console.error('StreetLens segmented map:',e);try{if(!window.maplibregl)throw new Error('MapLibre failed to load from CDN');const r=await fetch("{{ url_for('static', filename='data/road_registry.json') }}",{cache:'no-store'});if(r.ok){const d=await r.json();STREETLENS_ROAD_REGISTRY=d||STREETLENS_ROAD_REGISTRY;STREETLENS_ROADS=Array.isArray(d?.roads)?d.roads:[];}const response=await fetch("{{ url_for('static', filename='data/collingswood_sections.json') }}",{cache:'no-store'});if(!response.ok)throw new Error('section data '+response.status);const data=await response.json();STREETLENS_SECTION_DATA={...data,runs:Array.isArray(data.runs)?data.runs:[],sections:flattenSections(data)};if(!STREETLENS_SECTION_DATA.sections.length)throw new Error('No segmented sections were loaded');populateStreetSearch();updateLegendAndRanking();renderDashboardMiniRanking();STREETLENS_MAPS.dashboard=createStreetLensMap('streetLensDashboardMap','streetLensDashboardHoverCard');
+document.addEventListener('DOMContentLoaded',async()=>{const fail=e=>console.error('StreetLens segmented map:',e);try{if(!window.maplibregl)throw new Error('MapLibre failed to load from CDN');const r=await fetch("{{ url_for('static', filename='data/road_registry.json') }}",{cache:'no-store'});if(r.ok){const d=await r.json();STREETLENS_ROAD_REGISTRY=d||STREETLENS_ROAD_REGISTRY;STREETLENS_ROADS=Array.isArray(d?.roads)?d.roads:[];}const response=await fetch("{{ url_for('static', filename='data/collingswood_sections.json') }}",{cache:'no-store'});if(!response.ok)throw new Error('section data '+response.status);const data=await response.json();STREETLENS_SECTION_DATA={...data,runs:Array.isArray(data.runs)?data.runs:[],sections:flattenSections(data)};if(!STREETLENS_SECTION_DATA.sections.length)throw new Error('No segmented sections were loaded');populateStreetSearch();updateLegendAndRanking();renderDashboardMiniRanking();document.getElementById('streetLensMiniRankingCount')?.addEventListener('change',renderDashboardMiniRanking);STREETLENS_MAPS.dashboard=createStreetLensMap('streetLensDashboardMap','streetLensDashboardHoverCard');
  const restoreSelectedRoad=()=>{
   const params=new URLSearchParams(window.location.search),runKey=params.get('run'),sectionNo=params.get('section'),roadName=params.get('road');
   if(!runKey&&!roadName)return;
