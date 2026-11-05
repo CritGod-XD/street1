@@ -865,7 +865,8 @@ function updateDashboardDetails(sec){
  if(breakdown){
   const metrics=[
    ['Selected section','Section '+sec.bin],
-   ['Inspected length',n0(totalLength)+' ft'],
+   ['Selected section length',n0(sec.len)+' ft'],
+   ['Whole road length',n0(totalLength)+' ft'],
    ['Crack instances',n0(sum('cr'))],
    ['Crack length',fmt1(sum('crft'))+' ft'],
    ['Distressed area',distressed===null?'—':fmt1(distressed)+'%'],
