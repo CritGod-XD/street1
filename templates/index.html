@@ -312,19 +312,22 @@
         .streetlens-dataset-select{max-width:145px;height:28px;padding:0 6px;background:#111;color:#ccc;border:1px solid #303030;border-radius:5px;font:10px Inter,sans-serif;min-width:0}
         .streetlens-annotation-controls{display:none!important}
         .streetlens-annotation-state{display:none!important}
-        /* Compact floating annotation toolbar anchored to the viewer, not the scrolling frames. */
-        .streetlens-annotation-float{position:absolute;top:12px;right:14px;left:auto;z-index:40;display:flex;flex-direction:column;width:36px;background:rgba(17,17,17,.96);border:1px solid #343434;border-radius:4px;box-shadow:0 4px 14px #0008;overflow:hidden;backdrop-filter:blur(8px);pointer-events:auto}
-        .streetlens-annotation-tool{position:relative;width:34px;height:34px;display:flex;align-items:center;justify-content:center;padding:0;border:0;border-bottom:1px solid #303030;background:#171717;color:#ddd;cursor:pointer;font:700 12px 'JetBrains Mono',monospace;transition:background .15s,color .15s}
+        /* Sticky toolbar stays pinned to the viewer while its image strip scrolls. */
+        .streetlens-annotation-float{position:sticky;top:10px;float:right;margin:10px 12px -184px auto;z-index:40;display:flex;flex-direction:column;width:38px;background:rgba(17,17,17,.96);border:1px solid #343434;border-radius:4px;box-shadow:0 4px 14px #0008;overflow:hidden;backdrop-filter:blur(8px);pointer-events:auto}
+        .streetlens-annotation-tool{position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;padding:0;border:0;border-bottom:1px solid #303030;background:#171717;color:#ddd;cursor:pointer;transition:background .15s,color .15s}
         .streetlens-annotation-tool:last-child{border-bottom:0}
         .streetlens-annotation-tool:hover{background:#292929}
         .streetlens-annotation-tool:focus-visible{outline:2px solid #eee;outline-offset:-3px}
-        .streetlens-annotation-tool svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+        .streetlens-annotation-tool svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+        .streetlens-annotation-tool kbd{position:absolute;left:3px;bottom:2px;min-width:9px;padding:0 1px;border-radius:2px;background:#090909d9;color:#bdbdbd;font:7px 'JetBrains Mono',monospace;line-height:10px;text-align:center}
         .streetlens-annotation-tool.crack{color:#ff5147}.streetlens-annotation-tool.pothole{color:#ff9d19}.streetlens-annotation-tool.patch{color:#168cff}.streetlens-annotation-tool.sealant{color:#f2c83d}
         .streetlens-annotation-tool:not(.is-active){color:#686868;background:#101010;opacity:.72}
         .streetlens-annotation-tool:not(.is-active) svg{opacity:.5}
         .streetlens-annotation-tool[data-annotation-all]:not(.is-active){color:#777}
-        @media(max-width:700px){.streetlens-annotation-float{top:8px;right:8px;width:32px}.streetlens-annotation-tool{width:30px;height:31px;font-size:11px}.streetlens-annotation-tool svg{width:16px;height:16px}}        .streetlens-annotation-note{min-height:15px;padding:3px 2px 0;color:#666;font:9px Inter,sans-serif;flex:0 0 auto}
-        .streetlens-road-frame{position:relative;overflow:hidden;aspect-ratio:1640/787}
+        .streetlens-image-tracker{display:flex;justify-content:flex-end;align-items:center;gap:4px;min-height:30px;padding:5px 14px;background:#111;border:1px solid #292929;border-top:0;border-radius:0 0 5px 5px;color:#777;font:10px 'JetBrains Mono',monospace}
+        .streetlens-road-toolbar{display:flex;align-items:center;gap:6px;padding:0 0 8px}
+        .streetlens-road-ctrl-hint{margin-left:auto;color:#666;font:9px Inter,sans-serif}
+        @media(max-width:700px){.streetlens-annotation-float{top:8px;margin-right:8px;width:34px}.streetlens-annotation-tool{width:32px;height:32px}.streetlens-annotation-tool svg{width:17px;height:17px}}        .streetlens-road-frame{position:relative;overflow:hidden;aspect-ratio:1640/787}
         .streetlens-road-frame img{width:100%;height:100%;object-fit:contain}
         .streetlens-road-frame .streetlens-frame-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
         .streetlens-road-frame .streetlens-frame-error{position:absolute;left:7px;bottom:7px;padding:4px 6px;background:#260f0fe8;border:1px solid #6d2929;color:#ffb0a8;font:9px Inter,sans-serif;line-height:1.3}
@@ -543,19 +546,26 @@
 <div class="streetlens-road-scroll" id="streetLensRoadScroll" aria-label="Scrollable road inspection view">
 <div class="streetlens-annotation-float" id="streetLensAnnotationToolbar" role="toolbar" aria-label="Annotation visibility">
   <button type="button" class="streetlens-annotation-tool is-active" data-annotation-all aria-label="Show all annotations" aria-pressed="true" title="Show all (A)">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="3"/></svg>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="3"/></svg><kbd>A</kbd>
   </button>
-  <button type="button" class="streetlens-annotation-tool is-active crack" data-annotation-toggle="C" aria-label="Toggle cracks" aria-pressed="true" title="Cracks (C)">C</button>
-  <button type="button" class="streetlens-annotation-tool is-active pothole" data-annotation-toggle="P" aria-label="Toggle potholes" aria-pressed="true" title="Potholes (P)">P</button>
-  <button type="button" class="streetlens-annotation-tool is-active patch" data-annotation-toggle="M" aria-label="Toggle maintenance cuts and patches" aria-pressed="true" title="Maintenance cuts / patches (M)">M</button>
-  <button type="button" class="streetlens-annotation-tool is-active sealant" data-annotation-toggle="S" aria-label="Toggle sealant" aria-pressed="true" title="Sealant (S)">S</button>
+  <button type="button" class="streetlens-annotation-tool is-active crack" data-annotation-toggle="C" aria-label="Toggle cracks" aria-pressed="true" title="Cracks (C)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 2 4 6-3 3 5 5-3 6"/></svg><kbd>C</kbd>
+  </button>
+  <button type="button" class="streetlens-annotation-tool is-active pothole" data-annotation-toggle="P" aria-label="Toggle potholes" aria-pressed="true" title="Potholes (P)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="8.5" ry="5.5"/><ellipse cx="12" cy="12" rx="3" ry="2"/></svg><kbd>P</kbd>
+  </button>
+  <button type="button" class="streetlens-annotation-tool is-active patch" data-annotation-toggle="M" aria-label="Toggle maintenance cuts and patches" aria-pressed="true" title="Maintenance cuts / patches (M)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m12 0h4M2 15h4m12 0h4"/></svg><kbd>M</kbd>
+  </button>
+  <button type="button" class="streetlens-annotation-tool is-active sealant" data-annotation-toggle="S" aria-label="Toggle sealant" aria-pressed="true" title="Sealant (S)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 13c3-7 6 7 10 0s7 7 10 0"/></svg><kbd>S</kbd>
+  </button>
 </div>
-<div class="streetlens-road-toolbar" aria-label="Road image controls">
-<span class="streetlens-frame-status" id="streetLensFrameStatus">—</span>
-<span class="streetlens-road-dataset-label" aria-live="polite">Selected road dataset</span>
-<button id="streetLensRoadZoomIn" type="button" title="Zoom in on the road frames" aria-label="Zoom in">＋</button>
-<span class="streetlens-road-ctrl-hint">Ctrl + scroll</span>
-<span id="streetLensRoadZoomLabel" class="streetlens-road-zoom-label">100%</span>
+<div class="streetlens-image-tracker" aria-live="polite">Image <span id="streetLensFrameStatus">—</span></div>
+<div class="streetlens-road-toolbar" aria-label="Road image zoom">
+  <button id="streetLensRoadZoomIn" type="button" title="Zoom in on the road frames" aria-label="Zoom in">＋</button>
+  <span class="streetlens-road-ctrl-hint">Ctrl + scroll</span>
+  <span id="streetLensRoadZoomLabel" class="streetlens-road-zoom-label">100%</span>
 </div>
 <div class="streetlens-road-strip" id="streetLensRoadStrip"></div>
 <div class="streetlens-road-pending hidden" id="streetLensRoadPending">
