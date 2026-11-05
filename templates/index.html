@@ -313,7 +313,7 @@
         .streetlens-annotation-controls{display:none!important}
         .streetlens-annotation-state{display:none!important}
         /* Sticky toolbar stays pinned to the viewer while its image strip scrolls. */
-        .streetlens-annotation-float{position:sticky;top:10px;float:right;margin:10px 12px -184px auto;z-index:40;display:flex;flex-direction:column;width:38px;background:rgba(17,17,17,.96);border:1px solid #343434;border-radius:4px;box-shadow:0 4px 14px #0008;overflow:hidden;backdrop-filter:blur(8px);pointer-events:auto}
+        .streetlens-annotation-float{position:sticky;top:12px;float:right;margin:48px 12px -222px auto;z-index:40;display:flex;flex-direction:column;width:38px;background:rgba(17,17,17,.96);border:1px solid #343434;border-radius:4px;box-shadow:0 4px 14px #0008;overflow:hidden;backdrop-filter:blur(8px);pointer-events:auto}
         .streetlens-annotation-tool{position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;padding:0;border:0;border-bottom:1px solid #303030;background:#171717;color:#ddd;cursor:pointer;transition:background .15s,color .15s}
         .streetlens-annotation-tool:last-child{border-bottom:0}
         .streetlens-annotation-tool:hover{background:#292929}
@@ -324,7 +324,7 @@
         .streetlens-annotation-tool:not(.is-active){color:#686868;background:#101010;opacity:.72}
         .streetlens-annotation-tool:not(.is-active) svg{opacity:.5}
         .streetlens-annotation-tool[data-annotation-all]:not(.is-active){color:#777}
-        .streetlens-image-tracker{display:flex;justify-content:flex-end;align-items:center;gap:4px;min-height:30px;padding:5px 14px;background:#111;border:1px solid #292929;border-top:0;border-radius:0 0 5px 5px;color:#777;font:10px 'JetBrains Mono',monospace}
+        .streetlens-image-tracker{display:flex;justify-content:flex-start;align-items:center;gap:4px;min-height:22px;padding:3px 9px;background:#111;border:1px solid #292929;border-top:0;border-radius:0 0 5px 5px;color:#777;font:9px 'JetBrains Mono',monospace}
         .streetlens-road-toolbar{display:flex;align-items:center;gap:6px;padding:0 0 8px}
         .streetlens-road-ctrl-hint{margin-left:auto;color:#666;font:9px Inter,sans-serif}
         @media(max-width:700px){.streetlens-annotation-float{top:8px;margin-right:8px;width:34px}.streetlens-annotation-tool{width:32px;height:32px}.streetlens-annotation-tool svg{width:17px;height:17px}}        .streetlens-road-frame{position:relative;overflow:hidden;aspect-ratio:1640/787}
@@ -340,6 +340,26 @@
         .streetlens-dashboard-legend { left:12px; bottom:12px; max-width:240px; grid-template-columns:1fr; }
         .streetlens-dashboard-legend .lg-row { display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap; }
         .streetlens-dashboard-legend .lg-row span:last-child { color:#888; }
+        .streetlens-mini-ranking{margin-top:12px;padding:13px 13px 10px;background:#141414;border:1px solid #2b2b2b;border-radius:8px;color:#f0f0f0;min-height:0}
+        .streetlens-mini-ranking-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+        .streetlens-mini-ranking-head h3{margin:3px 0 0;font:700 17px 'Outfit',Inter,sans-serif;letter-spacing:-.3px}
+        .streetlens-mini-eyebrow{color:#a2b7ad;font:700 8px Inter,sans-serif;letter-spacing:1.2px}
+        .streetlens-mini-ranking-head>a{width:27px;height:27px;display:grid;place-items:center;border:1px solid #353535;border-radius:6px;background:#171717;color:#ddd;text-decoration:none;font-size:14px}
+        .streetlens-mini-ranking-sub{margin:5px 0 9px;color:#969696;font-size:9px}
+        .streetlens-mini-ranking-list{display:grid;gap:3px;max-height:250px;overflow:auto;padding-right:2px}
+        .streetlens-mini-ranking-row{display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:7px;width:100%;padding:7px 6px;border:1px solid transparent;border-bottom-color:#252525;border-radius:5px;background:transparent;color:#eee;text-decoration:none}
+        .streetlens-mini-ranking-row:hover{background:#1c1c1c;border-color:#3a3a3a}
+        .streetlens-mini-rank{color:#737373;font:600 9px 'JetBrains Mono',monospace}
+        .streetlens-mini-road{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 10px Inter,sans-serif}
+        .streetlens-mini-meta{display:flex;align-items:center;gap:6px;margin-top:4px}
+        .streetlens-mini-track{height:3px;flex:1;overflow:hidden;border-radius:8px;background:#292929}
+        .streetlens-mini-track i{display:block;height:100%;border-radius:8px}
+        .streetlens-mini-condition{color:#858585;font-size:8px}
+        .streetlens-mini-score{font:700 11px 'JetBrains Mono',monospace;text-align:right}
+        .streetlens-mini-ranking-more{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:8px 2px 1px;border-top:1px solid #2b2b2b;color:#a2b7ad;text-decoration:none;font-size:10px;font-weight:600}
+        .streetlens-mini-ranking-more:hover{color:#fff}
+        .streetlens-mini-ranking-loading{padding:12px 4px;color:#888;font-size:10px}
+        @media(max-width:1000px){.streetlens-mini-ranking-list{max-height:300px}}
         .streetlens-ranking-card { padding-bottom:10px; }
         .streetlens-ranking-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
         .streetlens-ranking-head h2 { margin:0; }
@@ -540,7 +560,12 @@
 <section class="route-section">
 <div class="map-card streetlens-main-map-card" aria-label="Interactive StreetLens route map"><div id="streetLensDashboardMap"></div><div id="streetLensDashboardMapLoading" class="streetlens-map-loading">Loading segmented inspection map…</div><div id="streetLensDashboardHoverCard" class="streetlens-section-hover-card" hidden></div><div class="streetlens-map-mini-tools"><button id="streetLensDashboardSatellite" type="button" title="Toggle satellite imagery"><svg class="satellite-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 4-4 4 4-4 4zM13 13l4 4m-7-7-4 4m8-2 3-3 3 3-3 3zM4 20l5-5m-2 5h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Satellite</span></button><button id="streetLensDashboardReset" type="button" title="Reset">↺</button><button id="streetLensDashboardExpand" type="button" title="Open map">⤢</button><button id="streetLensDashboardFullscreen" type="button" title="Full screen map">⛶</button></div></div></section>
 
-<section class="streetlens-left-preview" aria-label="Road image preview"><div class="streetlens-left-preview-head"><strong>Road image</strong><span>Preview</span></div><div class="streetlens-left-preview-frame"><img src="/static/images/road_preview.png" alt="Road inspection preview"></div></section>
+<section class="streetlens-mini-ranking" aria-label="Road PCI ranking">
+  <div class="streetlens-mini-ranking-head"><div><span class="streetlens-mini-eyebrow">PAVEMENT CONDITION</span><h3>Road ranking</h3></div><a href="{{ url_for('road_ranking') }}" aria-label="Open full road ranking">↗</a></div>
+  <p class="streetlens-mini-ranking-sub">Lowest PCI · priority roads</p>
+  <div class="streetlens-mini-ranking-list" id="streetLensMiniRanking"><div class="streetlens-mini-ranking-loading">Loading road scores…</div></div>
+  <a class="streetlens-mini-ranking-more" href="{{ url_for('road_ranking') }}">View all road rankings <span>→</span></a>
+</section>
 </aside>
 <section class="streetlens-ml-column"><section class="ml-card streetlens-ml-card">
 <div class="streetlens-road-toolbar" aria-label="Road image zoom">
@@ -795,6 +820,18 @@ function updateDashboardDetails(sec){
  renderRoadMetrics(sec,roadSections,`Whole road · ${n0(roadLength)} ft`);
  resolveRoadFrames(sec);
 }
+function renderDashboardMiniRanking(){
+ const box=document.getElementById('streetLensMiniRanking');
+ if(!box||!STREETLENS_SECTION_DATA?.runs)return;
+ const runs=STREETLENS_SECTION_DATA.runs.filter(run=>Number.isFinite(Number(run.pci))).sort((a,b)=>Number(a.pci)-Number(b.pci)).slice(0,7);
+ const colorFor=pci=>{const c=classify('pci',pci);return c?STREETLENS_COLORS[c[2]]:'#777'};
+ box.innerHTML=runs.map((run,i)=>{
+  const pci=Math.max(0,Math.min(100,Number(run.pci)));
+  const condition=conditionText('pci',pci);
+  const href='{{ url_for("dashboard") }}?road='+encodeURIComponent(run.name);
+  return `<a class="streetlens-mini-ranking-row" href="${href}" title="Open ${escapeHtml(run.name)} inspection data"><span class="streetlens-mini-rank">${String(i+1).padStart(2,'0')}</span><span><span class="streetlens-mini-road">${escapeHtml(run.name)}</span><span class="streetlens-mini-meta"><span class="streetlens-mini-track"><i style="width:${pci}%;background:${colorFor(pci)}"></i></span><small class="streetlens-mini-condition">${escapeHtml(condition)}</small></span></span><b class="streetlens-mini-score" style="color:${colorFor(pci)}">${fmt1(pci)}</b></a>`;
+ }).join('')||'<div class="streetlens-mini-ranking-loading">No scored roads available.</div>';
+}
 function updateLegendAndRanking(){const legend=document.getElementById('streetLensModalLegend');if(legend){const rows=STREETLENS_METRIC==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES;legend.innerHTML=rows.map(c=>`<div class="sheet-lg-row"><i style="background:${STREETLENS_COLORS[c[2]]}"></i><span>${c[1]}</span><small>${c[3]}</small></div>`).join('');}const label=document.getElementById('streetLensModalLegendLabel');if(label)label.textContent=STREETLENS_METRIC==='sdi'?'SDI of the section':'PCI rating (ASTM D6433)';const rankLabel=document.getElementById('streetLensRankingLabel');if(rankLabel)rankLabel.textContent=`All sections ranked by ${STREETLENS_METRIC.toUpperCase()}`;const box=document.getElementById('streetLensRoadRanking');if(!box||!STREETLENS_SECTION_DATA)return;const vals=STREETLENS_SECTION_DATA.sections.filter(sectionVisible);const sorted=[...vals].sort((a,b)=>STREETLENS_METRIC==='sdi'?Number(a.sdi)-Number(b.sdi):Number(a.pci)-Number(b.pci));box.innerHTML=sorted.map((s,i)=>`<button class="streetlens-ranking-row" data-section-key="${escapeHtml(s.run.key)}::${s.bin}"><span>${i+1}</span><span>${escapeHtml(s.run.name)}<small>Section ${s.bin} · ${n0(s.f0)}–${n0(s.f1)} ft</small></span><b>${STREETLENS_METRIC==='sdi'?fmt2(s.sdi):fmt1(s.pci)}</b></button>`).join('');box.querySelectorAll('[data-section-key]').forEach(btn=>btn.onclick=()=>{const s=STREETLENS_SECTION_DATA.sections.find(x=>`${x.run.key}::${x.bin}`===btn.dataset.sectionKey);if(s)focusSection(s)});const count=document.getElementById('streetLensRoadCount');if(count)count.textContent=`${STREETLENS_SECTION_DATA.sections.length} mapped sections · ${STREETLENS_SECTION_DATA.runs.length} street runs`;}
 function focusSection(sec){Object.values(STREETLENS_MAPS).forEach(map=>{if(!map)return;const b=new maplibregl.LngLatBounds();sec.coords.forEach(c=>b.extend(c));map.fitBounds(b,{padding:80,maxZoom:18,duration:650});});}
 function refreshMap(map){if(!map||!map.loaded())return;syncVisibility(map);}
@@ -810,7 +847,7 @@ async function toggleMapFullscreen(){const modal=document.getElementById('mapMod
 function closeMap(e){if(e&&e.target!==e.currentTarget)return;const modal=document.getElementById('mapModal');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});modal?.classList.add('hidden');}
 window.openMap=openMap;window.closeMap=closeMap;
 document.addEventListener('fullscreenchange',()=>setTimeout(()=>STREETLENS_MAPS.modal?.resize(),180));
-document.addEventListener('DOMContentLoaded',async()=>{const fail=e=>console.error('StreetLens segmented map:',e);try{if(!window.maplibregl)throw new Error('MapLibre failed to load from CDN');const r=await fetch("{{ url_for('static', filename='data/road_registry.json') }}",{cache:'no-store'});if(r.ok){const d=await r.json();STREETLENS_ROAD_REGISTRY=d||STREETLENS_ROAD_REGISTRY;STREETLENS_ROADS=Array.isArray(d?.roads)?d.roads:[];}const response=await fetch("{{ url_for('static', filename='data/collingswood_sections.json') }}",{cache:'no-store'});if(!response.ok)throw new Error('section data '+response.status);const data=await response.json();STREETLENS_SECTION_DATA={...data,runs:Array.isArray(data.runs)?data.runs:[],sections:flattenSections(data)};if(!STREETLENS_SECTION_DATA.sections.length)throw new Error('No segmented sections were loaded');populateStreetSearch();updateLegendAndRanking();STREETLENS_MAPS.dashboard=createStreetLensMap('streetLensDashboardMap','streetLensDashboardHoverCard');
+document.addEventListener('DOMContentLoaded',async()=>{const fail=e=>console.error('StreetLens segmented map:',e);try{if(!window.maplibregl)throw new Error('MapLibre failed to load from CDN');const r=await fetch("{{ url_for('static', filename='data/road_registry.json') }}",{cache:'no-store'});if(r.ok){const d=await r.json();STREETLENS_ROAD_REGISTRY=d||STREETLENS_ROAD_REGISTRY;STREETLENS_ROADS=Array.isArray(d?.roads)?d.roads:[];}const response=await fetch("{{ url_for('static', filename='data/collingswood_sections.json') }}",{cache:'no-store'});if(!response.ok)throw new Error('section data '+response.status);const data=await response.json();STREETLENS_SECTION_DATA={...data,runs:Array.isArray(data.runs)?data.runs:[],sections:flattenSections(data)};if(!STREETLENS_SECTION_DATA.sections.length)throw new Error('No segmented sections were loaded');populateStreetSearch();updateLegendAndRanking();renderDashboardMiniRanking();STREETLENS_MAPS.dashboard=createStreetLensMap('streetLensDashboardMap','streetLensDashboardHoverCard');
  const restoreSelectedRoad=()=>{
   const params=new URLSearchParams(window.location.search),runKey=params.get('run'),sectionNo=params.get('section'),roadName=params.get('road');
   if(!runKey&&!roadName)return;
