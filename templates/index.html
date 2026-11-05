@@ -799,17 +799,23 @@ function renderRoadMetrics(sec,sections,scope){
 }
 function resolveRoadFrames(sec){
  const runKey=String(sec.run.key||'').toLowerCase(),roadName=String(sec.run.name||'').trim().toLowerCase();
- // This is the only Collingswood run currently mapped to an uploaded frame index.
+ const registryRoad=STREETLENS_ROADS.find(r=>String(r.name||'').trim().toLowerCase()===roadName);
+ // Keep the existing Penn Ave N folder ID, which includes the "_sample" suffix.
  if(roadName==='penn ave n'||runKey.includes('penn ave n')){
-  if(window.streetLensLoadRoadDataset)window.streetLensLoadRoadDataset('/static/data/penn_ave_n_sample_frames.json','Penn Ave N (10-frame sample)');
+  window.streetLensLoadRoadDataset?.('/static/roads/penn_ave_n_sample/index.json','Penn Ave N');
   return;
  }
- const registryRoad=STREETLENS_ROADS.find(r=>String(r.name||'').trim().toLowerCase()===roadName);
+ // Prefer registered frames; otherwise load the standard folder for this road.
  if(registryRoad&&Array.isArray(registryRoad.frames)&&registryRoad.frames.length){
   window.streetLensLoadRoadFrames?.(registryRoad.frames);
-  const note=document.getElementById('streetLensAnnotationNote');if(note)note.textContent=`${sec.run.name} · ${registryRoad.frames.length} registered inspection frames loaded`;
+  const note=document.getElementById('streetLensAnnotationNote');if(note)note.textContent=sec.run.name+' · '+registryRoad.frames.length+' registered inspection frames loaded';
+  return;
+ }
+ const folderId=roadName.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+ if(folderId){
+  window.streetLensLoadRoadDataset?.('/static/roads/'+folderId+'/index.json',sec.run.name);
  }else{
-  window.streetLensClearRoadFrames?.(`No inspection image dataset is registered for ${sec.run.name} yet. Road metrics below are still loaded from the pavement survey.`);
+  window.streetLensClearRoadFrames?.('No inspection image dataset is registered for '+sec.run.name+' yet. Road metrics below are still loaded from the pavement survey.');
  }
 }
 function updateDashboardDetails(sec){
