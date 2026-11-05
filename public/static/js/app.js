@@ -23,6 +23,25 @@ function initStreetLensRoadViewer(){
     const annotationCache=new Map();
     const imageCache=new Map();
     const enabledLabels=()=>new Set(categoryInputs.filter(input=>input.checked).map(input=>input.dataset.annotationLabel));
+    const annotationToolbar=document.getElementById('streetLensAnnotationToolbar');
+    const allAnnotationsButton=annotationToolbar?.querySelector('[data-annotation-all]');
+    const categoryButtons=[...(annotationToolbar?.querySelectorAll('[data-annotation-toggle]')||[])];
+    const syncAnnotationToolbar=()=>{
+        const allOn=categoryInputs.length>0&&categoryInputs.every(input=>input.checked);
+        if(allAnnotationsButton){allAnnotationsButton.classList.toggle('is-active',allOn);allAnnotationsButton.setAttribute('aria-pressed',String(allOn));}
+        categoryButtons.forEach(button=>{
+            const input=categoryInputs.find(item=>item.dataset.annotationLabel===button.dataset.annotationToggle);
+            const active=!!input?.checked;
+            button.classList.toggle('is-active',active);
+            button.setAttribute('aria-pressed',String(active));
+        });
+    };
+    const setFrameCounts=(counts={})=>{
+        Object.entries(counts).forEach(([label,count])=>{
+            const target=annotationToolbar?.querySelector(`[data-annotation-count="${label}"]`);
+            if(target)target.textContent=String(count||0);
+        });
+    };
     if(!viewer||!strip)return;
 
 
@@ -46,6 +65,10 @@ function initStreetLensRoadViewer(){
             if(center>=top && center<bottom) active=i;
         });
         if(status)status.textContent=`${active+1} / ${frames.length}`;
+        const activeFigure=frames[active];
+        let counts={C:0,P:0,M:0,S:0};
+        try{counts={...counts,...JSON.parse(activeFigure?.dataset.annotationCounts||'{}')};}catch(_){}
+        setFrameCounts(counts);
     }
 
     function setScale(index, anchor){
@@ -169,6 +192,8 @@ function initStreetLensRoadViewer(){
                     const shapes=Array.isArray(annotation?.shapes)?annotation.shapes:[];
                     const counts={C:0,P:0,M:0,S:0};
                     shapes.forEach(shape=>{if(Object.prototype.hasOwnProperty.call(counts,shape.label))counts[shape.label]++;});
+                    figure.dataset.annotationCounts=JSON.stringify(counts);
+                    if(getActiveFrameIndex()===Number(figure.dataset.frameIndex))setFrameCounts(counts);
                     annotationNote.textContent=`${frame.frame_id||frame.frame}: ${shapes.length} shapes · ${counts.C} cracks · ${counts.P} potholes · ${counts.M} patches · ${counts.S} sealant`;
                 }
             }catch(error){
@@ -234,6 +259,8 @@ function initStreetLensRoadViewer(){
         const selectionId=++currentSelection;
         currentFrames=Array.isArray(frames)?frames:[];
         strip.innerHTML='';
+        setFrameCounts({C:0,P:0,M:0,S:0});
+        syncAnnotationToolbar();
         framesVisible=false;
         strip.classList.add('hidden');
         if(framesToggle){framesToggle.textContent='Frames: Off';framesToggle.setAttribute('aria-expanded','false');}
@@ -335,14 +362,26 @@ function initStreetLensRoadViewer(){
         if(datasetSelect.value==='penn-sample')loadSampleDataset();
         else {render([]);if(annotationNote)annotationNote.textContent='Select a road section on the map to load its frames.';}
     });
-    categoryInputs.forEach(input=>input.addEventListener('change',()=>{
+    const redrawAnnotations=()=>{
         const selectionId=currentSelection;
         strip.querySelectorAll('.streetlens-road-frame').forEach(figure=>{
             const frame=figure._streetLensFrame,img=figure.querySelector('img'),canvas=figure.querySelector('canvas');
             if(!frame?.annotation||!img?.naturalWidth||!canvas?.width)return;
             loadAnnotation(frame).then(annotation=>{if(selectionId===currentSelection&&figure.isConnected)drawAnnotations(canvas,annotation,img);}).catch(()=>{});
         });
+        syncAnnotationToolbar();
+    };
+    categoryInputs.forEach(input=>input.addEventListener('change',redrawAnnotations));
+    categoryButtons.forEach(button=>button.addEventListener('click',()=>{
+        const input=categoryInputs.find(item=>item.dataset.annotationLabel===button.dataset.annotationToggle);
+        if(input){input.checked=!input.checked;redrawAnnotations();}
     }));
+    allAnnotationsButton?.addEventListener('click',()=>{
+        const turnOn=categoryInputs.some(input=>!input.checked);
+        categoryInputs.forEach(input=>{input.checked=turnOn;});
+        redrawAnnotations();
+    });
+    syncAnnotationToolbar();
 
     framesToggle?.addEventListener('click',()=>{framesVisible=!framesVisible;strip.classList.toggle('hidden',!framesVisible);framesToggle.textContent=framesVisible?'Frames: On':'Frames: Off';framesToggle.setAttribute('aria-expanded',String(framesVisible));});
 
