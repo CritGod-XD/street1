@@ -36,12 +36,6 @@ function initStreetLensRoadViewer(){
             button.setAttribute('aria-pressed',String(active));
         });
     };
-    const setFrameCounts=(counts={})=>{
-        Object.entries(counts).forEach(([label,count])=>{
-            const target=annotationToolbar?.querySelector(`[data-annotation-count="${label}"]`);
-            if(target)target.textContent=String(count||0);
-        });
-    };
     if(!viewer||!strip)return;
 
 
@@ -65,10 +59,6 @@ function initStreetLensRoadViewer(){
             if(center>=top && center<bottom) active=i;
         });
         if(status)status.textContent=`${active+1} / ${frames.length}`;
-        const activeFigure=frames[active];
-        let counts={C:0,P:0,M:0,S:0};
-        try{counts={...counts,...JSON.parse(activeFigure?.dataset.annotationCounts||'{}')};}catch(_){}
-        setFrameCounts(counts);
     }
 
     function setScale(index, anchor){
@@ -192,8 +182,6 @@ function initStreetLensRoadViewer(){
                     const shapes=Array.isArray(annotation?.shapes)?annotation.shapes:[];
                     const counts={C:0,P:0,M:0,S:0};
                     shapes.forEach(shape=>{if(Object.prototype.hasOwnProperty.call(counts,shape.label))counts[shape.label]++;});
-                    figure.dataset.annotationCounts=JSON.stringify(counts);
-                    if(getActiveFrameIndex()===Number(figure.dataset.frameIndex))setFrameCounts(counts);
                     annotationNote.textContent=`${frame.frame_id||frame.frame}: ${shapes.length} shapes · ${counts.C} cracks · ${counts.P} potholes · ${counts.M} patches · ${counts.S} sealant`;
                 }
             }catch(error){
@@ -259,7 +247,6 @@ function initStreetLensRoadViewer(){
         const selectionId=++currentSelection;
         currentFrames=Array.isArray(frames)?frames:[];
         strip.innerHTML='';
-        setFrameCounts({C:0,P:0,M:0,S:0});
         syncAnnotationToolbar();
         framesVisible=false;
         strip.classList.add('hidden');
@@ -380,6 +367,16 @@ function initStreetLensRoadViewer(){
         const turnOn=categoryInputs.some(input=>!input.checked);
         categoryInputs.forEach(input=>{input.checked=turnOn;});
         redrawAnnotations();
+    });
+    // C / P / M / S are quick keyboard shortcuts for the matching annotation layers.
+    document.addEventListener('keydown',event=>{
+        if(event.ctrlKey||event.metaKey||event.altKey||event.repeat)return;
+        const target=event.target;
+        if(target?.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName||''))return;
+        const key=event.key.toUpperCase();
+        const input=categoryInputs.find(item=>item.dataset.annotationLabel===key);
+        if(input){input.checked=!input.checked;redrawAnnotations();}
+        else if(key==='A'){const turnOn=categoryInputs.some(item=>!item.checked);categoryInputs.forEach(item=>item.checked=turnOn);redrawAnnotations();}
     });
     syncAnnotationToolbar();
 
