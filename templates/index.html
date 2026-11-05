@@ -313,7 +313,7 @@
         .streetlens-annotation-controls{display:none!important}
         .streetlens-annotation-state{display:none!important}
         /* Sticky toolbar stays pinned to the viewer while its image strip scrolls. */
-         .streetlens-annotation-float{position:absolute;top:48px;right:12px;left:auto;margin:0;z-index:40;display:flex;flex-direction:column;width:38px;background:rgba(17,17,17,.96);border:1px solid #343434;border-radius:4px;box-shadow:0 4px 14px #0008;overflow:hidden;backdrop-filter:blur(8px);pointer-events:auto}
+         .streetlens-annotation-float{position:sticky;top:12px;right:12px;left:auto;margin:12px 12px -182px auto;z-index:40;display:flex;flex-direction:column;width:38px;background:rgba(17,17,17,.96);border:1px solid #343434;border-radius:4px;box-shadow:0 4px 14px #0008;overflow:hidden;backdrop-filter:blur(8px);pointer-events:auto}
         .streetlens-annotation-tool{position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;padding:0;border:0;border-bottom:1px solid #303030;background:#171717;color:#ddd;cursor:pointer;transition:background .15s,color .15s}
         .streetlens-annotation-tool:last-child{border-bottom:0}
         .streetlens-annotation-tool:hover{background:#292929}
@@ -343,7 +343,7 @@
         /* Keep the left dashboard column inside the desktop viewport. */
         @media(min-width:1001px){
           .streetlens-left-column{height:calc(100vh - 68px);max-height:calc(100vh - 68px);min-height:0;box-sizing:border-box;overflow:hidden}
-          .streetlens-main-map-card{height:clamp(190px,28vh,260px);flex:0 0 auto}
+          .streetlens-main-map-card{height:300px;min-height:300px;max-height:300px;flex:0 0 300px}
           .streetlens-mini-ranking{flex:1 1 auto;min-height:0;max-height:calc(100vh - 355px);display:flex;flex-direction:column;overflow:hidden}
           .streetlens-mini-ranking-list{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior:contain}
           .streetlens-mini-ranking-list::-webkit-scrollbar{display:none;width:0;height:0}
