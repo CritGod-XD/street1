@@ -944,7 +944,7 @@ async function loadPennAveFramePotholes(map){
      const loaded=await Promise.all(batch.map(async frame=>{
       if(!frame.annotation)return [];
       try{
-       const url=new URL(frame.annotation,'/static/roads/penn_ave_n_sample/').toString();
+       const url='/static/roads/penn_ave_n_sample/'+encodeURIComponent(frame.annotation);
        const response=await fetch(url,{cache:'force-cache'});
        if(!response.ok)return [];
        const annotation=await response.json(),meta=annotation.road_analysis_meta||{};
