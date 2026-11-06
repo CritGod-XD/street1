@@ -534,6 +534,60 @@
 .header-actions-only .streetlens-header-back-map{display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid #344640;border-radius:7px;background:#315f52;color:#fff;text-decoration:none;font:600 12px Inter,sans-serif;margin-right:8px}
 .header-actions-only .streetlens-header-back-map:hover{background:#3c7564}
 </style>
+
+<style id="streetlens-dashboard-brand-and-ranking-polish">
+/* Match the branded StreetLens wordmark shown on the map landing screen. */
+.header .streetlens-dashboard-brand{
+    min-width:0;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:inherit;
+    text-decoration:none;
+}
+.streetlens-brand-mark{display:block;width:34px;height:34px;flex:0 0 34px}
+.header .streetlens-dashboard-brand strong{
+    display:flex;
+    align-items:baseline;
+    font:800 25px/1 'Outfit',Inter,sans-serif;
+    letter-spacing:-1.35px;
+}
+.streetlens-brand-street{color:#f0f0f0}
+.streetlens-brand-lens{color:#48a9df}
+
+/* Give the mini ranking a complete, clearly defined card edge like the
+   map and analytics cards, while keeping its list independently scrollable. */
+.streetlens-mini-ranking{
+    width:100%;
+    flex:1 1 0;
+    min-height:0;
+    max-height:none;
+    box-sizing:border-box;
+    background:#161616;
+    border:1px solid #303030;
+    border-radius:6px;
+    box-shadow:0 0 0 1px rgba(255,255,255,.012);
+    overflow:hidden;
+}
+@media(min-width:1001px){
+    .streetlens-left-column .streetlens-mini-ranking{
+        flex:1 1 0!important;
+        min-height:0!important;
+        max-height:none!important;
+        width:100%!important;
+        align-self:stretch;
+    }
+    .streetlens-left-column .streetlens-mini-ranking-list{
+        min-height:0!important;
+        max-height:none!important;
+    }
+}
+@media(max-width:1000px){
+    .header .streetlens-dashboard-brand strong{font-size:22px}
+    .streetlens-mini-ranking{min-height:260px}
+}
+</style>
+
 </head>
 <body>
 
@@ -545,11 +599,18 @@
 
     <header class="header">
 
-        <div class="header-brand">
-            <strong>StreetLens</strong>
-            <span>·</span>
-            <span>Pavement Condition</span>
-        </div>
+        <a class="header-brand streetlens-dashboard-brand" href="{{ url_for('map_home') }}" aria-label="StreetLens home">
+            <svg class="streetlens-brand-mark" viewBox="0 0 48 48" role="img" aria-label="StreetLens logo">
+                <circle cx="22" cy="21" r="16" fill="#17201f" stroke="#75b9dc" stroke-width="2.2"/>
+                <circle cx="22" cy="21" r="12.5" fill="#263c38" stroke="#d7e4df" stroke-width="1"/>
+                <path d="M18 9.5c-4 5.2-3.8 10.1.2 14.3 3.6 3.8 3.6 7.5.1 10.6" fill="none" stroke="#e5c94f" stroke-width="3.2" stroke-linecap="round"/>
+                <path d="M27.5 10.5c-3.1 4.2-3.2 7.2-.2 10.4 3.5 3.8 3.2 7.1-.5 11.3" fill="none" stroke="#76b9e5" stroke-width="3" stroke-linecap="round"/>
+                <path d="M21 13.5l-3 5 5 3-3 5 5 3" fill="none" stroke="#f0f2e8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M34 33.5 44 43" stroke="#75b9dc" stroke-width="4" stroke-linecap="round"/>
+                <path d="M7 39.5c3.5-4.5 8-6.5 13.5-6.5" fill="none" stroke="#75b9dc" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <strong><span class="streetlens-brand-street">Street</span><span class="streetlens-brand-lens">Lens</span></strong>
+        </a>
 
 
         <div class="header-actions-only">
