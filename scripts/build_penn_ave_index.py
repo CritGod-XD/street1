@@ -29,7 +29,7 @@ def natural_key(path: Path) -> list[Any]:
     """Sort section_2 before section_10 while preserving exact file names."""
     return [
         int(part) if part.isdigit() else part.lower()
-        for part in re.split(r"(\\d+)", path.stem)
+        for part in re.split(r"(\d+)", path.stem)
     ]
 
 
@@ -68,7 +68,7 @@ def main() -> None:
         else:
             missing_annotations.append(image_path.name)
 
-        match = re.search(r"\\d+", image_path.stem)
+        match = re.search(r"\d+", image_path.stem)
         frame_number = match.group(0) if match else image_path.stem
 
         width = annotation_data.get("imageWidth", 1640)
@@ -105,7 +105,7 @@ def main() -> None:
     }
 
     OUTPUT_FILE.write_text(
-        json.dumps(index, indent=2) + "\\n",
+        json.dumps(index, indent=2) + "\n",
         encoding="utf-8",
     )
 
@@ -118,11 +118,11 @@ def main() -> None:
     print(f"  Output: {OUTPUT_FILE.relative_to(ROOT)}")
 
     if missing_annotations:
-        print("\\nImages without a matching JSON (still included):")
+        print("\nImages without a matching JSON (still included):")
         for name in missing_annotations:
             print(f"  - {name}")
     if invalid_annotations:
-        print("\\nInvalid annotation JSON (images still included without overlays):")
+        print("\nInvalid annotation JSON (images still included without overlays):")
         for item in invalid_annotations:
             print(f"  - {item}")
 
