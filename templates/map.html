@@ -777,6 +777,7 @@ html.streetlens-map-first #mapModal .maplibregl-ctrl-attrib a{color:#c0d8d0!impo
   </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/road-datasets.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
@@ -784,13 +785,7 @@ const STREETLENS_MAP_FIRST = true;
 /* StreetLens segmented Collingswood map — MapLibre implementation. */
 let STREETLENS_ROAD_REGISTRY={version:1,section_length_ft:2500,roads:[]};
 let STREETLENS_ROADS=[]; let STREETLENS_REGISTRY_READY=null;
-const STREETLENS_DATASET_BY_ROAD={'penn ave n':'/static/roads/penn_ave_n_sample/index.json'};
-function streetLensDatasetForRoad(name){
- const key=String(name||'').trim().toLowerCase();
- if(STREETLENS_DATASET_BY_ROAD[key])return STREETLENS_DATASET_BY_ROAD[key];
- const slug=key.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
- return slug?'/static/roads/'+slug+'/index.json':null;
-}
+function streetLensDatasetForRoad(name){return window.streetLensRoadDatasetInfo?.(name)?.url||null;}
 function streetLensDashboardUrl(sec){const q=new URLSearchParams({road:sec.run.name,run:sec.run.key,section:String(sec.bin)});const dataset=streetLensDatasetForRoad(sec.run.name);if(dataset)q.set('dataset',dataset);return '/dashboard?'+q.toString();}
 let STREETLENS_SECTION_DATA=null; let STREETLENS_METRIC='sdi'; let STREETLENS_CURRENT_SECTION=null; let STREETLENS_SELECTED_SECTION=null;
 let STREETLENS_MAPS={};

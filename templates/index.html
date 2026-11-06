@@ -693,6 +693,7 @@
   </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/road-datasets.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
@@ -798,25 +799,12 @@ function renderRoadMetrics(sec,sections,scope){
  }).join('');
 }
 function resolveRoadFrames(sec){
- const runKey=String(sec.run.key||'').toLowerCase(),roadName=String(sec.run.name||'').trim().toLowerCase();
- const registryRoad=STREETLENS_ROADS.find(r=>String(r.name||'').trim().toLowerCase()===roadName);
- // Keep the existing Penn Ave N folder ID, which includes the "_sample" suffix.
- if(roadName==='penn ave n'||runKey.includes('penn ave n')){
-  window.streetLensLoadRoadDataset?.('/static/roads/penn_ave_n_sample/index.json','Penn Ave N');
-  return;
- }
- // Prefer registered frames; otherwise load the standard folder for this road.
- if(registryRoad&&Array.isArray(registryRoad.frames)&&registryRoad.frames.length){
-  window.streetLensLoadRoadFrames?.(registryRoad.frames);
-  const note=document.getElementById('streetLensAnnotationNote');if(note)note.textContent=sec.run.name+' · '+registryRoad.frames.length+' registered inspection frames loaded';
-  return;
- }
- const folderId=roadName.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
- if(folderId){
-  window.streetLensLoadRoadDataset?.('/static/roads/'+folderId+'/index.json',sec.run.name);
- }else{
-  window.streetLensClearRoadFrames?.('No inspection image dataset is registered for '+sec.run.name+' yet. Road metrics below are still loaded from the pavement survey.');
- }
+ const roadName=String(sec.run.name||'').trim(),dataset=window.streetLensRoadDatasetInfo?.(roadName);
+ const registryRoad=STREETLENS_ROADS.find(r=>String(r.name||'').trim().toLowerCase()===roadName.toLowerCase());
+ if(dataset&&dataset.folder_id==='penn_ave_n_sample'){window.streetLensLoadRoadDataset?.(dataset.url,'Penn Ave N');return;}
+ if(registryRoad&&Array.isArray(registryRoad.frames)&&registryRoad.frames.length){window.streetLensLoadRoadFrames?.(registryRoad.frames);const note=document.getElementById('streetLensAnnotationNote');if(note)note.textContent=roadName+' · '+registryRoad.frames.length+' registered inspection frames loaded';return;}
+ if(dataset){window.streetLensLoadRoadDataset?.(dataset.url,dataset.canonical_name);return;}
+ window.streetLensClearRoadFrames?.('No inspection image dataset is registered for '+roadName+' yet. Road metrics below are still loaded from the pavement survey.');
 }
 function updateDashboardDetails(sec){
  if(!sec)return;
