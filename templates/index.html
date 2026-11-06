@@ -588,6 +588,108 @@
 }
 </style>
 
+<style id="streetlens-dashboard-final-brand-ranking-fix">
+/* Reuse the exact mark and wordmark treatment from login.html. */
+.header .streetlens-dashboard-brand{
+    min-width:0!important;
+    width:max-content;
+    display:flex!important;
+    align-items:center;
+    gap:12px;
+    text-decoration:none;
+}
+.header .streetlens-dashboard-brand .brand-mark{
+    display:block;
+    width:42px;
+    height:42px;
+    flex:none;
+    filter:drop-shadow(0 5px 12px #0007);
+}
+.header .streetlens-dashboard-brand .brand-copy{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    min-width:0;
+}
+.header .streetlens-dashboard-brand .brand-name{
+    display:block;
+    color:#e0e0e0!important;
+    font:700 29px/1 Outfit,sans-serif!important;
+    letter-spacing:-.065em!important;
+    white-space:nowrap;
+}
+.header .streetlens-dashboard-brand .brand-name span{color:#4ba5df!important}
+
+/* The left column must provide a constrained flex height; the list then
+   gets the remaining space and scrolls inside the bordered ranking card. */
+@media(min-width:1001px){
+    .streetlens-left-column{
+        display:flex!important;
+        flex-direction:column!important;
+        height:calc(100vh - 68px)!important;
+        min-height:0!important;
+        max-height:calc(100vh - 68px)!important;
+        box-sizing:border-box!important;
+        overflow:hidden!important;
+    }
+    .streetlens-left-column .route-section{
+        display:block;
+        flex:0 0 auto!important;
+        min-height:0;
+    }
+    .streetlens-left-column .streetlens-main-map-card{
+        height:300px!important;
+        min-height:300px!important;
+        max-height:300px!important;
+        flex:0 0 300px!important;
+    }
+    .streetlens-left-column .streetlens-mini-ranking{
+        display:flex!important;
+        flex:1 1 0!important;
+        flex-direction:column!important;
+        min-height:0!important;
+        max-height:none!important;
+        width:100%!important;
+        margin-top:10px!important;
+        padding:11px 12px 9px!important;
+        box-sizing:border-box!important;
+        overflow:hidden!important;
+        background:#161616!important;
+        border:1px solid #272727!important;
+        border-radius:6px!important;
+    }
+    .streetlens-left-column .streetlens-mini-ranking-list{
+        display:flex!important;
+        flex:1 1 auto!important;
+        flex-direction:column!important;
+        min-height:0!important;
+        max-height:none!important;
+        overflow-x:hidden!important;
+        overflow-y:auto!important;
+        overscroll-behavior:contain;
+        scrollbar-width:thin!important;
+        scrollbar-color:#555 #161616!important;
+        padding-right:4px!important;
+    }
+    .streetlens-left-column .streetlens-mini-ranking-more{
+        flex:0 0 auto!important;
+    }
+}
+@media(max-width:1000px){
+    .header .streetlens-dashboard-brand .brand-mark{width:38px;height:38px}
+    .header .streetlens-dashboard-brand .brand-name{font-size:25px!important}
+    .streetlens-mini-ranking{
+        background:#161616!important;
+        border:1px solid #272727!important;
+        border-radius:6px!important;
+    }
+    .streetlens-mini-ranking-list{
+        max-height:300px!important;
+        overflow-y:auto!important;
+        scrollbar-width:thin!important;
+    }
+}
+</style>
 </head>
 <body>
 
@@ -600,16 +702,18 @@
     <header class="header">
 
         <a class="header-brand streetlens-dashboard-brand" href="{{ url_for('map_home') }}" aria-label="StreetLens home">
-            <svg class="streetlens-brand-mark" viewBox="0 0 48 48" role="img" aria-label="StreetLens logo">
-                <circle cx="22" cy="21" r="16" fill="#17201f" stroke="#75b9dc" stroke-width="2.2"/>
-                <circle cx="22" cy="21" r="12.5" fill="#263c38" stroke="#d7e4df" stroke-width="1"/>
-                <path d="M18 9.5c-4 5.2-3.8 10.1.2 14.3 3.6 3.8 3.6 7.5.1 10.6" fill="none" stroke="#e5c94f" stroke-width="3.2" stroke-linecap="round"/>
-                <path d="M27.5 10.5c-3.1 4.2-3.2 7.2-.2 10.4 3.5 3.8 3.2 7.1-.5 11.3" fill="none" stroke="#76b9e5" stroke-width="3" stroke-linecap="round"/>
-                <path d="M21 13.5l-3 5 5 3-3 5 5 3" fill="none" stroke="#f0f2e8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M34 33.5 44 43" stroke="#75b9dc" stroke-width="4" stroke-linecap="round"/>
-                <path d="M7 39.5c3.5-4.5 8-6.5 13.5-6.5" fill="none" stroke="#75b9dc" stroke-width="2" stroke-linecap="round"/>
+            <svg class="brand-mark" viewBox="0 0 64 64" role="img" aria-label="StreetLens lens and road mark">
+                <path d="M16 47 C26 53 42 54 54 46" fill="none" stroke="#4ba5df" stroke-width="3" stroke-linecap="round"/>
+                <path d="M11 52 C25 58 43 58 58 49" fill="none" stroke="#8fbd3c" stroke-width="2.4" stroke-linecap="round"/>
+                <path d="M10 40 L3 48 Q1 51 5 55 L10 59 Q13 61 16 57 L23 49" fill="#24658d" stroke="#b7dff3" stroke-width="2"/>
+                <circle cx="31" cy="26" r="22" fill="#0d1b25" stroke="#9ab5c5" stroke-width="2.5"/>
+                <circle cx="31" cy="26" r="17.5" fill="#d7edf8" stroke="#4ba5df" stroke-width="1.4"/>
+                <path d="M15 27 Q31 14 47 27 L47 37 L15 37Z" fill="#8dbd54"/>
+                <path d="M25 42 C20 35 25 31 30 27 C35 23 34 18 31 14" fill="none" stroke="#28343d" stroke-width="10" stroke-linecap="round"/>
+                <path d="M25 42 C20 35 25 31 30 27 C35 23 34 18 31 14" fill="none" stroke="#f2c52b" stroke-width="1.7" stroke-dasharray="4 4"/>
+                <circle cx="41" cy="14" r="3" fill="#f3c629"/>
             </svg>
-            <strong><span class="streetlens-brand-street">Street</span><span class="streetlens-brand-lens">Lens</span></strong>
+            <span class="brand-copy"><span class="brand-name">Street<span>Lens</span></span></span>
         </a>
 
 
