@@ -599,10 +599,15 @@
     text-decoration:none;
 }
 .header .streetlens-dashboard-brand .brand-mark{
-    display:block;
+    display:block!important;
     width:42px;
     height:42px;
     flex:none;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    color:inherit;
     filter:drop-shadow(0 5px 12px #0007);
 }
 .header .streetlens-dashboard-brand .brand-copy{
@@ -618,7 +623,16 @@
     letter-spacing:-.065em!important;
     white-space:nowrap;
 }
-.header .streetlens-dashboard-brand .brand-name span{color:#4ba5df!important}
+.header .streetlens-dashboard-brand .brand-name span{
+    display:inline!important;
+    color:#4ba5df!important;
+    font:inherit!important;
+    font-size:inherit!important;
+    font-weight:inherit!important;
+    letter-spacing:inherit!important;
+    line-height:inherit!important;
+    vertical-align:baseline!important;
+}
 
 /* The left column must provide a constrained flex height; the list then
    gets the remaining space and scrolls inside the bordered ranking card. */
