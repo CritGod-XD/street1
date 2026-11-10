@@ -311,6 +311,26 @@ def road_ranking():
         roads.append({"name": name, "pci": pci, "condition": pci_condition(pci),
                       "treatment": item.get("treatment", "Not specified"),
                       "source_rows": item.get("source_rows", [])})
+    sdi_path = os.path.join(app.root_path, "public", "static", "data", "sdi_by_name.json")
+    sdi_values = {}
+    try:
+        with open(sdi_path, "r", encoding="utf-8") as fh:
+            raw_sdi = json.load(fh)
+        if isinstance(raw_sdi, dict):
+            sdi_values = {str(key).casefold(): float(value) for key, value in raw_sdi.items()
+                          if isinstance(value, (int, float)) and 0 <= float(value) <= 5}
+    except (OSError, ValueError, TypeError):
+        sdi_values = {}
+
+    def road_sdi(name):
+        key = "".join(ch for ch in name.casefold() if ch.isalnum())
+        value = sdi_values.get(key)
+        if value is None and key[:1] in {"n", "s", "e", "w"}:
+            value = sdi_values.get(key[1:])
+        return value
+
+    for road in roads:
+        road["sdi"] = road_sdi(road["name"])
     roads.sort(key=lambda road: (road["pci"], road["name"].casefold()))
     return render_template("road_ranking.html", roads=roads, username=session.get("username"))
 
