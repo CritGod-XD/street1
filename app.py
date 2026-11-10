@@ -329,16 +329,16 @@ def road_ranking():
                 continue
             # Direction suffixes/prefixes (N/S/E/W) distinguish mapped runs,
             # not the underlying road name used by the PCI priority list.
-            key = "".join(ch for ch in name.casefold().split() if ch not in {"n", "s", "e", "w"})
-            key = "".join(ch for ch in key if ch.isalnum())
+            parts = "".join(ch if ch.isalnum() else " " for ch in name.casefold()).split()
+            key = "".join(part for part in parts if part not in {"n", "s", "e", "w"})
             if key:
                 sdi_by_road.setdefault(key, []).append(value)
     except (OSError, ValueError, TypeError):
         sdi_by_road = {}
 
     def road_sdi(name):
-        key = "".join(ch for ch in name.casefold().split() if ch not in {"n", "s", "e", "w"})
-        key = "".join(ch for ch in key if ch.isalnum())
+        parts = "".join(ch if ch.isalnum() else " " for ch in name.casefold()).split()
+        key = "".join(part for part in parts if part not in {"n", "s", "e", "w"})
         values = sdi_by_road.get(key, [])
         return sum(values) / len(values) if values else None
 
