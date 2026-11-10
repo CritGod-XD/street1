@@ -311,23 +311,36 @@ def road_ranking():
         roads.append({"name": name, "pci": pci, "condition": pci_condition(pci),
                       "treatment": item.get("treatment", "Not specified"),
                       "source_rows": item.get("source_rows", [])})
-    sdi_path = os.path.join(app.root_path, "public", "static", "data", "sdi_by_name.json")
-    sdi_values = {}
+    # Use the same run-level SDI values that power the map, rather than the
+    # separate name lookup file. A road may have multiple directional runs;
+    # combine those run scores into one road-level mean for this ranking.
+    sections_path = os.path.join(app.root_path, "public", "static", "data", "collingswood_sections.json")
+    sdi_by_road = {}
     try:
-        with open(sdi_path, "r", encoding="utf-8") as fh:
-            raw_sdi = json.load(fh)
-        if isinstance(raw_sdi, dict):
-            sdi_values = {str(key).casefold(): float(value) for key, value in raw_sdi.items()
-                          if isinstance(value, (int, float)) and 0 <= float(value) <= 5}
+        with open(sections_path, "r", encoding="utf-8") as fh:
+            section_data = json.load(fh)
+        for run in section_data.get("runs", []):
+            name = str(run.get("name", "")).strip()
+            try:
+                value = float(run.get("sdi"))
+            except (TypeError, ValueError):
+                continue
+            if not name or not 0 <= value <= 5:
+                continue
+            # Direction suffixes/prefixes (N/S/E/W) distinguish mapped runs,
+            # not the underlying road name used by the PCI priority list.
+            key = "".join(ch for ch in name.casefold().split() if ch not in {"n", "s", "e", "w"})
+            key = "".join(ch for ch in key if ch.isalnum())
+            if key:
+                sdi_by_road.setdefault(key, []).append(value)
     except (OSError, ValueError, TypeError):
-        sdi_values = {}
+        sdi_by_road = {}
 
     def road_sdi(name):
-        key = "".join(ch for ch in name.casefold() if ch.isalnum())
-        value = sdi_values.get(key)
-        if value is None and key[:1] in {"n", "s", "e", "w"}:
-            value = sdi_values.get(key[1:])
-        return value
+        key = "".join(ch for ch in name.casefold().split() if ch not in {"n", "s", "e", "w"})
+        key = "".join(ch for ch in key if ch.isalnum())
+        values = sdi_by_road.get(key, [])
+        return sum(values) / len(values) if values else None
 
     for road in roads:
         road["sdi"] = road_sdi(road["name"])
