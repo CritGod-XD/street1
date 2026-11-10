@@ -3,10 +3,7 @@
   "functions": {
     "app.py": {
       "maxDuration": 30,
-      "includeFiles": [
-        "public/static/data/collingswood_sections.json",
-        "public/static/data/pci_evaluated_roads.json"
-      ]
+      "includeFiles": "public/static/data/**/*.json"
     }
   },
   "buildCommand": "python scripts/build_pci_geojson.py && python scripts/build_penn_ave_index.py"
