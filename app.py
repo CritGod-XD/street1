@@ -363,6 +363,7 @@ def _score_roads_for_page():
             key = _score_name_key(run.get("name"))
             if key:
                 sdi_by_road.setdefault(key, []).append(value)
+    overrides = _current_score_overrides()
     roads = []
     for item in pci_roads:
         try:
@@ -373,11 +374,15 @@ def _score_roads_for_page():
         if not name or not 0 <= pci <= 100:
             continue
         values = sdi_by_road.get(_score_name_key(name), [])
+        score_override = overrides.get(_score_name_key(name), {})
+        sdi_value = score_override.get("sdi") if isinstance(score_override, dict) else None
+        if sdi_value is None:
+            sdi_value = sum(values) / len(values) if values else None
         roads.append({
             "name": name,
             "pci": pci,
             "condition": pci_condition(pci),
-            "sdi": sum(values) / len(values) if values else None,
+            "sdi": sdi_value,
             "treatment": item.get("treatment", "Not specified"),
             "source_rows": item.get("source_rows", []),
         })
