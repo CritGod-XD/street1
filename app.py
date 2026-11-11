@@ -535,7 +535,7 @@ def score_data():
         _base_pci_roads(), _base_section_data(), _current_score_overrides()
     )
     response = app.response_class(
-        response=json.dumps({"roads": pci_roads, "sections": section_data}),
+        response=json.dumps({**section_data, "pci_roads": pci_roads}),
         status=200,
         mimetype="application/json",
     )
