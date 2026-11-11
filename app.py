@@ -1,4 +1,6 @@
 from functools import wraps
+import csv
+import io
 import json
 import os
 import time
@@ -10,7 +12,7 @@ from flask import Flask, flash, redirect, render_template, request, session, url
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from config import Config
-from models import User, db
+from models import ScoreRevision, User, db
 
 load_dotenv()  # no-op on Vercel (env vars are injected directly); loads .env locally
 
@@ -286,21 +288,83 @@ def pci_condition(pci):
     return "Failed"
 
 
-@app.route("/road-ranking")
-@login_required
-def road_ranking():
-    """Rank the 108 unique PCI-evaluated roads from worst to best."""
-    data_path = os.path.join(app.root_path, "public", "static", "data", "pci_evaluated_roads.json")
-    roads = []
+
+def _score_name_key(name):
+    parts = "".join(ch if ch.isalnum() else " " for ch in str(name or "").casefold()).split()
+    return "".join(part for part in parts if part not in {"n", "s", "e", "w"})
+
+
+def _read_score_json(filename, fallback):
+    path = os.path.join(app.root_path, "public", "static", "data", filename)
     try:
-        with open(data_path, "r", encoding="utf-8") as fh:
-            dataset = json.load(fh)
-        candidates = dataset.get("roads", [])
-        if not isinstance(candidates, list) or len(candidates) != 108:
-            candidates = PCI_EVALUATED_ROADS_FALLBACK
+        with open(path, "r", encoding="utf-8") as fh:
+            return json.load(fh)
     except (OSError, ValueError, TypeError):
+        return fallback
+
+
+def _base_pci_roads():
+    dataset = _read_score_json("pci_evaluated_roads.json", {})
+    candidates = dataset.get("roads", []) if isinstance(dataset, dict) else []
+    if not isinstance(candidates, list) or not candidates:
         candidates = PCI_EVALUATED_ROADS_FALLBACK
-    for item in candidates:
+    return [dict(item) for item in candidates if isinstance(item, dict) and item.get("name")]
+
+
+def _base_section_data():
+    data = _read_score_json("collingswood_sections.json", {})
+    return data if isinstance(data, dict) else {"runs": []}
+
+
+def _current_score_overrides():
+    revision = ScoreRevision.query.order_by(ScoreRevision.id.desc()).first()
+    if not revision:
+        return {}
+    try:
+        payload = json.loads(revision.scores_json)
+        return payload if isinstance(payload, dict) else {}
+    except (TypeError, ValueError):
+        return {}
+
+
+def _apply_score_overrides(pci_roads, section_data, overrides):
+    for road in pci_roads:
+        override = overrides.get(_score_name_key(road.get("name")))
+        if not isinstance(override, dict):
+            continue
+        if override.get("pci") is not None:
+            road["pci"] = float(override["pci"])
+            road["condition"] = pci_condition(road["pci"])
+    for run in section_data.get("runs", []):
+        override = overrides.get(_score_name_key(run.get("name")))
+        if not isinstance(override, dict):
+            continue
+        for metric in ("pci", "sdi"):
+            if override.get(metric) is None:
+                continue
+            value = float(override[metric])
+            run[metric] = value
+            for section in run.get("secs", []):
+                section[metric] = value
+    return pci_roads, section_data
+
+
+def _score_roads_for_page():
+    pci_roads, section_data = _apply_score_overrides(
+        _base_pci_roads(), _base_section_data(), _current_score_overrides()
+    )
+    sdi_by_road = {}
+    for run in section_data.get("runs", []):
+        try:
+            value = float(run.get("sdi"))
+        except (TypeError, ValueError):
+            continue
+        if 0 <= value <= 5:
+            key = _score_name_key(run.get("name"))
+            if key:
+                sdi_by_road.setdefault(key, []).append(value)
+    roads = []
+    for item in pci_roads:
         try:
             pci = float(item["pci"])
             name = str(item["name"]).strip()
@@ -308,44 +372,184 @@ def road_ranking():
             continue
         if not name or not 0 <= pci <= 100:
             continue
-        roads.append({"name": name, "pci": pci, "condition": pci_condition(pci),
-                      "treatment": item.get("treatment", "Not specified"),
-                      "source_rows": item.get("source_rows", [])})
-    # Use the same run-level SDI values that power the map, rather than the
-    # separate name lookup file. A road may have multiple directional runs;
-    # combine those run scores into one road-level mean for this ranking.
-    sections_path = os.path.join(app.root_path, "public", "static", "data", "collingswood_sections.json")
-    sdi_by_road = {}
-    try:
-        with open(sections_path, "r", encoding="utf-8") as fh:
-            section_data = json.load(fh)
-        for run in section_data.get("runs", []):
-            name = str(run.get("name", "")).strip()
-            try:
-                value = float(run.get("sdi"))
-            except (TypeError, ValueError):
-                continue
-            if not name or not 0 <= value <= 5:
-                continue
-            # Direction suffixes/prefixes (N/S/E/W) distinguish mapped runs,
-            # not the underlying road name used by the PCI priority list.
-            parts = "".join(ch if ch.isalnum() else " " for ch in name.casefold()).split()
-            key = "".join(part for part in parts if part not in {"n", "s", "e", "w"})
-            if key:
-                sdi_by_road.setdefault(key, []).append(value)
-    except (OSError, ValueError, TypeError):
-        sdi_by_road = {}
-
-    def road_sdi(name):
-        parts = "".join(ch if ch.isalnum() else " " for ch in name.casefold()).split()
-        key = "".join(part for part in parts if part not in {"n", "s", "e", "w"})
-        values = sdi_by_road.get(key, [])
-        return sum(values) / len(values) if values else None
-
-    for road in roads:
-        road["sdi"] = road_sdi(road["name"])
+        values = sdi_by_road.get(_score_name_key(name), [])
+        roads.append({
+            "name": name,
+            "pci": pci,
+            "condition": pci_condition(pci),
+            "sdi": sum(values) / len(values) if values else None,
+            "treatment": item.get("treatment", "Not specified"),
+            "source_rows": item.get("source_rows", []),
+        })
     roads.sort(key=lambda road: (road["pci"], road["name"].casefold()))
-    return render_template("road_ranking.html", roads=roads, username=session.get("username"))
+    return roads
+
+
+def _save_score_revision(overrides, label, source):
+    revision = ScoreRevision(
+        label=(label or "Score update")[:160],
+        source=source,
+        scores_json=json.dumps(overrides, separators=(",", ":"), sort_keys=True),
+        created_by=session.get("username"),
+    )
+    db.session.add(revision)
+    db.session.commit()
+    return revision
+
+
+@app.route("/score-management")
+@login_required
+def score_management():
+    roads = _score_roads_for_page()
+    history = ScoreRevision.query.order_by(ScoreRevision.id.desc()).limit(30).all()
+    latest = history[0] if history else None
+    return render_template(
+        "score_management.html",
+        roads=roads,
+        history=history,
+        latest=latest,
+        username=session.get("username"),
+    )
+
+
+@app.route("/score-management/update", methods=["POST"])
+@login_required
+def score_management_update():
+    name = (request.form.get("road_name") or "").strip()
+    key = _score_name_key(name)
+    known = {_score_name_key(road["name"]) for road in _base_pci_roads()}
+    if not key or key not in known:
+        flash("Select a road from the existing road list.", "error")
+        return redirect(url_for("score_management"))
+
+    current = _current_score_overrides()
+    overrides = dict(current)
+    updated = dict(overrides.get(key, {}))
+    changed = False
+    for metric, maximum in (("pci", 100), ("sdi", 5)):
+        raw = (request.form.get(metric) or "").strip()
+        if not raw:
+            continue
+        try:
+            value = float(raw)
+        except ValueError:
+            flash(f"{metric.upper()} must be a number.", "error")
+            return redirect(url_for("score_management"))
+        if not 0 <= value <= maximum:
+            flash(f"{metric.upper()} must be between 0 and {maximum}.", "error")
+            return redirect(url_for("score_management"))
+        updated[metric] = value
+        changed = True
+    if not changed:
+        flash("Enter a new PCI or SDI score before saving.", "error")
+        return redirect(url_for("score_management"))
+    overrides[key] = updated
+    _save_score_revision(overrides, f"Manual update · {name}", "manual")
+    flash(f"Scores updated for {name}. Previous scores are available in history.", "success")
+    return redirect(url_for("score_management"))
+
+
+@app.route("/score-management/upload", methods=["POST"])
+@login_required
+def score_management_upload():
+    upload = request.files.get("score_file")
+    if not upload or not upload.filename:
+        flash("Choose a CSV file to upload.", "error")
+        return redirect(url_for("score_management"))
+    if not upload.filename.lower().endswith(".csv"):
+        flash("Only CSV score files are supported.", "error")
+        return redirect(url_for("score_management"))
+    try:
+        raw = upload.stream.read().decode("utf-8-sig")
+        reader = csv.DictReader(io.StringIO(raw))
+        headers = {str(h or "").strip().lower() for h in (reader.fieldnames or [])}
+        if "road_name" not in headers or not ({"pci", "sdi"} & headers):
+            raise ValueError("CSV must contain road_name and at least one of pci or sdi columns.")
+        known_names = {_score_name_key(road["name"]): road["name"] for road in _base_pci_roads()}
+        overrides = dict(_current_score_overrides())
+        staged = {}
+        errors = []
+        for line, row in enumerate(reader, start=2):
+            name = (row.get("road_name") or "").strip()
+            key = _score_name_key(name)
+            if not key:
+                continue
+            if key not in known_names:
+                errors.append(f"Row {line}: road '{name}' was not found.")
+                continue
+            item = dict(staged.get(key, overrides.get(key, {})))
+            has_value = False
+            for metric, maximum in (("pci", 100), ("sdi", 5)):
+                raw_value = (row.get(metric) or "").strip()
+                if not raw_value:
+                    continue
+                try:
+                    value = float(raw_value)
+                except ValueError:
+                    errors.append(f"Row {line}: {metric.upper()} must be numeric.")
+                    continue
+                if not 0 <= value <= maximum:
+                    errors.append(f"Row {line}: {metric.upper()} must be between 0 and {maximum}.")
+                    continue
+                item[metric] = value
+                has_value = True
+            if has_value:
+                staged[key] = item
+        if errors:
+            raise ValueError("Upload was not applied. " + " ".join(errors[:8]))
+        if not staged:
+            raise ValueError("No valid score rows were found in the CSV.")
+        overrides.update(staged)
+        _save_score_revision(overrides, f"CSV upload · {upload.filename}", "csv")
+        flash(f"Imported scores for {len(staged)} roads. The previous score set is saved in history.", "success")
+    except (UnicodeDecodeError, csv.Error, ValueError) as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("score_management"))
+
+
+@app.route("/score-management/rollback/<int:revision_id>", methods=["POST"])
+@login_required
+def score_management_rollback(revision_id):
+    target = db.session.get(ScoreRevision, revision_id)
+    if not target:
+        flash("That score revision could not be found.", "error")
+        return redirect(url_for("score_management"))
+    try:
+        restored = json.loads(target.scores_json)
+        if not isinstance(restored, dict):
+            raise ValueError("Invalid snapshot")
+    except (TypeError, ValueError):
+        flash("That score revision is not valid and could not be restored.", "error")
+        return redirect(url_for("score_management"))
+    _save_score_revision(restored, f"Rollback to revision #{target.id}", "rollback")
+    flash(f"Restored the score set from revision #{target.id}. The pre-rollback scores remain in history.", "success")
+    return redirect(url_for("score_management"))
+
+
+@app.route("/api/score-data")
+@login_required
+def score_data():
+    pci_roads, section_data = _apply_score_overrides(
+        _base_pci_roads(), _base_section_data(), _current_score_overrides()
+    )
+    response = app.response_class(
+        response=json.dumps({"roads": pci_roads, "sections": section_data}),
+        status=200,
+        mimetype="application/json",
+    )
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/road-ranking")
+@login_required
+def road_ranking():
+    """Rank the PCI-evaluated roads using the active score revision."""
+    return render_template(
+        "road_ranking.html",
+        roads=_score_roads_for_page(),
+        username=session.get("username"),
+    )
 
 @app.route("/map")
 @login_required
