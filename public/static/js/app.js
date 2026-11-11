@@ -47,82 +47,34 @@ function initStreetLensRoadViewer(){
 
     function getFrames(){ return [...strip.querySelectorAll('.streetlens-road-frame')]; }
 
+    const isHorizontal=()=>document.querySelector('.streetlens-dashboard-grid')?.classList.contains('streetlens-horizontal-layout')||false;
+    function frameCenter(){const scale=levels[zoomIndex];return isHorizontal()?(viewer.scrollLeft+viewer.clientWidth/2)/scale:(viewer.scrollTop+viewer.clientHeight/2)/scale;}
     function updateStatus(){
-        const frames=getFrames();
-        if(!frames.length){ if(status)status.textContent='—'; return; }
-        const scale=levels[zoomIndex];
-        const center=(viewer.scrollTop + viewer.clientHeight/2) / scale;
-        let active=0;
-        frames.forEach((frame,i)=>{
-            const top=frame.offsetTop;
-            const bottom=top+frame.offsetHeight;
-            if(center>=top && center<bottom) active=i;
-        });
+        const frames=getFrames();if(!frames.length){if(status)status.textContent='—';return;}
+        const horizontal=isHorizontal(),center=frameCenter();let active=0;
+        frames.forEach((frame,i)=>{const start=horizontal?frame.offsetLeft:frame.offsetTop;const end=start+(horizontal?frame.offsetWidth:frame.offsetHeight);if(center>=start&&center<end)active=i;});
         if(status)status.textContent=`${active+1} / ${frames.length}`;
     }
-
-    function setScale(index, anchor){
-        const frames=getFrames();
-        if(!frames.length) return;
-        const oldScale=levels[zoomIndex];
-        const nextIndex=Math.max(0,Math.min(levels.length-1,index));
-        const newScale=levels[nextIndex];
-        if(oldScale===newScale) return;
-
-        // Anchor the exact image point under the mouse while zooming.
-        const rect=viewer.getBoundingClientRect();
-        const ax=anchor ? anchor.x-rect.left : viewer.clientWidth/2;
-        const ay=anchor ? anchor.y-rect.top : viewer.clientHeight/2;
-        const contentX=(viewer.scrollLeft+ax)/oldScale;
-        const contentY=(viewer.scrollTop+ay)/oldScale;
-
-        zoomIndex=nextIndex;
-        strip.style.transform=`scale(${newScale})`;strip.style.transformOrigin='top left';
-        strip.style.width='100%';
-        strip.style.marginBottom='0';
-        strip.dataset.scale=String(newScale);
+    function setScale(index,anchor){
+        const frames=getFrames();if(!frames.length)return;
+        const oldScale=levels[zoomIndex],nextIndex=Math.max(0,Math.min(levels.length-1,index)),newScale=levels[nextIndex];if(oldScale===newScale)return;
+        const rect=viewer.getBoundingClientRect(),ax=anchor?anchor.x-rect.left:viewer.clientWidth/2,ay=anchor?anchor.y-rect.top:viewer.clientHeight/2;
+        const contentX=(viewer.scrollLeft+ax)/oldScale,contentY=(viewer.scrollTop+ay)/oldScale;
+        zoomIndex=nextIndex;strip.style.transform=`scale(${newScale})`;strip.style.transformOrigin='top left';strip.style.width=isHorizontal()?'max-content':'100%';strip.style.marginBottom='0';strip.dataset.scale=String(newScale);
         if(zoomLabel)zoomLabel.textContent=`${Math.round(newScale*100)}%`;
-
-        requestAnimationFrame(()=>{
-            viewer.scrollLeft=Math.max(0,contentX*newScale-ax);
-            viewer.scrollTop=Math.max(0,contentY*newScale-ay);
-            updateStatus();
-        });
+        requestAnimationFrame(()=>{viewer.scrollLeft=Math.max(0,contentX*newScale-ax);viewer.scrollTop=Math.max(0,contentY*newScale-ay);updateStatus();});
     }
-
     function fitWholeRoad(){
-        const frames=getFrames();
-        if(!frames.length)return;
-        const naturalHeight=frames.reduce((sum,f)=>sum+f.offsetHeight,0);
-        if(!naturalHeight)return;
-        const available=Math.max(120,viewer.clientHeight-12);
-        // Fit the complete inspected corridor vertically while preserving its proportions.
-        const target=Math.max(0.08,Math.min(0.85,available/naturalHeight));
-        let closest=0;
-        levels.forEach((v,i)=>{ if(Math.abs(v-target)<Math.abs(levels[closest]-target)) closest=i; });
-        const oldScale=levels[zoomIndex];
-        zoomIndex=closest;
-        const scale=levels[zoomIndex];
-        strip.style.transform=`scale(${scale})`;strip.style.transformOrigin='top left';
-        strip.style.width='100%';
-        strip.style.marginBottom='0';
-        strip.dataset.scale=String(scale);
-        if(zoomLabel)zoomLabel.textContent=`${Math.round(scale*100)}%`;
-        viewer.scrollTop=0;
-        viewer.scrollLeft=0;
-        updateStatus();
+        const frames=getFrames();if(!frames.length)return;const horizontal=isHorizontal();
+        const natural=frames.reduce((sum,f)=>sum+(horizontal?f.offsetWidth:f.offsetHeight),0);if(!natural)return;
+        const available=Math.max(120,(horizontal?viewer.clientWidth:viewer.clientHeight)-12),target=Math.max(.08,Math.min(.85,available/natural));
+        let closest=0;levels.forEach((v,i)=>{if(Math.abs(v-target)<Math.abs(levels[closest]-target))closest=i;});
+        zoomIndex=closest;const scale=levels[zoomIndex];strip.style.transform=`scale(${scale})`;strip.style.transformOrigin='top left';strip.style.width=horizontal?'max-content':'100%';strip.style.marginBottom='0';strip.dataset.scale=String(scale);
+        if(zoomLabel)zoomLabel.textContent=`${Math.round(scale*100)}%`;viewer.scrollTop=0;viewer.scrollLeft=0;updateStatus();
     }
-
     function resetZoom(){
-        zoomIndex=levels.indexOf(1);
-        strip.style.transform='scale(1)';strip.style.transformOrigin='top left';
-        strip.style.width='100%';
-        strip.style.marginBottom='0';
-        strip.dataset.scale='1';
-        if(zoomLabel)zoomLabel.textContent='100%';
-        viewer.scrollTop=0;
-        viewer.scrollLeft=0;
-        updateStatus();
+        zoomIndex=levels.indexOf(1);strip.style.transform='scale(1)';strip.style.transformOrigin='top left';strip.style.width=isHorizontal()?'max-content':'100%';strip.style.marginBottom='0';strip.dataset.scale='1';
+        if(zoomLabel)zoomLabel.textContent='100%';viewer.scrollTop=0;viewer.scrollLeft=0;updateStatus();
     }
 
     function drawAnnotations(canvas, annotation, image){
@@ -223,14 +175,8 @@ function initStreetLensRoadViewer(){
     function getActiveFrameIndex(){
         const frames=getFrames();
         if(!frames.length) return 0;
-        const scale=levels[zoomIndex];
-        const center=(viewer.scrollTop + viewer.clientHeight/2) / scale;
-        let active=0;
-        frames.forEach((frame,i)=>{
-            const top=frame.offsetTop;
-            const bottom=top+frame.offsetHeight;
-            if(center>=top && center<bottom) active=i;
-        });
+        const center=frameCenter();let active=0;
+        frames.forEach((frame,i)=>{const start=isHorizontal()?frame.offsetLeft:frame.offsetTop;const end=start+(isHorizontal()?frame.offsetWidth:frame.offsetHeight);if(center>=start&&center<end)active=i;});
         return active;
     }
 
@@ -393,18 +339,11 @@ function initStreetLensRoadViewer(){
     const zoomResetBtn=document.getElementById('streetLensRoadZoomReset');
     if(zoomResetBtn)zoomResetBtn.addEventListener('click',resetZoom);
 
-    let preloadScrollFrame=0;
-    let previousScrollTop=viewer.scrollTop;
+    let preloadScrollFrame=0,previousScrollPosition=0;
+    viewer.addEventListener('wheel',event=>{if(!isHorizontal()||event.ctrlKey||event.metaKey||Math.abs(event.deltaY)<Math.abs(event.deltaX))return;event.preventDefault();viewer.scrollLeft+=event.deltaY;},{passive:false});
     viewer.addEventListener('scroll',()=>{
-        updateStatus();
-        if(preloadScrollFrame) cancelAnimationFrame(preloadScrollFrame);
-        preloadScrollFrame=requestAnimationFrame(()=>{
-            preloadScrollFrame=0;
-            const currentTop=viewer.scrollTop;
-            const direction=currentTop >= previousScrollTop ? 1 : -1;
-            previousScrollTop=currentTop;
-            preloadWindow(getActiveFrameIndex(),currentSelection,direction);
-        });
+        updateStatus();if(preloadScrollFrame)cancelAnimationFrame(preloadScrollFrame);
+        preloadScrollFrame=requestAnimationFrame(()=>{preloadScrollFrame=0;const position=isHorizontal()?viewer.scrollLeft:viewer.scrollTop;const direction=position>=previousScrollPosition?1:-1;previousScrollPosition=position;preloadWindow(getActiveFrameIndex(),currentSelection,direction);});
     },{passive:true});
     window.addEventListener('resize',updateStatus);
 
@@ -424,4 +363,11 @@ function initStreetLensRoadViewer(){
     };
 }
 
+function initStreetLensLayoutToggle(){
+ const dashboard=document.querySelector('.streetlens-dashboard-grid'),button=document.getElementById('streetLensLayoutToggle');if(!dashboard||!button)return;
+ const apply=horizontal=>{dashboard.classList.toggle('streetlens-horizontal-layout',horizontal);button.textContent=horizontal?'Classic layout':'Horizontal layout';button.setAttribute('aria-pressed',String(horizontal));button.title=horizontal?'Switch to classic stacked road layout':'Switch to horizontal road layout';try{localStorage.setItem('streetLensRoadLayout',horizontal?'horizontal':'classic');}catch(_){}requestAnimationFrame(()=>{if(streetLensRoadViewerState){streetLensRoadViewerState.updateStatus();if(horizontal)document.getElementById('streetLensRoadScroll')?.scrollTo({left:0,top:0});}});};
+ let saved='classic';try{saved=localStorage.getItem('streetLensRoadLayout')||'classic';}catch(_){}apply(saved==='horizontal');
+ button.addEventListener('click',()=>apply(!dashboard.classList.contains('streetlens-horizontal-layout')));
+}
+document.addEventListener('DOMContentLoaded',initStreetLensLayoutToggle);
 document.addEventListener('DOMContentLoaded',initStreetLensRoadViewer);
