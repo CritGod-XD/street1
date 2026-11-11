@@ -443,6 +443,184 @@
             .streetlens-horizontal-layout .streetlens-road-scroll{height:360px;min-height:360px}
         }
 
+    
+        /* Horizontal mode: dedicated inspection workstation layout */
+        @media(min-width:1001px){
+          .streetlens-dashboard-grid.streetlens-horizontal-layout{
+            display:grid!important;
+            grid-template-columns:minmax(260px,.82fr) minmax(0,1.18fr)!important;
+            grid-template-rows:minmax(0,1.12fr) minmax(220px,.88fr);
+            gap:10px;
+            height:calc(100vh - 68px);
+            min-height:0;
+            padding:10px 16px 14px;
+            box-sizing:border-box;
+            overflow:hidden;
+          }
+          .streetlens-horizontal-layout>.streetlens-ml-column{
+            grid-column:1 / -1;
+            grid-row:1;
+            min-width:0;
+            min-height:0;
+            padding:0;
+            border:0;
+          }
+          .streetlens-horizontal-layout>.streetlens-left-column{
+            grid-column:1;
+            grid-row:2;
+            min-width:0;
+            min-height:0;
+            height:auto;
+            max-height:none;
+            padding:0;
+            border:0;
+            overflow:hidden;
+          }
+          .streetlens-horizontal-layout>.streetlens-right-column{
+            grid-column:2;
+            grid-row:2;
+            display:grid;
+            grid-template-columns:minmax(0,1fr);
+            grid-template-rows:minmax(0,.92fr) minmax(0,1.08fr);
+            gap:10px;
+            min-width:0;
+            min-height:0;
+            padding:0;
+            border:0;
+            overflow:hidden;
+          }
+          .streetlens-horizontal-layout .streetlens-ml-card{
+            height:100%;
+            max-height:none;
+            min-height:0;
+            padding:9px;
+            box-sizing:border-box;
+          }
+          .streetlens-horizontal-layout .streetlens-road-scroll{
+            flex:1 1 auto;
+            min-height:0;
+            height:100%;
+            overflow-x:auto;
+            overflow-y:hidden;
+            scrollbar-width:thin;
+          }
+          .streetlens-horizontal-layout .streetlens-road-strip{
+            display:flex;
+            align-items:stretch;
+            gap:0!important;
+            width:max-content;
+            min-width:100%;
+            height:100%;
+            min-height:100%;
+            transform-origin:top left;
+          }
+          .streetlens-horizontal-layout .streetlens-road-frame{
+            flex:0 0 auto;
+            height:100%;
+            width:auto;
+            max-height:100%;
+            margin:0!important;
+            padding:0!important;
+            border:0!important;
+            border-radius:0!important;
+            box-shadow:none!important;
+            aspect-ratio:var(--frame-height,787) / var(--frame-width,1640);
+            overflow:hidden;
+            background:#080808;
+          }
+          .streetlens-horizontal-layout .streetlens-frame-content{
+            position:absolute;
+            left:50%;
+            top:50%;
+            width:calc(100% * var(--frame-width,1640) / var(--frame-height,787));
+            height:calc(100% * var(--frame-height,787) / var(--frame-width,1640));
+            transform:translate(-50%,-50%) rotate(-90deg);
+            transform-origin:center;
+          }
+          .streetlens-horizontal-layout .streetlens-frame-content img,
+          .streetlens-horizontal-layout .streetlens-frame-content .streetlens-frame-overlay{
+            position:absolute;
+            inset:0;
+            display:block;
+            width:100%;
+            height:100%;
+            min-height:0;
+            object-fit:fill;
+            margin:0;
+            border:0;
+            border-radius:0;
+            pointer-events:none;
+          }
+          .streetlens-horizontal-layout .streetlens-road-frame figcaption{
+            z-index:4;
+            top:6px;
+            right:6px;
+            transform:none;
+          }
+          .streetlens-horizontal-layout .streetlens-left-column .route-section{
+            height:100%;
+            min-height:0;
+          }
+          .streetlens-horizontal-layout .streetlens-left-column .streetlens-main-map-card{
+            height:100%;
+            min-height:0;
+            max-height:none;
+          }
+          .streetlens-horizontal-layout .streetlens-left-column .streetlens-mini-ranking{
+            display:none!important;
+          }
+          .streetlens-horizontal-layout .streetlens-score-card,
+          .streetlens-horizontal-layout .streetlens-breakdown-card{
+            height:auto;
+            min-height:0;
+            max-height:none;
+            margin:0;
+            overflow:auto;
+          }
+          .streetlens-horizontal-layout .streetlens-score-card .gauge{
+            height:112px;
+          }
+          .streetlens-horizontal-layout .streetlens-score-card .gauge svg{
+            height:108px;
+          }
+        }
+        @media(max-width:1000px){
+          .streetlens-dashboard-grid.streetlens-horizontal-layout{
+            display:grid!important;
+            grid-template-columns:minmax(0,1fr)!important;
+            grid-template-rows:460px auto auto;
+            height:auto;
+            min-height:0;
+            overflow:visible;
+            padding:10px;
+            gap:10px;
+          }
+          .streetlens-horizontal-layout>.streetlens-ml-column,
+          .streetlens-horizontal-layout>.streetlens-left-column,
+          .streetlens-horizontal-layout>.streetlens-right-column{
+            grid-column:1;
+            grid-row:auto;
+            min-height:0;
+            padding:0;
+            border:0;
+            height:auto;
+            max-height:none;
+            overflow:visible;
+          }
+          .streetlens-horizontal-layout .streetlens-ml-card{
+            height:460px;
+            min-height:0;
+            max-height:none;
+          }
+          .streetlens-horizontal-layout .streetlens-road-scroll{overflow-x:auto;overflow-y:hidden}
+          .streetlens-horizontal-layout .streetlens-road-strip{height:100%;min-height:100%;gap:0!important}
+          .streetlens-horizontal-layout .streetlens-road-frame{height:100%;width:auto;flex:0 0 auto;aspect-ratio:var(--frame-height,787) / var(--frame-width,1640)}
+          .streetlens-horizontal-layout .streetlens-frame-content{transform:translate(-50%,-50%) rotate(-90deg)}
+          .streetlens-horizontal-layout .streetlens-left-column .streetlens-mini-ranking{display:none!important}
+          .streetlens-horizontal-layout .streetlens-left-column .streetlens-main-map-card{height:280px;min-height:280px}
+          .streetlens-horizontal-layout>.streetlens-right-column{display:grid;grid-template-rows:auto auto;gap:10px}
+        }
+
     </style>
 
 <style>
