@@ -677,6 +677,73 @@
           .streetlens-horizontal-layout .streetlens-horizontal-panel-title{margin-bottom:2px}
         }
 
+    
+        /* Horizontal workstation viewport fit: give the viewer the space, keep bottom cards fully visible. */
+        @media(min-width:1001px){
+          .dashboard:has(.streetlens-dashboard-grid.streetlens-horizontal-layout){
+            height:100vh!important;
+            min-height:0!important;
+            display:flex!important;
+            flex-direction:column!important;
+            overflow:hidden!important;
+          }
+          .dashboard:has(.streetlens-dashboard-grid.streetlens-horizontal-layout)>.header{
+            flex:0 0 auto!important;
+          }
+          .dashboard>.streetlens-dashboard-grid.streetlens-horizontal-layout{
+            flex:1 1 auto!important;
+            width:100%!important;
+            height:auto!important;
+            min-height:0!important;
+            max-height:none!important;
+            box-sizing:border-box!important;
+            grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)!important;
+            grid-template-rows:minmax(390px,1fr) minmax(250px,.62fr)!important;
+            overflow:hidden!important;
+            padding:10px 16px 14px!important;
+            gap:10px!important;
+          }
+          .streetlens-horizontal-layout>.streetlens-ml-column{
+            min-height:0!important;
+            height:auto!important;
+          }
+          .streetlens-horizontal-layout .streetlens-ml-card{
+            height:100%!important;
+            min-height:0!important;
+            max-height:none!important;
+            display:flex!important;
+            flex-direction:column!important;
+          }
+          .streetlens-horizontal-layout .streetlens-road-scroll{
+            flex:1 1 auto!important;
+            height:auto!important;
+            min-height:0!important;
+          }
+          .streetlens-horizontal-layout>.streetlens-left-column,
+          .streetlens-horizontal-layout>.streetlens-right-column>.streetlens-score-card,
+          .streetlens-horizontal-layout>.streetlens-right-column>.streetlens-breakdown-card{
+            min-height:0!important;
+            height:100%!important;
+            max-height:none!important;
+            box-sizing:border-box!important;
+          }
+          .streetlens-horizontal-layout .streetlens-left-column .route-section{
+            height:100%!important;
+            min-height:0!important;
+          }
+          .streetlens-horizontal-layout .streetlens-left-column .streetlens-main-map-card{
+            flex:1 1 auto!important;
+            height:auto!important;
+            min-height:0!important;
+          }
+          .streetlens-horizontal-layout .streetlens-breakdown-card{
+            padding:12px 14px!important;
+          }
+          .streetlens-horizontal-layout .streetlens-breakdown-card #streetLensDistressBreakdown{
+            gap:6px!important;
+          }
+        }
+
     </style>
 
 <style>
