@@ -189,7 +189,7 @@ function initStreetLensRoadViewer(){
         for(let i=first;i<=last;i++) preloadFrame(i,selectionId);
     }
 
-    function render(frames,roadScores={}){
+    function render(frames,roadScores={}) {
         const selectionId=++currentSelection;
         currentFrames=Array.isArray(frames)?frames:[];
         strip.innerHTML='';
@@ -217,11 +217,19 @@ function initStreetLensRoadViewer(){
             figure.dataset.frameIndex=index;
             const frameWidth=Number(frame.image_width||1640);
             const frameHeight=Number(frame.image_height||787);
-            if(frameWidth>0&&frameHeight>0) figure.style.aspectRatio=`${frameWidth} / ${frameHeight}`;
+            if(frameWidth>0&&frameHeight>0){
+                figure.style.aspectRatio=`${frameWidth} / ${frameHeight}`;
+                figure.style.setProperty('--frame-width',frameWidth);
+                figure.style.setProperty('--frame-height',frameHeight);
+            }
             figure.dataset.stationStart=frame.station_start??'';
             figure.dataset.stationEnd=frame.station_end??'';
             figure._streetLensFrame=frame;
 
+            // The image and its annotation canvas live in one rotatable surface.
+            // Horizontal mode rotates this entire surface; classic mode leaves it untouched.
+            const content=document.createElement('div');
+            content.className='streetlens-frame-content';
             const img=document.createElement('img');
             const imagePath=frame.image||(`/static/images/${frame.file}`);
             img.alt=`Pavement inspection frame ${frame.frame_id||frame.frame||index+1}`;
@@ -231,7 +239,7 @@ function initStreetLensRoadViewer(){
             img.dataset.src=imagePath;
             img.addEventListener('load',()=>attachFrame(frame,figure,img,figure.querySelector('canvas'),selectionId),{once:true});
             img.addEventListener('error',()=>{
-                if(selectionId!==currentSelection) return;
+                if(selectionId!==currentSelection)return;
                 const warning=document.createElement('span');
                 warning.className='streetlens-frame-error';
                 warning.textContent='Image unavailable';
@@ -241,19 +249,20 @@ function initStreetLensRoadViewer(){
             const canvas=document.createElement('canvas');
             canvas.className='streetlens-frame-overlay';
             canvas.setAttribute('aria-hidden','true');
+            content.append(img,canvas);
+
             const caption=document.createElement('figcaption');
             const left=document.createElement('span');
             left.textContent=`#${frame.frame_id||frame.frame||String(index+1).padStart(4,'0')}`;
             const right=document.createElement('span');
-            if(Number.isFinite(Number(frame.station_start))&&Number.isFinite(Number(frame.station_end))) right.textContent=`${Number(frame.station_start).toFixed(2)}–${Number(frame.station_end).toFixed(2)} ft`;
+            if(Number.isFinite(Number(frame.station_start))&&Number.isFinite(Number(frame.station_end)))right.textContent=`${Number(frame.station_start).toFixed(2)}–${Number(frame.station_end).toFixed(2)} ft`;
             else right.textContent='Road frame';
             caption.append(left,right);
-            figure.append(img,canvas,caption);
+            figure.append(content,caption);
             strip.appendChild(figure);
         });
 
         updateStatus();
-        // Start the first frame plus the next three immediately.
         preloadWindow(0,selectionId);
     }
 
