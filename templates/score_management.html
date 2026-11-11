@@ -71,6 +71,6 @@
 <script>
 const search=document.getElementById('roadSearch');
 search?.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();document.querySelectorAll('#scoreRows tr').forEach(row=>{row.hidden=!row.dataset.search.includes(q);});});
-document.querySelectorAll('.edit-form').forEach(form=>form.addEventListener('submit',event=>{const pci=form.querySelector('[name="pci"]'),sdi=form.parentElement.parentElement.querySelector('[name="sdi"]');if(!pci.value.trim()&&!sdi.value.trim()){event.preventDefault();alert('Enter a new PCI or SDI score first.');}}));
+
 </script>
 </body></html>
