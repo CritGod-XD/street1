@@ -448,10 +448,10 @@
         @media(min-width:1001px){
           .streetlens-dashboard-grid.streetlens-horizontal-layout{
             display:grid!important;
-            grid-template-columns:minmax(0,.95fr) minmax(0,.98fr) minmax(0,1.2fr)!important;
-            grid-template-rows:minmax(0,1fr) 282px;
+            grid-template-columns:repeat(3,minmax(0,1fr))!important;
+            grid-template-rows:minmax(0,1fr) 270px;
             gap:10px;
-            height:calc(100vh - 68px);
+            height:calc(100vh - 148px);
             min-height:0;
             padding:10px 16px 14px;
             box-sizing:border-box;
@@ -607,6 +607,33 @@
           }
           .streetlens-horizontal-layout .streetlens-score-card .gauge svg{
             height:108px;
+          }
+          .streetlens-horizontal-layout>.streetlens-left-column,
+          .streetlens-horizontal-layout>.streetlens-score-card,
+          .streetlens-horizontal-layout>.streetlens-breakdown-card{
+            height:100%;
+            min-height:0;
+            box-sizing:border-box;
+          }
+          .streetlens-horizontal-layout .streetlens-breakdown-card{
+            padding:14px 16px!important;
+          }
+          .streetlens-horizontal-layout .streetlens-breakdown-card h2{
+            margin-bottom:12px;
+          }
+          .streetlens-horizontal-layout .streetlens-breakdown-card #streetLensDistressBreakdown{
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+          }
+          .streetlens-horizontal-layout .streetlens-breakdown-card #streetLensDistressBreakdown>div{
+            margin:0!important;
+            padding:0!important;
+          }
+          .streetlens-horizontal-layout .streetlens-breakdown-card #streetLensDistressBreakdown progress,
+          .streetlens-horizontal-layout .streetlens-breakdown-card #streetLensDistressBreakdown .progress,
+          .streetlens-horizontal-layout .streetlens-breakdown-card #streetLensDistressBreakdown .bar{
+            max-height:7px;
           }
         }
         @media(max-width:1000px){
