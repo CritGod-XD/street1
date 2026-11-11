@@ -824,6 +824,73 @@
           }
         }
 
+    
+        /* Horizontal viewer cleanup: seamless frames, clean legend, hidden scrollbars. */
+        .streetlens-horizontal-layout .streetlens-road-scroll{
+          scrollbar-width:none!important;
+          -ms-overflow-style:none!important;
+        }
+        .streetlens-horizontal-layout .streetlens-road-scroll::-webkit-scrollbar{
+          display:none!important;
+          width:0!important;
+          height:0!important;
+        }
+        .streetlens-horizontal-layout .streetlens-road-frame figcaption{
+          display:none!important;
+        }
+        .streetlens-horizontal-layout .streetlens-image-tracker{
+          min-height:30px!important;
+          padding:4px 10px!important;
+          gap:16px!important;
+          flex-wrap:wrap;
+        }
+        .streetlens-horizontal-layout .streetlens-annotation-legend{
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          gap:16px;
+          min-width:0;
+          color:#aeb7b3;
+          font:10px Inter,sans-serif;
+        }
+        .streetlens-horizontal-layout .streetlens-annotation-legend span{
+          display:inline-flex;
+          align-items:center;
+          gap:5px;
+          white-space:nowrap;
+        }
+        .streetlens-horizontal-layout .streetlens-annotation-legend i{
+          display:inline-block;
+          width:7px;
+          height:7px;
+          border-radius:50%;
+          background:var(--legend-color);
+          box-shadow:0 0 0 2px color-mix(in srgb,var(--legend-color) 18%,transparent);
+        }
+        .streetlens-horizontal-layout .streetlens-road-ctrl-hint{
+          margin-left:auto!important;
+        }
+        .streetlens-horizontal-layout .streetlens-breakdown-card{
+          overflow-y:hidden!important;
+          scrollbar-width:none!important;
+          -ms-overflow-style:none!important;
+        }
+        .streetlens-horizontal-layout .streetlens-breakdown-card::-webkit-scrollbar{
+          display:none!important;
+          width:0!important;
+          height:0!important;
+        }
+        @media(max-width:1000px){
+          .streetlens-horizontal-layout .streetlens-image-tracker{
+            gap:8px!important;
+          }
+          .streetlens-horizontal-layout .streetlens-annotation-legend{
+            justify-content:flex-start;
+            gap:10px;
+            flex-wrap:wrap;
+          }
+        }
+
     </style>
 
 <style>
@@ -1229,7 +1296,16 @@
     <span>The selected road does not have inspection frames uploaded yet.</span>
 </div>
 </div>
-<div class="streetlens-image-tracker" aria-live="polite"><span>Image <span id="streetLensFrameStatus">—</span></span><span class="streetlens-road-ctrl-hint">Ctrl + scroll to zoom</span></div>
+<div class="streetlens-image-tracker" aria-live="polite">
+  <span>Image <span id="streetLensFrameStatus">—</span></span>
+  <div class="streetlens-annotation-legend" aria-label="Annotation color legend">
+    <span><i style="--legend-color:#ff5148"></i>Cracks</span>
+    <span><i style="--legend-color:#ff9b32"></i>Potholes</span>
+    <span><i style="--legend-color:#168cff"></i>Maintenance patches</span>
+    <span><i style="--legend-color:#f2c744"></i>Sealant</span>
+  </div>
+  <span class="streetlens-road-ctrl-hint">Ctrl + scroll to zoom</span>
+</div>
 <div class="streetlens-annotation-controls" aria-label="Annotation categories">
   <input class="streetlens-annotation-state" type="checkbox" data-annotation-label="C" checked aria-label="Cracks">
   <input class="streetlens-annotation-state" type="checkbox" data-annotation-label="P" checked aria-label="Potholes">
