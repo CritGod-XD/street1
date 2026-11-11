@@ -400,6 +400,8 @@ def _save_score_revision(overrides, label, source):
 @app.route("/score-management")
 @login_required
 def score_management():
+    if not ScoreRevision.query.first():
+        _save_score_revision({}, "Original dataset baseline", "baseline")
     roads = _score_roads_for_page()
     history = ScoreRevision.query.order_by(ScoreRevision.id.desc()).limit(30).all()
     latest = history[0] if history else None
