@@ -698,7 +698,7 @@
             max-height:none!important;
             box-sizing:border-box!important;
             grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)!important;
-            grid-template-rows:minmax(390px,1fr) minmax(250px,.62fr)!important;
+            grid-template-rows:minmax(370px,1fr) minmax(260px,.68fr)!important;
             overflow:hidden!important;
             padding:10px 16px 14px!important;
             gap:10px!important;
@@ -741,6 +741,65 @@
           }
           .streetlens-horizontal-layout .streetlens-breakdown-card #streetLensDistressBreakdown{
             gap:6px!important;
+          }
+        }
+
+    
+        /* Horizontal score/map compact fit: expose all score details without inner scrolling. */
+        @media(min-width:1001px){
+          .streetlens-horizontal-layout .streetlens-left-column .route-section{
+            padding:6px!important;
+            gap:5px!important;
+          }
+          .streetlens-horizontal-layout .streetlens-horizontal-panel-title{
+            line-height:16px!important;
+          }
+          .streetlens-horizontal-layout .streetlens-left-column .streetlens-main-map-card{
+            border-radius:6px!important;
+          }
+          .streetlens-horizontal-layout .streetlens-score-card{
+            display:flex!important;
+            flex-direction:column!important;
+            justify-content:flex-start!important;
+            gap:0!important;
+            padding:10px 12px!important;
+            overflow:hidden!important;
+          }
+          .streetlens-horizontal-layout .streetlens-score-card h2{
+            flex:0 0 auto!important;
+            margin:0 0 2px!important;
+          }
+          .streetlens-horizontal-layout .streetlens-score-card .gauge{
+            flex:0 0 88px!important;
+            height:88px!important;
+            min-height:88px!important;
+            margin:0 auto!important;
+          }
+          .streetlens-horizontal-layout .streetlens-score-card .gauge svg{
+            display:block!important;
+            width:205px!important;
+            height:88px!important;
+            max-width:100%!important;
+          }
+          .streetlens-horizontal-layout .streetlens-score-card .condition{
+            flex:0 0 auto!important;
+            margin:2px auto 6px!important;
+            padding:6px 10px!important;
+            line-height:16px!important;
+          }
+          .streetlens-horizontal-layout .streetlens-score-card .road-summary{
+            flex:0 0 auto!important;
+            display:grid!important;
+            gap:5px!important;
+            margin:0!important;
+          }
+          .streetlens-horizontal-layout .streetlens-score-card .road-summary>div{
+            min-height:30px!important;
+            padding:5px 9px!important;
+            box-sizing:border-box!important;
+          }
+          .streetlens-horizontal-layout .streetlens-score-card .road-summary-wide{
+            min-height:32px!important;
           }
         }
 
