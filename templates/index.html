@@ -448,8 +448,8 @@
         @media(min-width:1001px){
           .streetlens-dashboard-grid.streetlens-horizontal-layout{
             display:grid!important;
-            grid-template-columns:minmax(260px,.82fr) minmax(0,1.18fr)!important;
-            grid-template-rows:minmax(0,1.12fr) minmax(220px,.88fr);
+            grid-template-columns:minmax(0,.95fr) minmax(0,.98fr) minmax(0,1.2fr)!important;
+            grid-template-rows:minmax(0,1fr) 282px;
             gap:10px;
             height:calc(100vh - 68px);
             min-height:0;
@@ -477,17 +477,40 @@
             overflow:hidden;
           }
           .streetlens-horizontal-layout>.streetlens-right-column{
+            display:contents;
+          }
+          .streetlens-horizontal-layout>.streetlens-right-column>.streetlens-score-card{
             grid-column:2;
             grid-row:2;
-            display:grid;
-            grid-template-columns:minmax(0,1fr);
-            grid-template-rows:minmax(0,.92fr) minmax(0,1.08fr);
-            gap:10px;
-            min-width:0;
+          }
+          .streetlens-horizontal-layout>.streetlens-right-column>.streetlens-breakdown-card{
+            grid-column:3;
+            grid-row:2;
+          }
+          .streetlens-horizontal-layout .streetlens-horizontal-panel-title{
+            margin:0;
+            color:#e5e7e7;
+            font:600 14px Inter,sans-serif;
+            line-height:18px;
+          }
+          .streetlens-horizontal-layout .streetlens-left-column .route-section{
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+            height:100%;
             min-height:0;
-            padding:0;
-            border:0;
-            overflow:hidden;
+            padding:14px;
+            box-sizing:border-box;
+            background:#151918;
+            border:1px solid #303936;
+            border-radius:11px;
+          }
+          .streetlens-horizontal-layout .streetlens-left-column .streetlens-main-map-card{
+            flex:1 1 auto;
+            width:100%;
+            height:auto;
+            min-height:0;
+            max-height:none;
           }
           .streetlens-horizontal-layout .streetlens-ml-card{
             height:100%;
@@ -618,7 +641,11 @@
           .streetlens-horizontal-layout .streetlens-frame-content{transform:translate(-50%,-50%) rotate(-90deg)}
           .streetlens-horizontal-layout .streetlens-left-column .streetlens-mini-ranking{display:none!important}
           .streetlens-horizontal-layout .streetlens-left-column .streetlens-main-map-card{height:280px;min-height:280px}
-          .streetlens-horizontal-layout>.streetlens-right-column{display:grid;grid-template-rows:auto auto;gap:10px}
+          .streetlens-horizontal-layout>.streetlens-right-column{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto;gap:10px}
+          .streetlens-horizontal-layout>.streetlens-right-column>.streetlens-score-card,
+          .streetlens-horizontal-layout>.streetlens-right-column>.streetlens-breakdown-card{grid-column:1;grid-row:auto}
+          .streetlens-horizontal-layout .streetlens-left-column .route-section{height:auto;min-height:280px}
+          .streetlens-horizontal-layout .streetlens-horizontal-panel-title{margin-bottom:2px}
         }
 
     </style>
@@ -986,6 +1013,7 @@
     <main class="dashboard-body streetlens-dashboard-grid">
 <aside class="left-column streetlens-left-column">
 <section class="route-section">
+<h2 class="streetlens-horizontal-panel-title">Section location</h2>
 <div class="map-card streetlens-main-map-card" aria-label="Interactive StreetLens route map"><div id="streetLensDashboardMap"></div><div id="streetLensDashboardMapLoading" class="streetlens-map-loading">Loading segmented inspection map…</div><div id="streetLensDashboardHoverCard" class="streetlens-section-hover-card" hidden></div><div class="streetlens-map-mini-tools"><button id="streetLensDashboardSatellite" type="button" title="Toggle satellite imagery"><svg class="satellite-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 4-4 4 4-4 4zM13 13l4 4m-7-7-4 4m8-2 3-3 3 3-3 3zM4 20l5-5m-2 5h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Satellite</span></button><button id="streetLensDashboardReset" type="button" title="Reset">↺</button><button id="streetLensDashboardExpand" type="button" title="Open map">⤢</button><button id="streetLensDashboardFullscreen" type="button" title="Full screen map">⛶</button></div></div></section>
 
 <section class="streetlens-mini-ranking" aria-label="Road PCI ranking">
