@@ -472,6 +472,7 @@ def score_management_upload():
         staged = {}
         errors = []
         for line, row in enumerate(reader, start=2):
+            row = {str(key or "").strip().lower(): value for key, value in row.items()}
             name = (row.get("road_name") or "").strip()
             key = _score_name_key(name)
             if not key:
