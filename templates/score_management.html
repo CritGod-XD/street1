@@ -32,9 +32,9 @@
 <td><div class="road">{{ road.name }}</div><span class="condition {{ road.condition|lower|replace(' ','-') }}">{{ road.condition }}</span></td>
 <td class="mono">{{ '%.1f'|format(road.pci) }}</td>
 <td class="mono">{% if road.sdi is not none %}{{ '%.2f'|format(road.sdi) }}{% else %}<span class="muted">No data</span>{% endif %}</td>
-<td><form method="post" action="{{ url_for('score_management_update') }}" class="edit-form"><input type="hidden" name="road_name" value="{{ road.name }}"><input class="score-input" type="number" name="pci" min="0" max="100" step="0.1" placeholder="{{ '%.1f'|format(road.pci) }}" aria-label="New PCI for {{ road.name }}"></td>
-<td><input class="score-input" type="number" name="sdi" min="0" max="5" step="0.01" placeholder="{% if road.sdi is not none %}{{ '%.2f'|format(road.sdi) }}{% else %}—{% endif %}" aria-label="New SDI for {{ road.name }}"></td>
-<td><button class="save" type="submit">Save</button></form></td>
+<td><input form="score-edit-{{ loop.index }}" class="score-input" type="number" name="pci" min="0" max="100" step="0.1" placeholder="{{ '%.1f'|format(road.pci) }}" aria-label="New PCI for {{ road.name }}"></td>
+<td><input form="score-edit-{{ loop.index }}" class="score-input" type="number" name="sdi" min="0" max="5" step="0.01" placeholder="{% if road.sdi is not none %}{{ '%.2f'|format(road.sdi) }}{% else %}—{% endif %}" aria-label="New SDI for {{ road.name }}"></td>
+<td><form id="score-edit-{{ loop.index }}" method="post" action="{{ url_for('score_management_update') }}" class="edit-form"><input type="hidden" name="road_name" value="{{ road.name }}"></form><button form="score-edit-{{ loop.index }}" class="save" type="submit">Save</button></td>
 </tr>
 {% endfor %}
 </tbody></table></div>
