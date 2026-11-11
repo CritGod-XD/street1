@@ -384,6 +384,19 @@
         .streetlens-ranking-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; }
         .streetlens-ranking-score { font:700 11px JetBrains Mono,monospace; }
         .streetlens-ranking-condition { display:block; margin-top:2px; color:#777; font-size:9px; }
+/* Horizontal inspection layout */
+.streetlens-layout-toggle{height:30px;padding:0 10px;border:1px solid #3a5148;border-radius:5px;background:#15231e;color:#bde8d8;font:600 10px Inter,sans-serif;cursor:pointer;white-space:nowrap}
+.streetlens-layout-toggle:hover{background:#1d352c;border-color:#527b69}
+.streetlens-layout-toggle:focus-visible{outline:2px solid #8bcbb2;outline-offset:2px}
+.streetlens-dashboard-grid.streetlens-horizontal-layout{min-height:0;height:calc(100vh - 68px);overflow:hidden}
+.streetlens-horizontal-layout .streetlens-ml-card{height:calc(100vh - 104px);min-height:0;max-height:calc(100vh - 104px)}
+.streetlens-horizontal-layout .streetlens-road-scroll{overflow-x:auto;overflow-y:hidden;touch-action:pan-x pan-y}
+.streetlens-horizontal-layout .streetlens-road-strip{display:flex;align-items:center;gap:8px;width:max-content;min-width:100%;height:100%;transform-origin:top left}
+.streetlens-horizontal-layout .streetlens-road-frame{flex:0 0 min(76%,780px);width:min(76%,780px);height:auto;aspect-ratio:1640/787;max-height:100%;overflow:hidden;border:1px solid #242424}
+.streetlens-horizontal-layout .streetlens-road-frame img{width:100%;height:100%;min-height:0;object-fit:contain}
+.streetlens-horizontal-layout .streetlens-road-frame .streetlens-frame-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.streetlens-horizontal-layout .streetlens-annotation-float{position:sticky;top:10px;left:10px;right:auto;float:left;margin:10px -38px -164px 10px}
+@media(max-width:1000px){.streetlens-dashboard-grid.streetlens-horizontal-layout{height:auto;overflow:visible}.streetlens-horizontal-layout .streetlens-ml-card{height:620px;max-height:none;min-height:0}.streetlens-horizontal-layout .streetlens-road-scroll{overflow-x:auto;overflow-y:hidden}.streetlens-horizontal-layout .streetlens-road-frame{flex-basis:82vw;width:82vw}}
 </style>
 
 <style>
@@ -732,7 +745,7 @@
 
 
         <div class="header-actions-only">
-            <a href="{{ url_for('map_home') }}" class="streetlens-header-back-map" aria-label="Back to inspection map"><span class="ranking-link-icon" aria-hidden="true">←</span><span>Back to map</span></a><a href="{{ url_for('road_ranking') }}" class="streetlens-ranking-link" aria-label="Open PCI road ranking page"><span class="ranking-link-icon" aria-hidden="true">↗</span><span>Road ranking</span></a>
+            <a href="{{ url_for('map_home') }}" class="streetlens-header-back-map" aria-label="Back to inspection map"><span class="ranking-link-icon" aria-hidden="true">←</span><span>Back to map</span></a><a href="{{ url_for('road_ranking') }}" class="streetlens-ranking-link" aria-label="Open PCI road ranking page"><span class="ranking-link-icon" aria-hidden="true">↗</span><span>Road ranking</span></a><button type="button" id="streetLensLayoutToggle" class="streetlens-layout-toggle" aria-pressed="false" title="Switch to horizontal road layout">Horizontal layout</button>
             <!-- Logout must be POST because Flask route is POST-only -->
             <form
                 action="{{ url_for('logout') }}"
