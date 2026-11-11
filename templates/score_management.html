@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StreetLens · Score Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#0b0d0c;--panel:#141817;--panel2:#191e1c;--ink:#edf2ef;--muted:#929e98;--line:#2b3531;--green:#315f52;--green2:#3e7665;--red:#e45a48;--orange:#ed9a3d;--yellow:#e6c34e;--blue:#278ce2}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Arial,sans-serif}a{color:inherit;text-decoration:none}.page{max-width:1440px;margin:auto;padding:22px 24px 40px}.top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-bottom:15px;border-bottom:1px solid var(--line);margin-bottom:22px}.brand{font-size:20px;font-weight:750;letter-spacing:-.6px}.brand small{font-size:11px;color:var(--muted);font-weight:500;margin-left:8px}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.btn,.link{border:1px solid #394640;background:#171d1a;color:#edf2ef;border-radius:7px;padding:9px 12px;font:600 11px Inter;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px}.btn.primary{background:var(--green);border-color:var(--green);color:#fff}.btn:hover,.link:hover{background:#222d28;border-color:#52645a}.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:17px}.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:1.6px;color:#9ab7a9;font-weight:700}.hero h1{font-size:clamp(25px,3vw,34px);letter-spacing:-1px;margin:7px 0}.hero p{margin:0;color:var(--muted);font-size:12px;line-height:1.55;max-width:700px}.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.stat,.panel{background:var(--panel);border:1px solid var(--line);border-radius:9px}.stat{padding:13px 15px}.stat span{display:block;color:var(--muted);font-size:10px}.stat strong{display:block;margin-top:6px;font:700 20px 'JetBrains Mono',monospace}.workspace{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(310px,.8fr);gap:12px;align-items:start}.panel{padding:15px;min-width:0}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.panel h2{font-size:13px;margin:0}.panel-head small,.muted{color:var(--muted);font-size:10px}.search{width:100%;padding:10px 11px;border:1px solid #35403b;background:#0e1210;color:#f0f4f1;border-radius:6px;outline-color:#77a28e;font:12px Inter;margin-bottom:10px}.table-wrap{max-height:60vh;overflow:auto;border:1px solid #29322e;border-radius:7px;scrollbar-width:thin;scrollbar-color:#4b5b53 #101412}.table{width:100%;border-collapse:collapse;min-width:620px}.table th{position:sticky;top:0;background:#1b211e;color:#98a49e;text-transform:uppercase;letter-spacing:.7px;font-size:9px;text-align:left;padding:10px;z-index:2}.table td{padding:8px 10px;border-top:1px solid #242d29;font-size:11px;vertical-align:middle}.road{font-weight:600}.mono{font:600 11px 'JetBrains Mono',monospace}.score-input{width:76px;padding:7px 8px;background:#0d110f;border:1px solid #35403b;border-radius:5px;color:#f1f5f2;font:11px 'JetBrains Mono',monospace}.score-input:focus{outline:1px solid #65927e;border-color:#65927e}.save{padding:7px 9px;border:1px solid #3b6555;background:#203b30;color:#dff3e8;border-radius:5px;font:600 10px Inter;cursor:pointer}.save:hover{background:#2c5142}.condition{display:inline-flex;padding:4px 7px;border-radius:5px;font-size:9px;font-weight:700;border:1px solid currentColor}.good{color:#61b89e}.satisfactory{color:#4da5d8}.fair{color:#e1c44e}.poor{color:#ef9b3e}.very-poor{color:#e65b42}.serious{color:#cf3f4d}.failed{color:#a72f62}.upload-zone{border:1px dashed #46574e;background:#101613;border-radius:8px;padding:13px;margin-bottom:13px}.upload-zone p{font-size:10px;line-height:1.55;color:var(--muted);margin:6px 0 10px}.file{display:block;width:100%;font-size:10px;color:#aeb9b2;margin:8px 0}.field{width:100%;padding:8px 9px;background:#0e1210;border:1px solid #34403a;border-radius:5px;color:#edf2ef;font:11px Inter}.upload-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.history{display:grid;gap:8px;max-height:370px;overflow:auto;scrollbar-width:thin;scrollbar-color:#4b5b53 #101412}.history-item{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:10px;border:1px solid #2b3530;border-radius:7px;background:#101512}.history-item strong{display:block;font-size:10px}.history-item small{display:block;color:var(--muted);font-size:9px;margin-top:4px;line-height:1.45}.restore{padding:6px 8px;border:1px solid #65533b;background:#302719;color:#f2d8aa;border-radius:5px;font:600 9px Inter;cursor:pointer;white-space:nowrap}.flash{padding:10px 12px;border-radius:7px;margin-bottom:12px;font-size:11px;border:1px solid #39443e;background:#17211b;color:#a9dfba}.flash.error{background:#281715;border-color:#67342e;color:#ffb5a9}.flash.success{background:#14241b;border-color:#315d42;color:#a9dfba}.format{font:10px 'JetBrains Mono',monospace;color:#c6d4cc;background:#0d110f;border:1px solid #2c3731;border-radius:5px;padding:9px;overflow:auto}.note{color:var(--muted);font-size:9px;line-height:1.55;margin-top:9px}.empty{color:var(--muted);text-align:center;padding:20px;font-size:11px}
+@media(max-width:1000px){.workspace{grid-template-columns:1fr}.table-wrap{max-height:520px}.history{max-height:260px}}
+@media(max-width:640px){.page{padding:15px 11px 25px}.top{align-items:flex-start;flex-direction:column}.hero{align-items:flex-start;flex-direction:column}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{padding:11px}}
+</style>
+</head>
+<body><main class="page">
+<header class="top"><div class="brand">StreetLens <small>· Score management</small></div><nav class="actions"><a class="link" href="{{ url_for('map_home') }}">⌖ Map</a><a class="link" href="{{ url_for('dashboard') }}">← Dashboard</a><a class="link" href="{{ url_for('road_ranking') }}">Road ranking</a><form action="{{ url_for('logout') }}" method="post"><button class="link" type="submit">Sign out</button></form></nav></header>
+<section class="hero"><div><div class="eyebrow">Data maintenance · PCI / SDI</div><h1>Score management</h1><p>Update pavement scores road by road or import a CSV. Every successful change creates a complete revision so you can restore a previous score set if needed.</p></div><a class="btn" href="{{ url_for('static', filename='data/score_upload_template.csv') }}">↓ Download CSV template</a></section>
+{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for category,message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endif %}{% endwith %}
+<section class="summary">
+<div class="stat"><span>Roads listed</span><strong>{{ roads|length }}</strong></div>
+<div class="stat"><span>Roads with SDI</span><strong>{{ roads|selectattr('sdi','ne',none)|list|length }}</strong></div>
+<div class="stat"><span>Saved revisions</span><strong>{{ history|length }}</strong></div>
+<div class="stat"><span>Active score set</span><strong>{% if latest %}#{{ latest.id }}{% else %}Base{% endif %}</strong></div>
+</section>
+<div class="workspace">
+<section class="panel">
+<div class="panel-head"><h2>Road score register</h2><small>Blank input = keep current score</small></div>
+<input class="search" id="roadSearch" type="search" placeholder="Search road name or condition…" aria-label="Search roads">
+<div class="table-wrap"><table class="table"><thead><tr><th>Road</th><th>Current PCI</th><th>Current SDI</th><th>New PCI</th><th>New SDI</th><th>Save</th></tr></thead><tbody id="scoreRows">
+{% for road in roads %}
+<tr data-search="{{ (road.name ~ ' ' ~ road.condition)|lower }}">
+<td><div class="road">{{ road.name }}</div><span class="condition {{ road.condition|lower|replace(' ','-') }}">{{ road.condition }}</span></td>
+<td class="mono">{{ '%.1f'|format(road.pci) }}</td>
+<td class="mono">{% if road.sdi is not none %}{{ '%.2f'|format(road.sdi) }}{% else %}<span class="muted">No data</span>{% endif %}</td>
+<td><form method="post" action="{{ url_for('score_management_update') }}" class="edit-form"><input type="hidden" name="road_name" value="{{ road.name }}"><input class="score-input" type="number" name="pci" min="0" max="100" step="0.1" placeholder="{{ '%.1f'|format(road.pci) }}" aria-label="New PCI for {{ road.name }}"></td>
+<td><input class="score-input" type="number" name="sdi" min="0" max="5" step="0.01" placeholder="{% if road.sdi is not none %}{{ '%.2f'|format(road.sdi) }}{% else %}—{% endif %}" aria-label="New SDI for {{ road.name }}"></td>
+<td><button class="save" type="submit">Save</button></form></td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+<div class="note">PCI range: 0–100. SDI range: 0–5. Updating a road-level score applies it to matching directional map runs and their sections, so map condition colours and rankings stay consistent.</div>
+</section>
+<aside>
+<section class="panel" style="margin-bottom:12px">
+<div class="panel-head"><h2>Upload score file</h2><small>CSV only</small></div>
+<form method="post" action="{{ url_for('score_management_upload') }}" enctype="multipart/form-data" class="upload-zone">
+<strong style="font-size:11px">Bulk PCI / SDI import</strong>
+<p>Use the template headers exactly. Each row updates the named road. Leave a score blank to preserve its current value.</p>
+<div class="format">road_name,pci,sdi<br>Autumn Ave,78.5,3.72<br>Allen Ln,82,4.10</div>
+<input class="file" type="file" name="score_file" accept=".csv,text/csv" required>
+<div class="upload-actions"><button class="btn primary" type="submit">↑ Validate &amp; import</button></div>
+</form>
+<div class="note">The import is all-or-nothing: unknown roads or invalid values prevent the entire file from being applied. A new revision is saved only after every row passes validation.</div>
+</section>
+<section class="panel">
+<div class="panel-head"><h2>Score history &amp; recovery</h2><small>Latest 30 revisions</small></div>
+<div class="history">
+{% if history %}
+{% for revision in history %}
+<div class="history-item"><div><strong>#{{ revision.id }} · {{ revision.label }}</strong><small>{{ revision.created_at.strftime('%d %b %Y, %H:%M UTC') }} · {{ revision.source|upper }}{% if revision.created_by %} · {{ revision.created_by }}{% endif %}</small></div>
+{% if not loop.first %}<form method="post" action="{{ url_for('score_management_rollback', revision_id=revision.id) }}" onsubmit="return confirm('Restore score revision #{{ revision.id }}? The current score set will first remain saved in history.');"><button class="restore" type="submit">Restore</button></form>{% else %}<span class="condition good">Active</span>{% endif %}
+</div>
+{% endfor %}
+{% else %}<div class="empty">No score changes have been saved yet. The original dataset is currently active.</div>{% endif %}
+</div>
+<div class="note">Restore creates a new revision from the selected snapshot. It never deletes newer history entries.</div>
+</section>
+</aside>
+</div>
+</main>
+<script>
+const search=document.getElementById('roadSearch');
+search?.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();document.querySelectorAll('#scoreRows tr').forEach(row=>{row.hidden=!row.dataset.search.includes(q);});});
+document.querySelectorAll('.edit-form').forEach(form=>form.addEventListener('submit',event=>{const pci=form.querySelector('[name="pci"]'),sdi=form.parentElement.parentElement.querySelector('[name="sdi"]');if(!pci.value.trim()&&!sdi.value.trim()){event.preventDefault();alert('Enter a new PCI or SDI score first.');}}));
+</script>
+</body></html>
