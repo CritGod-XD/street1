@@ -218,7 +218,6 @@ function initStreetLensRoadViewer(){
             const frameWidth=Number(frame.image_width||1640);
             const frameHeight=Number(frame.image_height||787);
             if(frameWidth>0&&frameHeight>0){
-                figure.style.aspectRatio=`${frameWidth} / ${frameHeight}`;
                 figure.style.setProperty('--frame-width',frameWidth);
                 figure.style.setProperty('--frame-height',frameHeight);
             }
