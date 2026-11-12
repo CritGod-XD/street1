@@ -24,8 +24,8 @@
 </section>
 <div class="workspace">
 <section class="panel">
-<div class="panel-head"><h2>Road score register</h2><small>Blank input = keep current score</small></div>
-<input class="search" id="roadSearch" type="search" placeholder="Search road name or condition…" aria-label="Search roads">
+<div class="panel-head"><h2>Road scores</h2><small>Blank fields leave scores unchanged</small></div>
+<input class="search" id="roadSearch" type="search" placeholder="Search roads…" aria-label="Search roads">
 <div class="table-wrap"><table class="table"><thead><tr><th>Road</th><th>Current PCI</th><th>Current SDI</th><th>New PCI</th><th>New SDI</th><th>Save</th></tr></thead><tbody id="scoreRows">
 {% for road in roads %}
 <tr data-search="{{ (road.name ~ ' ' ~ road.condition)|lower }}">
@@ -38,22 +38,22 @@
 </tr>
 {% endfor %}
 </tbody></table></div>
-<div class="note">PCI range: 0–100. SDI range: 0–5. Updating a road-level score applies it to matching directional map runs and their sections, so map condition colours and rankings stay consistent.</div>
+<div class="note">PCI range: 0–100. SDI range: 0–5. Road-level updates are applied to matching directional runs and sections.</div>
 </section>
 <aside>
 <section class="panel" style="margin-bottom:12px">
 <div class="panel-head"><h2>Upload score file</h2><small>CSV only</small></div>
 <form method="post" action="{{ url_for('score_management_upload') }}" enctype="multipart/form-data" class="upload-zone">
-<strong style="font-size:11px">Bulk PCI / SDI import</strong>
-<p>Use the template headers exactly. Each row updates the named road. Leave a score blank to preserve its current value.</p>
+<strong style="font-size:11px">Import road scores</strong>
+<p>Use the CSV headers shown below. Leave PCI or SDI blank to keep its current value.</p>
 <div class="format">road_name,pci,sdi<br>Autumn Ave,78.5,3.72<br>Allen Ln,82,4.10</div>
 <input class="file" type="file" name="score_file" accept=".csv,text/csv" required>
-<div class="upload-actions"><button class="btn primary" type="submit">↑ Validate &amp; import</button></div>
+<div class="upload-actions"><button class="btn primary" type="submit">Import CSV</button></div>
 </form>
-<div class="note">The import is all-or-nothing: unknown roads or invalid values prevent the entire file from being applied. A new revision is saved only after every row passes validation.</div>
+<div class="note">The file is checked before changes are saved. If any road or score is invalid, no rows are imported.</div>
 </section>
 <section class="panel">
-<div class="panel-head"><h2>Score history &amp; recovery</h2><small>Latest 30 revisions</small></div>
+<div class="panel-head"><h2>Revision history</h2><small>Latest 30 revisions</small></div>
 <div class="history">
 {% if history %}
 {% for revision in history %}
@@ -63,7 +63,7 @@
 {% endfor %}
 {% else %}<div class="empty">No score changes have been saved yet. The original dataset is currently active.</div>{% endif %}
 </div>
-<div class="note">Restore creates a new revision from the selected snapshot. It never deletes newer history entries.</div>
+<div class="note">Restoring a revision saves it as a new entry. Existing history is retained.</div>
 </section>
 </aside>
 </div>
