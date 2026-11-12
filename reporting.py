@@ -138,11 +138,16 @@ def _find_road_dataset(road_name, app_root):
             annotation_path = os.path.join(folder_path, annotation_name) if annotation_name else ""
             annotation = _read_json(annotation_path, {}) if annotation_path and os.path.isfile(annotation_path) else {}
             shapes = annotation.get("shapes", []) if isinstance(annotation, dict) else []
+            analysis_meta = annotation.get("road_analysis_meta", {}) if isinstance(annotation, dict) else {}
+            stitch_meta = analysis_meta.get("stitch", {}) if isinstance(analysis_meta, dict) else {}
             frame_rows.append({
                 "frame_id": str(frame.get("frame_id") or frame.get("frame") or len(frame_rows) + 1),
                 "image_path": image_path,
                 "width": int(frame.get("image_width") or 1640),
                 "height": int(frame.get("image_height") or 787),
+                "station_start": analysis_meta.get("ft_start"),
+                "station_end": analysis_meta.get("ft_end"),
+                "lane_width_ft": stitch_meta.get("lane_width_ft"),
                 "shapes": shapes if isinstance(shapes, list) else [],
             })
         return index, frame_rows
@@ -232,7 +237,7 @@ class AnnotatedFrameSheet(Flowable):
                     continue
             canvas.setFillColor(colors.HexColor("#53606c"))
             canvas.setFont("Helvetica", 5.7)
-            canvas.drawString(x, y - 6.2, f"Frame {frame['frame_id']}")
+            canvas.drawString(x, y - 4.5, f"{_station(frame.get('station_start'))}")
             canvas.restoreState()
 
 
@@ -299,6 +304,9 @@ def build_road_report_pdf(run, all_runs, app_root):
             end_coord = coords[-1]
 
     dataset_index, frames = _find_road_dataset(road_name, app_root)
+    lane_widths = [float(frame["lane_width_ft"]) for frame in frames if frame.get("lane_width_ft") is not None]
+    mean_lane_width = sum(lane_widths) / len(lane_widths) if lane_widths else None
+    rated_area_sqft = length * mean_lane_width if mean_lane_width is not None else None
     annotation_counts = {key: 0 for key in DISTRESS_COLORS}
     for frame in frames:
         for shape in frame.get("shapes", []):
@@ -405,15 +413,15 @@ def build_road_report_pdf(run, all_runs, app_root):
         [para("PCI (ASTM D6433)", "MetricLabelSL"), para("SDI", "MetricLabelSL"),
          para("LENGTH RATED", "MetricLabelSL"), para("RATED AREA", "MetricLabelSL")],
         [para(_number(pci, 1), "MetricValueSL"), para(_number(sdi, 2), "MetricValueSL"),
-         para(f"{_number(length, 0)} ft", "MetricValueSL"), para("—", "MetricValueSL")],
+         para(f"{_number(length, 0)} ft", "MetricValueSL"), para(f"{_number(rated_area_sqft, 0)} sq ft" if rated_area_sqft is not None else "—", "MetricValueSL")],
         [para(escape(pci_condition), "MetricSubSL"),
          para(f"NDI {_number(ndi, 2)}  ·  LDI {_number(ldi, 2)}", "MetricSubSL"),
          para(f"{_number(length / 5280, 3)} mi  ·  station 0+00 to {_station(length)}", "MetricSubSL"),
-         para("Rated area and lane width not supplied", "MetricSubSL")],
+         para(f"Mean lane width {_number(mean_lane_width, 1)} ft" if mean_lane_width is not None else "Rated area and lane width not supplied", "MetricSubSL")],
         [para(f"{len(unit_pci_values)} sample units  ·  PCI {pci_range}", "MetricSubSL"),
          para(f"{len(sections)} bins  ·  SDI {sdi_range}", "MetricSubSL"),
          para(f"{section_count} sections  ·  {_number(length / max(section_count, 1), 2)} ft each (average)", "MetricSubSL"),
-         para("One directional run", "MetricSubSL")]
+         para("One lane, one direction" if mean_lane_width is not None else "One directional run", "MetricSubSL")]
     ]
     metric_table = Table(metric_cells, colWidths=[usable_width / 4] * 4)
     metric_table.setStyle(TableStyle([
@@ -617,7 +625,7 @@ def build_road_report_pdf(run, all_runs, app_root):
     story.append(para("Annotated survey imagery", "SectionHeadingSL"))
     story.append(para(
         f"Survey imagery for {escape(road_name)}. Frames are arranged in capture order, "
-        "left to right and continues on the next row. Annotation polygons are drawn over their corresponding source frame.",
+        "left to right and continues on the next row. Station labels are feet from the run start. Annotation polygons are drawn over their corresponding source frame.",
         "BodySL"
     ))
     legend_items = []
