@@ -195,6 +195,9 @@ class AnnotatedFrameSheet(Flowable):
             except Exception:
                 canvas.setFillColor(colors.HexColor("#eef1f4"))
                 canvas.rect(x, y, image_width, image_height, stroke=0, fill=1)
+            clip = canvas.beginPath()
+            clip.rect(x, y, image_width, image_height)
+            canvas.clipPath(clip, stroke=0, fill=0)
             for shape in frame.get("shapes", []):
                 label = str(shape.get("label") or "").strip().upper()
                 color = DISTRESS_COLORS.get(label)
@@ -377,7 +380,7 @@ def build_road_report_pdf(run, all_runs, app_root):
     pci_condition = _pci_condition(pci)
     sdi_condition = _sdi_condition(sdi)
     metric_cells = [
-        [para("PCI  ·  ASTM D6433", "MetricLabelSL"), para("SDI", "MetricLabelSL"),
+        [para("PCI  ·  PAVEMENT CONDITION INDEX", "MetricLabelSL"), para("SDI", "MetricLabelSL"),
          para("LENGTH RATED", "MetricLabelSL"), para("INSPECTION FRAMES", "MetricLabelSL")],
         [para(_number(pci, 1), "MetricValueSL"), para(_number(sdi, 2), "MetricValueSL"),
          para(f"{_number(length, 0)} ft", "MetricValueSL"),
