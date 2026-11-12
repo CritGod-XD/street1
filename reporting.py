@@ -280,6 +280,15 @@ def build_road_report_pdf(run, all_runs, app_root):
     current_key = str(run.get("key") or "")
     pci_rank = 1 + sum(1 for value, key in pci_values if pci is not None and value < pci)
     sdi_rank = 1 + sum(1 for value, key in sdi_values if sdi is not None and value < sdi)
+    opposite_run = None
+    direction_swap = {"N": "S", "S": "N", "E": "W", "W": "E"}
+    name_parts = road_name.rsplit(" ", 1)
+    if len(name_parts) == 2 and name_parts[-1].upper() in direction_swap:
+        opposite_name = name_parts[0] + " " + direction_swap[name_parts[-1].upper()]
+        opposite_run = next(
+            (item for item in all_runs if str(item.get("name") or "").casefold() == opposite_name.casefold()),
+            None,
+        )
 
     start_coord = end_coord = None
     for section in sections:
@@ -420,6 +429,16 @@ def build_road_report_pdf(run, all_runs, app_root):
             ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
         ]))
         story.append(rank_table)
+    if opposite_run:
+        opposite_pci = opposite_run.get("pci")
+        opposite_sdi = opposite_run.get("sdi")
+        story.append(Spacer(1, 3))
+        story.append(para(
+            f"<b>Opposite direction comparison · {escape(str(opposite_run.get('name') or ''))}:</b> "
+            f"PCI {_number(opposite_pci, 1)} ({escape(_pci_condition(opposite_pci))})"
+            f"  ·  SDI {_number(opposite_sdi, 2)} ({escape(_sdi_condition(opposite_sdi))}).",
+            "SmallSL"
+        ))
 
     story.append(para("What the survey shows", "SectionHeadingSL"))
     findings = (
@@ -428,7 +447,7 @@ def build_road_report_pdf(run, all_runs, app_root):
         f"Weighted distressed-area percentage: <b>{_number(distressed_area, 1)}%</b>.<br/>"
         f"<b>{potholes:,}</b> potholes and <b>{patches:,}</b> maintenance-cut / patch records "
         f"are recorded in the section data.<br/>"
-        f"The source contains <b>{sample_count:,}</b> section-level sample elements across "
+        f"The source contains <b>{sample_count:,}</b> source micro-sections across "
         f"<b>{len(sections)}</b> scored bins."
     )
     if pci is not None and pci < 40:
