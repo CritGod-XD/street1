@@ -390,7 +390,7 @@ def build_road_report_pdf(run, all_runs, app_root):
     start_text = f"{float(start_coord[0]):.5f}, {float(start_coord[1]):.5f}" if start_coord else "Not available"
     end_text = f"{float(end_coord[0]):.5f}, {float(end_coord[1]):.5f}" if end_coord else "Not available"
     story.append(para(
-        f"Run: {escape(str(run.get('key') or '—'))}  ·  Start: {start_text}  ·  End: {end_text}"
+        f"{'Northbound' if road_name.casefold().endswith(' n') else 'Southbound' if road_name.casefold().endswith(' s') else 'Directional'} run  ·  survey start {start_text}  ·  scored limit {end_text}"
         f"  ·  Survey date: not recorded in source  ·  Report generated {__import__('datetime').datetime.now().strftime('%d %b %Y')}",
         "ReportMeta"
     ))
