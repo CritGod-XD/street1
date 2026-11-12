@@ -156,9 +156,9 @@ class AnnotatedFrameSheet(Flowable):
         super().__init__()
         self.frames = frames
         self.max_width = max_width
-        self.columns = 8
-        self.gap = 2.2
-        self.label_height = 7
+        self.columns = 18
+        self.gap = 1.15
+        self.label_height = 5
         self.cell_width = (max_width - (self.columns - 1) * self.gap) / self.columns
         self.image_height = self.cell_width * 787 / 1640
         self.row_height = self.image_height + self.label_height + 2
@@ -475,104 +475,129 @@ def build_road_report_pdf(run, all_runs, app_root):
     ]))
     story.append(two_col)
 
-    story.append(para("Distress summary · quantities available in the road dataset", "SectionHeadingSL"))
+    story.append(para("Distress summary quantities as booked for PCI, whole road", "SectionHeadingSL"))
     distress_rows = [[
-        para("DISTRESS", "TableHeadSL"), para("RECORDED COUNT", "TableHeadSL"),
-        para("QUANTITY / VALUE", "TableHeadSL"), para("SOURCE FIELD", "TableHeadSL")
+        para("DISTRESS", "TableHeadSL"), para("SEVERITY", "TableHeadSL"),
+        para("COUNT", "TableHeadSL"), para("QUANTITY", "TableHeadSL"),
+        para("DENSITY %", "TableHeadSL"), para("IN WHEEL PATHS", "TableHeadSL")
     ], [
-        para("Crack instances", "TableCellBoldSL"), para(f"{crack_instances:,}", "TableCellSL"),
-        para(f"{_number(crack_length, 1)} ft crack length", "TableCellSL"),
-        para("cr / crft", "TableCellSL")
+        para("Cracking (combined)", "TableCellBoldSL"), para("Not recorded", "TableCellSL"),
+        para(f"{crack_instances:,}", "TableCellSL"), para(f"{_number(crack_length, 1)} ft", "TableCellSL"),
+        para("—", "TableCellSL"), para("—", "TableCellSL")
     ], [
-        para("Distressed area", "TableCellBoldSL"), para("—", "TableCellSL"),
-        para(f"{_number(distressed_area, 1)}% weighted by section length", "TableCellSL"),
-        para("dpct", "TableCellSL")
+        para("Pattern / block cracking", "TableCellBoldSL"), para("Not separately classified", "TableCellSL"),
+        para("—", "TableCellSL"), para("—", "TableCellSL"), para("—", "TableCellSL"), para("—", "TableCellSL")
     ], [
-        para("Potholes", "TableCellBoldSL"), para(f"{potholes:,}", "TableCellSL"),
-        para("Count only; area not supplied", "TableCellSL"),
-        para("pot", "TableCellSL")
+        para("Maintenance cuts / patches", "TableCellBoldSL"), para("Not recorded", "TableCellSL"),
+        para(f"{patches:,}", "TableCellSL"), para("—", "TableCellSL"), para("—", "TableCellSL"), para("—", "TableCellSL")
     ], [
-        para("Maintenance cuts / patches", "TableCellBoldSL"), para(f"{patches:,}", "TableCellSL"),
-        para("Count only; area not supplied", "TableCellSL"),
-        para("pat", "TableCellSL")
+        para("Potholes", "TableCellBoldSL"), para("Not recorded", "TableCellSL"),
+        para(f"{potholes:,}", "TableCellSL"), para("—", "TableCellSL"), para("—", "TableCellSL"), para("—", "TableCellSL")
     ]]
     distress_table = Table(distress_rows, colWidths=[
-        usable_width * .27, usable_width * .15, usable_width * .40, usable_width * .18
+        usable_width * .22, usable_width * .19, usable_width * .10,
+        usable_width * .17, usable_width * .13, usable_width * .19
     ], repeatRows=1)
     distress_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#24364c")),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f3f6f9")]),
-        ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#d6dde5")),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#303840")),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f5f5")]),
+        ("GRID", (0, 0), (-1, -1), 0.45, colors.HexColor("#777777")),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 5),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
         ("TOPPADDING", (0, 0), (-1, -1), 4),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
     story.append(distress_table)
+    story.append(para(
+        "* StreetLens currently stores aggregate crack count and length. It does not separately store longitudinal, "
+        "transverse or pattern-crack quantities, severity, density or wheel-path percentages. Dashes indicate unavailable "
+        "source measurements, not zero distress.", "SmallSL"
+    ))
 
     if sections:
-        story.append(para("Section-level condition scores", "SectionHeadingSL"))
-        header = ["BIN", "STATION", "LENGTH", "PCI", "PCI CONDITION", "SDI", "NDI", "LDI", "DISTRESSED %", "POTHOLES", "PATCHES"]
-        section_rows = [[para(escape(value), "TableHeadSL") for value in header]]
+        story.append(para("PCI by sample unit                                      SDI by 0.1 mile bin", "SectionHeadingSL"))
+        unit_scores = []
+        seen_unit_scores = set()
         for section in sections:
-            start = section.get("f0")
-            end = section.get("f1")
-            station = f"{_station(start)}–{_station(end)}"
-            values = [
-                str(section.get("bin", "—")), station, _number(section.get("len"), 0),
-                _number(section.get("pci"), 1), _pci_condition(section.get("pci")),
-                _number(section.get("sdi"), 2), _number(section.get("ndi"), 2),
-                _number(section.get("ldi"), 2), _number(section.get("dpct"), 1),
-                str(int(float(section.get("pot") or 0))),
-                str(int(float(section.get("pat") or 0))),
-            ]
-            section_rows.append([para(escape(value), "TableCellSL") for value in values])
-        widths = [23, 70, 38, 29, 49, 28, 28, 28, 48, 33, 33]
-        scale = usable_width / sum(widths)
-        section_table = Table(section_rows, colWidths=[value * scale for value in widths], repeatRows=1)
-        section_table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#24364c")),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f3f6f9")]),
-            ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#d6dde5")),
+            for unit in section.get("units", []):
+                if not isinstance(unit, dict) or unit.get("pci") is None:
+                    continue
+                value = round(float(unit.get("pci")), 1)
+                if value not in seen_unit_scores:
+                    seen_unit_scores.add(value)
+                    unit_scores.append(value)
+        pci_rows = [[
+            para("UNIT", "TableHeadSL"), para("PCI", "TableHeadSL"),
+            para("CONDITION", "TableHeadSL"), para("LARGEST DEDUCTS", "TableHeadSL")
+        ]]
+        for index, value in enumerate(unit_scores, 1):
+            pci_rows.append([
+                para(str(index), "TableCellSL"), para(_number(value, 1), "TableCellSL"),
+                para(_pci_condition(value), "TableCellSL"), para("Not supplied", "TableCellSL")
+            ])
+        if len(pci_rows) == 1:
+            pci_rows.append([para("—", "TableCellSL")] * 4)
+        sdi_rows = [[
+            para("BIN", "TableHeadSL"), para("STATION", "TableHeadSL"),
+            para("NDI", "TableHeadSL"), para("LDI", "TableHeadSL"),
+            para("SDI", "TableHeadSL"), para("DISTRESSED AREA", "TableHeadSL")
+        ]]
+        for section in sections:
+            sdi_rows.append([
+                para(str(section.get("bin", "—")), "TableCellSL"),
+                para(f"{_station(section.get('f0'))} to {_station(section.get('f1'))}", "TableCellSL"),
+                para(_number(section.get("ndi"), 2), "TableCellSL"),
+                para(_number(section.get("ldi"), 2), "TableCellSL"),
+                para(_number(section.get("sdi"), 2), "TableCellSL"),
+                para(f"{_number(section.get('dpct'), 1)}%", "TableCellSL")
+            ])
+        pci_table = Table(pci_rows, colWidths=[usable_width * .035, usable_width * .045, usable_width * .075, usable_width * .14], repeatRows=1)
+        sdi_table = Table(sdi_rows, colWidths=[usable_width * .045, usable_width * .10, usable_width * .055, usable_width * .055, usable_width * .055, usable_width * .10], repeatRows=1)
+        common_table_style = [
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#303840")),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f5f5")]),
+            ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#777777")),
             ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
             ("LEFTPADDING", (0, 0), (-1, -1), 2.5),
             ("RIGHTPADDING", (0, 0), (-1, -1), 2.5),
             ("TOPPADDING", (0, 0), (-1, -1), 3),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+        ]
+        pci_table.setStyle(TableStyle(common_table_style))
+        sdi_table.setStyle(TableStyle(common_table_style))
+        paired_tables = Table([[pci_table, sdi_table]], colWidths=[usable_width * .43, usable_width * .57])
+        paired_tables.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+            ("TOPPADDING", (0, 0), (-1, -1), 0),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
         ]))
-        story.append(section_table)
+        story.append(paired_tables)
+        story.append(para(
+            "PCI unit scores are available, but unit station limits and largest deducts are not included in the current "
+            "StreetLens section records. The SDI table uses the supplied scored bins.",
+            "SmallSL"
+        ))
 
-        unit_values = []
-        for section in sections:
-            for unit in section.get("units", []):
-                if isinstance(unit, dict) and unit.get("pci") is not None:
-                    unit_values.append(_number(unit.get("pci"), 1))
-        if unit_values:
-            story.append(Spacer(1, 3))
-            story.append(para(
-                "<b>PCI unit scores recorded in source:</b> " + ", ".join(unit_values)
-                + ". Unit-specific station limits are not supplied in this dataset.",
-                "SmallSL"
-            ))
-
-    story.append(para("Basis and limitations", "SectionHeadingSL"))
+    story.append(para("Basis and limits", "SectionHeadingSL"))
     limitations = (
-        "This report uses the active StreetLens Collingswood section dataset and current saved PCI / SDI score revisions. "
+        "This report follows the pavement rehabilitation candidate summary format and uses the active StreetLens Collingswood section dataset and current saved PCI / SDI score revisions. "
         "Run-level values are length-weighted from the section records where available. The source provides aggregate crack "
         "instances, crack length, distressed-area percentage, pothole count and maintenance-patch count. It does not provide "
-        "distress severity classes, a longitudinal / transverse / pattern-crack split, wheel-path distribution, measured area "
+        "distress severity classes, a longitudinal / transverse / pattern-crack split, sample-unit station limits or largest deducts, wheel-path distribution, measured area "
         "for each pothole or patch, or a survey date. The indicative follow-up is a screening aid, not a final engineering "
         "recommendation. Confirm condition, treatment type and limits through field review."
     )
     story.append(para(limitations, "SmallSL"))
 
     story.append(PageBreak())
-    story.append(para(escape(road_name) + " · ANNOTATED SURVEY IMAGERY", "ReportEyebrow"))
-    story.append(para("Sequential road inspection frames", "SectionHeadingSL"))
+    story.append(para(escape(road_name) + "   DRAFT", "ReportEyebrow"))
+    story.append(para("Annotated survey imagery", "SectionHeadingSL"))
     story.append(para(
-        f"{len(frames)} image frames are available for this road. Frames are arranged in capture order, "
-        "left to right and then top to bottom. Annotation polygons are drawn over their corresponding source frame.",
+        f"Survey imagery for {escape(road_name)}. Frames are arranged in capture order, "
+        "left to right and continues on the next row. Annotation polygons are drawn over their corresponding source frame.",
         "BodySL"
     ))
     legend_items = []
