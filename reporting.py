@@ -370,7 +370,7 @@ def build_road_report_pdf(run, all_runs, app_root):
     end_text = f"{float(end_coord[0]):.5f}, {float(end_coord[1]):.5f}" if end_coord else "Not available"
     story.append(para(
         f"Run: {escape(str(run.get('key') or '—'))}  ·  Start: {start_text}  ·  End: {end_text}"
-        f"  ·  Report generated {__import__('datetime').datetime.now().strftime('%d %b %Y')}",
+        f"  ·  Survey date: not recorded in source  ·  Report generated {__import__('datetime').datetime.now().strftime('%d %b %Y')}",
         "ReportMeta"
     ))
 
