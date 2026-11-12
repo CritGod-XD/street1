@@ -376,8 +376,9 @@ def build_road_report_pdf(run, all_runs, app_root):
         return Paragraph(str(text), styles[style])
 
     story = []
-    story.append(para("COLLINGSWOOD, NJ  ·  PAVEMENT CONDITION INSPECTION REPORT", "ReportEyebrow"))
+    story.append(para("COLLINGSWOOD, NJ  ·  PAVEMENT REHABILITATION CANDIDATE", "ReportEyebrow"))
     story.append(para(escape(road_name), "ReportTitle"))
+    story.append(para("DRAFT", "ReportEyebrow"))
     start_text = f"{float(start_coord[0]):.5f}, {float(start_coord[1]):.5f}" if start_coord else "Not available"
     end_text = f"{float(end_coord[0]):.5f}, {float(end_coord[1]):.5f}" if end_coord else "Not available"
     story.append(para(
@@ -388,27 +389,42 @@ def build_road_report_pdf(run, all_runs, app_root):
 
     pci_condition = _pci_condition(pci)
     sdi_condition = _sdi_condition(sdi)
+    unit_pci_values = sorted({
+        round(float(unit.get("pci")), 1)
+        for section in sections
+        for unit in section.get("units", [])
+        if isinstance(unit, dict) and unit.get("pci") is not None
+    })
+    sdi_values_for_run = [float(section["sdi"]) for section in sections if section.get("sdi") is not None]
+    ndi = _weighted_average(sections, "ndi")
+    ldi = _weighted_average(sections, "ldi")
+    sdi_range = f"{min(sdi_values_for_run):.2f} to {max(sdi_values_for_run):.2f}" if sdi_values_for_run else "—"
+    pci_range = f"{min(unit_pci_values):.1f} to {max(unit_pci_values):.1f}" if unit_pci_values else "—"
+    section_count = sample_count
     metric_cells = [
-        [para("PCI  ·  PAVEMENT CONDITION INDEX", "MetricLabelSL"), para("SDI", "MetricLabelSL"),
-         para("LENGTH RATED", "MetricLabelSL"), para("INSPECTION FRAMES", "MetricLabelSL")],
+        [para("PCI (ASTM D6433)", "MetricLabelSL"), para("SDI", "MetricLabelSL"),
+         para("LENGTH RATED", "MetricLabelSL"), para("RATED AREA", "MetricLabelSL")],
         [para(_number(pci, 1), "MetricValueSL"), para(_number(sdi, 2), "MetricValueSL"),
-         para(f"{_number(length, 0)} ft", "MetricValueSL"),
-         para(str(len(frames)) if frames else "Unavailable", "MetricValueSL")],
+         para(f"{_number(length, 0)} ft", "MetricValueSL"), para("—", "MetricValueSL")],
         [para(escape(pci_condition), "MetricSubSL"),
-         para(escape(sdi_condition), "MetricSubSL"),
-         para(f"{_number(length / 5280, 3)} mi rated", "MetricSubSL"),
-         para("Sequential frame images" if frames else "No registered image folder", "MetricSubSL")]
+         para(f"NDI {_number(ndi, 2)}  ·  LDI {_number(ldi, 2)}", "MetricSubSL"),
+         para(f"{_number(length / 5280, 3)} mi  ·  station 0+00 to {_station(length)}", "MetricSubSL"),
+         para("Rated area and lane width not supplied", "MetricSubSL")],
+        [para(f"{len(unit_pci_values)} sample units  ·  PCI {pci_range}", "MetricSubSL"),
+         para(f"{len(sections)} bins  ·  SDI {sdi_range}", "MetricSubSL"),
+         para(f"{section_count} sections  ·  {_number(length / max(section_count, 1), 2)} ft each (average)", "MetricSubSL"),
+         para("One directional run", "MetricSubSL")]
     ]
     metric_table = Table(metric_cells, colWidths=[usable_width / 4] * 4)
     metric_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f2f5f8")),
-        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#d9e0e8")),
-        ("INNERGRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#d9e0e8")),
+        ("BACKGROUND", (0, 0), (-1, -1), colors.white),
+        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#555555")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#888888")),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 7),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
         ("RIGHTPADDING", (0, 0), (-1, -1), 5),
-        ("TOPPADDING", (0, 0), (-1, -1), 5),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
     story.append(metric_table)
 
@@ -441,17 +457,21 @@ def build_road_report_pdf(run, all_runs, app_root):
         ))
 
     story.append(para("What the survey shows", "SectionHeadingSL"))
+    lowest_unit = min(unit_pci_values) if unit_pci_values else None
+    highest_unit = max(unit_pci_values) if unit_pci_values else None
     findings = (
-        f"<b>{crack_instances:,}</b> recorded crack instances extend for "
-        f"<b>{_number(crack_length, 1)} ft</b> across the scored sections.<br/>"
-        f"Weighted distressed-area percentage: <b>{_number(distressed_area, 1)}%</b>.<br/>"
-        f"<b>{potholes:,}</b> potholes and <b>{patches:,}</b> maintenance-cut / patch records "
-        f"are recorded in the section data.<br/>"
-        f"The source contains <b>{sample_count:,}</b> source micro-sections across "
-        f"<b>{len(sections)}</b> scored bins."
+        f"Recorded cracking totals <b>{crack_instances:,} instances</b> and "
+        f"<b>{_number(crack_length, 1)} ft</b> across the rated run.<br/>"
+        f"Weighted distressed area is <b>{_number(distressed_area, 1)}%</b> of the rated sections; "
+        f"the dataset does not provide the corresponding square-foot area or wheel-path split.<br/>"
+        f"The weakest recorded PCI sample-unit score is <b>{_number(lowest_unit, 1)}</b> "
+        f"({_pci_condition(lowest_unit)}). The highest is {_number(highest_unit, 1)} "
+        f"({_pci_condition(highest_unit)}); no recorded sample unit is above Poor.<br/>"
+        f"<b>{potholes:,}</b> potholes and <b>{patches:,}</b> maintenance cuts / patches are recorded. "
+        f"Unit station limits and largest deducts are not supplied."
     )
     if pci is not None and pci < 40:
-        action = "High priority — arrange a field review and rehabilitation assessment. The PCI band indicates substantial pavement distress; treatment selection and limits require engineering review."
+        action = "Immediate attention. Repair failed areas and assess mill-and-overlay or deeper rehabilitation within the year. This is an indicative action from the PCI condition band; a field check must confirm treatment type and limits."
     elif pci is not None and pci < 55:
         action = "Priority review — inspect the distressed locations and evaluate suitable repair or rehabilitation options. Confirm treatment limits in the field."
     elif pci is not None and pci < 70:
