@@ -8,11 +8,12 @@ import urllib.parse
 import urllib.request
 
 from dotenv import load_dotenv
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import Flask, flash, redirect, render_template, request, send_file, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from config import Config
 from models import ScoreRevision, User, db
+from reporting import build_road_report_pdf
 
 load_dotenv()  # no-op on Vercel (env vars are injected directly); loads .env locally
 
@@ -576,6 +577,38 @@ def dashboard():
         username=session.get("username"),
         road_frames=ROAD_FRAMES,
         road_length_ft=(ROAD_FRAMES[-1]["station_end"] if ROAD_FRAMES else 0),
+    )
+
+
+@app.route("/dashboard/report")
+@login_required
+def dashboard_report():
+    """Download a whole-road PDF report for the road currently selected in the dashboard."""
+    run_key = (request.args.get("run") or "").strip()
+    road_name = (request.args.get("road") or "").strip()
+    _, section_data = _apply_score_overrides(
+        _base_pci_roads(), _base_section_data(), _current_score_overrides()
+    )
+    runs = section_data.get("runs", []) if isinstance(section_data, dict) else []
+    selected_run = next(
+        (item for item in runs if run_key and str(item.get("key") or "") == run_key),
+        None,
+    )
+    if selected_run is None and road_name:
+        selected_run = next(
+            (item for item in runs if str(item.get("name") or "").casefold() == road_name.casefold()),
+            None,
+        )
+    if selected_run is None:
+        flash("Select a scored road section on the dashboard before generating its report.", "error")
+        return redirect(url_for("dashboard"))
+    pdf_bytes, filename = build_road_report_pdf(selected_run, runs, app.root_path)
+    return send_file(
+        io.BytesIO(pdf_bytes),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=filename,
+        max_age=0,
     )
 
 
