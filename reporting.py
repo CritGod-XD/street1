@@ -154,6 +154,33 @@ def _find_road_dataset(road_name, app_root):
     return None, []
 
 
+def _select_report_frames(frames, limit=15):
+    """Pick at most 15 annotated frames spread across the full roadway run."""
+    ordered = sorted(
+        frames,
+        key=lambda frame: (
+            float(frame.get("station_start"))
+            if frame.get("station_start") is not None else float(frame.get("frame_id") or 0)
+        ),
+    )
+    if len(ordered) <= limit:
+        return ordered
+    selected = []
+    for slot in range(limit):
+        start = round(slot * len(ordered) / limit)
+        end = round((slot + 1) * len(ordered) / limit)
+        candidates = ordered[start:max(start + 1, end)]
+        best = max(
+            candidates,
+            key=lambda frame: (
+                len(frame.get("shapes", [])),
+                -abs(candidates.index(frame) - (len(candidates) - 1) / 2),
+            ),
+        )
+        selected.append(best)
+    return selected
+
+
 class AnnotatedFrameSheet(Flowable):
     """Compact sequential frame sheet with the source LabelMe polygons overlaid."""
 
@@ -161,9 +188,9 @@ class AnnotatedFrameSheet(Flowable):
         super().__init__()
         self.frames = frames
         self.max_width = max_width
-        self.columns = 18
-        self.gap = 1.15
-        self.label_height = 5
+        self.columns = 3
+        self.gap = 3.0
+        self.label_height = 7
         self.cell_width = (max_width - (self.columns - 1) * self.gap) / self.columns
         self.image_height = self.cell_width * 787 / 1640
         self.row_height = self.image_height + self.label_height + 2
@@ -247,18 +274,20 @@ def build_road_report_pdf(run, all_runs, app_root):
         key=lambda item: float(item.get("f0") or 0)
     )
     road_name = str(run.get("name") or "Unnamed road")
-    pci = _weighted_average(sections, "pci")
-    sdi = _weighted_average(sections, "sdi")
+    # Use the roadway-level scores: PCI is sample-unit area-weighted and
+    # SDI is section length-weighted. Section averages are only a fallback.
+    try:
+        pci = float(run.get("pci")) if run.get("pci") is not None else None
+    except (TypeError, ValueError):
+        pci = None
+    try:
+        sdi = float(run.get("sdi")) if run.get("sdi") is not None else None
+    except (TypeError, ValueError):
+        sdi = None
     if pci is None:
-        try:
-            pci = float(run.get("pci"))
-        except (TypeError, ValueError):
-            pci = None
+        pci = _weighted_average(sections, "pci")
     if sdi is None:
-        try:
-            sdi = float(run.get("sdi"))
-        except (TypeError, ValueError):
-            sdi = None
+        sdi = _weighted_average(sections, "sdi")
     length = sum(float(section.get("len") or 0) for section in sections)
     crack_instances = sum(int(float(section.get("cr") or 0)) for section in sections)
     crack_length = sum(float(section.get("crft") or 0) for section in sections)
@@ -304,6 +333,7 @@ def build_road_report_pdf(run, all_runs, app_root):
             end_coord = coords[-1]
 
     dataset_index, frames = _find_road_dataset(road_name, app_root)
+    frames = _select_report_frames(frames, 15)
     lane_widths = [float(frame["lane_width_ft"]) for frame in frames if frame.get("lane_width_ft") is not None]
     mean_lane_width = sum(lane_widths) / len(lane_widths) if lane_widths else None
     rated_area_sqft = length * mean_lane_width if mean_lane_width is not None else None
@@ -409,18 +439,18 @@ def build_road_report_pdf(run, all_runs, app_root):
 
     pci_condition = _pci_condition(pci)
     sdi_condition = _sdi_condition(sdi)
-    unit_pci_values = sorted({
+    unit_pci_values = [
         round(float(unit.get("pci")), 1)
         for section in sections
         for unit in section.get("units", [])
         if isinstance(unit, dict) and unit.get("pci") is not None
-    })
+    ]
     sdi_values_for_run = [float(section["sdi"]) for section in sections if section.get("sdi") is not None]
     ndi = _weighted_average(sections, "ndi")
     ldi = _weighted_average(sections, "ldi")
     sdi_range = f"{min(sdi_values_for_run):.2f} to {max(sdi_values_for_run):.2f}" if sdi_values_for_run else "—"
     pci_range = f"{min(unit_pci_values):.1f} to {max(unit_pci_values):.1f}" if unit_pci_values else "—"
-    section_count = sample_count
+    section_count = len(sections)
     metric_cells = [
         [para("PCI (ASTM D6433)", "MetricLabelSL"), para("SDI", "MetricLabelSL"),
          para("LENGTH RATED", "MetricLabelSL"), para("RATED AREA", "MetricLabelSL")],
@@ -432,7 +462,7 @@ def build_road_report_pdf(run, all_runs, app_root):
          para(f"Mean lane width {_number(mean_lane_width, 1)} ft" if mean_lane_width is not None else "Rated area and lane width not supplied", "MetricSubSL")],
         [para(f"{len(unit_pci_values)} sample units  ·  PCI {pci_range}", "MetricSubSL"),
          para(f"{len(sections)} bins  ·  SDI {sdi_range}", "MetricSubSL"),
-         para(f"{section_count} sections  ·  {_number(length / max(section_count, 1), 2)} ft each (average)", "MetricSubSL"),
+         para(f"{section_count} sections  ·  {sample_count} frames · {_number(length / max(section_count, 1), 2)} ft avg. section", "MetricSubSL"),
          para("One lane, one direction" if mean_lane_width is not None else "One directional run", "MetricSubSL")]
     ]
     metric_table = Table(metric_cells, colWidths=[usable_width / 4] * 4)
