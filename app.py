@@ -394,6 +394,7 @@ def _apply_score_overrides(pci_roads, section_data, overrides):
         if source:
             run["score_source"] = "PCI and SDI report.xlsx"
             run["score_date"] = "2026-11-07"
+            run["score_total_roadways"] = len(pci_roads)
             for field in ("pci", "sdi", "condition", "sdi_rating", "pci_rank", "sdi_rank",
                           "length_ft", "section_count", "direction", "treatment",
                           "treatment_notes", "labels_reviewed", "collected",
