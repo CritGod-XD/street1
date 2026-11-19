@@ -480,10 +480,13 @@ def build_road_report_pdf(run, all_runs, app_root):
     story.append(metric_table)
 
     rank_parts = []
-    if pci is not None and pci_values:
-        rank_parts.append(f"PCI: {pci_rank} of {len(pci_values)} scored runs (lowest first)")
-    if sdi is not None and sdi_values:
-        rank_parts.append(f"SDI: {sdi_rank} of {len(sdi_values)} scored runs (lowest first)")
+    score_total = int(run.get("score_total_roadways") or 0) or len(pci_values)
+    pci_rank = run.get("pci_rank") or pci_rank
+    sdi_rank = run.get("sdi_rank") or sdi_rank
+    if pci is not None and pci_rank:
+        rank_parts.append(f"PCI: {pci_rank} of {score_total} workbook roadways (ranked lowest first)")
+    if sdi is not None and sdi_rank:
+        rank_parts.append(f"SDI: {sdi_rank} of {score_total} workbook roadways (ranked lowest first)")
     if rank_parts:
         story.append(Spacer(1, 5))
         rank_table = Table([[para("  ·  ".join(rank_parts), "BodySL")]], colWidths=[usable_width])
