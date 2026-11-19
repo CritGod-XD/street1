@@ -290,7 +290,9 @@ def build_road_report_pdf(run, all_runs, app_root):
     length = float(run.get("length_ft") or sum(float(section.get("len") or 0) for section in sections))
     potholes = int(run.get("potholes") if run.get("potholes") is not None else sum(int(float(section.get("pot") or 0)) for section in sections))
     patches = int(run.get("cuts_patches") if run.get("cuts_patches") is not None else sum(int(float(section.get("pat") or 0)) for section in sections))
-    sample_count = sum(int(float(section.get("n") or 0)) for section in sections)
+    crack_instances = None if run.get("workbook_matched") else sum(int(float(section.get("cr") or 0)) for section in sections)
+    crack_length = None if run.get("workbook_matched") else sum(float(section.get("crft") or 0) for section in sections)
+    sample_count = 0 if run.get("workbook_matched") else sum(int(float(section.get("n") or 0)) for section in sections)
 
     pci_values = []
     sdi_values = []
@@ -458,9 +460,9 @@ def build_road_report_pdf(run, all_runs, app_root):
          para(f"NDI {_number(ndi, 2)}  ·  LDI {_number(ldi, 2)}", "MetricSubSL"),
          para(f"{_number(length / 5280, 3)} mi  ·  station 0+00 to {_station(length)}", "MetricSubSL"),
          para(f"Mean lane width {_number(mean_lane_width, 1)} ft" if mean_lane_width is not None else "Rated area and lane width not supplied", "MetricSubSL")],
-        [para(f"{len(unit_pci_values)} sample units  ·  PCI {pci_range}", "MetricSubSL"),
-         para(f"{len(sections)} bins  ·  SDI {sdi_range}", "MetricSubSL"),
-         para(f"{section_count} sections  ·  {sample_count} frames · {_number(length / max(section_count, 1), 2)} ft avg. section", "MetricSubSL"),
+        [para(f"{len(unit_pci_values)} sample units  ·  PCI {pci_range}" if unit_pci_values else "Sample-unit breakdown not supplied", "MetricSubSL"),
+         para(f"{len(sections)} map bins · SDI {sdi_range}" if sdi_range != "—" else "Section SDI breakdown not reconciled", "MetricSubSL"),
+         para(f"{section_count} workbook sections  ·  {_number(length / max(section_count, 1), 2)} ft avg. section", "MetricSubSL"),
          para("One lane, one direction" if mean_lane_width is not None else "One directional run", "MetricSubSL")]
     ]
     metric_table = Table(metric_cells, colWidths=[usable_width / 4] * 4)
@@ -547,7 +549,7 @@ def build_road_report_pdf(run, all_runs, app_root):
         para("DENSITY %", "TableHeadSL"), para("IN WHEEL PATHS", "TableHeadSL")
     ], [
         para("Cracking (combined)", "TableCellBoldSL"), para("Not recorded", "TableCellSL"),
-        para(f"{crack_instances:,}", "TableCellSL"), para(f"{_number(crack_length, 1)} ft", "TableCellSL"),
+        para(_number(crack_instances, 0), "TableCellSL"), para(f"{_number(crack_length, 1)} ft" if crack_length is not None else "—", "TableCellSL"),
         para("—", "TableCellSL"), para("—", "TableCellSL")
     ], [
         para("Pattern / block cracking", "TableCellBoldSL"), para("Not separately classified", "TableCellSL"),
@@ -575,13 +577,13 @@ def build_road_report_pdf(run, all_runs, app_root):
     ]))
     story.append(distress_table)
     story.append(para(
-        "* StreetLens currently stores aggregate crack count and length. It does not separately store longitudinal, "
-        "transverse or pattern-crack quantities, severity, density or wheel-path percentages. Dashes indicate unavailable "
+        "* The final PCI/SDI workbook supplies roadway-level pothole and maintenance-cut counts, but not aggregate crack "
+        "count/length, separate crack types, severity, density or wheel-path percentages. Dashes indicate unavailable "
         "source measurements, not zero distress.", "SmallSL"
     ))
 
     if sections:
-        story.append(para("PCI by sample unit                                      SDI by 0.1 mile bin", "SectionHeadingSL"))
+        story.append(para("Mapped section geometry · workbook section scores are reported at roadway level", "SectionHeadingSL"))
         unit_scores = []
         seen_unit_scores = set()
         for section in sections:
