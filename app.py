@@ -385,7 +385,9 @@ def _apply_score_overrides(pci_roads, section_data, overrides):
     for run in section_data.get("runs", []):
         candidates = [
             _folder_score_key(str(run.get("key") or "").split("/")[-1]),
+            *[_folder_score_key(part) for part in str(run.get("key") or "").split("/")[-1].split("/")],
             _folder_score_key(run.get("name")),
+            *[_folder_score_key(part) for part in str(run.get("name") or "").split("/")],
         ]
         source = next((workbook_by_folder[key] for key in candidates if key in workbook_by_folder), None)
         run["workbook_matched"] = bool(source)
@@ -402,6 +404,9 @@ def _apply_score_overrides(pci_roads, section_data, overrides):
                 section["sdi"] = None
                 section["ndi"] = None
                 section["ldi"] = None
+                for stale_field in ("pot", "pat", "cr", "crft", "dpct", "n"):
+                    section[stale_field] = None
+                section["units"] = []
         override = overrides.get(_score_name_key(run.get("name")))
         if isinstance(override, dict):
             for metric in ("pci", "sdi"):
