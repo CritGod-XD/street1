@@ -154,6 +154,32 @@ def _find_road_dataset(road_name, app_root):
     return None, []
 
 
+def _select_report_frames(frames, limit=15):
+    """Pick at most 15 annotated frames spread across the full roadway run."""
+    ordered = sorted(
+        frames,
+        key=lambda frame: (
+            float(frame.get("station_start") or 0)
+        ),
+    )
+    if len(ordered) <= limit:
+        return ordered
+    selected = []
+    for slot in range(limit):
+        start = round(slot * len(ordered) / limit)
+        end = round((slot + 1) * len(ordered) / limit)
+        candidates = ordered[start:max(start + 1, end)]
+        best = max(
+            candidates,
+            key=lambda frame: (
+                len(frame.get("shapes", [])),
+                -abs(candidates.index(frame) - (len(candidates) - 1) / 2),
+            ),
+        )
+        selected.append(best)
+    return selected
+
+
 class AnnotatedFrameSheet(Flowable):
     """Compact sequential frame sheet with the source LabelMe polygons overlaid."""
 
@@ -161,9 +187,9 @@ class AnnotatedFrameSheet(Flowable):
         super().__init__()
         self.frames = frames
         self.max_width = max_width
-        self.columns = 18
-        self.gap = 1.15
-        self.label_height = 5
+        self.columns = 3
+        self.gap = 3.0
+        self.label_height = 7
         self.cell_width = (max_width - (self.columns - 1) * self.gap) / self.columns
         self.image_height = self.cell_width * 787 / 1640
         self.row_height = self.image_height + self.label_height + 2
@@ -247,25 +273,26 @@ def build_road_report_pdf(run, all_runs, app_root):
         key=lambda item: float(item.get("f0") or 0)
     )
     road_name = str(run.get("name") or "Unnamed road")
-    pci = _weighted_average(sections, "pci")
-    sdi = _weighted_average(sections, "sdi")
+    # Use the roadway-level scores: PCI is sample-unit area-weighted and
+    # SDI is section length-weighted. Section averages are only a fallback.
+    try:
+        pci = float(run.get("pci")) if run.get("pci") is not None else None
+    except (TypeError, ValueError):
+        pci = None
+    try:
+        sdi = float(run.get("sdi")) if run.get("sdi") is not None else None
+    except (TypeError, ValueError):
+        sdi = None
     if pci is None:
-        try:
-            pci = float(run.get("pci"))
-        except (TypeError, ValueError):
-            pci = None
+        pci = _weighted_average(sections, "pci")
     if sdi is None:
-        try:
-            sdi = float(run.get("sdi"))
-        except (TypeError, ValueError):
-            sdi = None
-    length = sum(float(section.get("len") or 0) for section in sections)
-    crack_instances = sum(int(float(section.get("cr") or 0)) for section in sections)
-    crack_length = sum(float(section.get("crft") or 0) for section in sections)
-    potholes = sum(int(float(section.get("pot") or 0)) for section in sections)
-    patches = sum(int(float(section.get("pat") or 0)) for section in sections)
-    distressed_area = _weighted_average(sections, "dpct")
-    sample_count = sum(int(float(section.get("n") or 0)) for section in sections)
+        sdi = _weighted_average(sections, "sdi")
+    length = float(run.get("length_ft") or sum(float(section.get("len") or 0) for section in sections))
+    potholes = int(run.get("potholes") if run.get("potholes") is not None else sum(int(float(section.get("pot") or 0)) for section in sections))
+    patches = int(run.get("cuts_patches") if run.get("cuts_patches") is not None else sum(int(float(section.get("pat") or 0)) for section in sections))
+    crack_instances = None if run.get("workbook_matched") else sum(int(float(section.get("cr") or 0)) for section in sections)
+    crack_length = None if run.get("workbook_matched") else sum(float(section.get("crft") or 0) for section in sections)
+    sample_count = 0 if run.get("workbook_matched") else sum(int(float(section.get("n") or 0)) for section in sections)
 
     pci_values = []
     sdi_values = []
@@ -283,8 +310,10 @@ def build_road_report_pdf(run, all_runs, app_root):
         except (TypeError, ValueError):
             pass
     current_key = str(run.get("key") or "")
-    pci_rank = 1 + sum(1 for value, key in pci_values if pci is not None and value < pci)
-    sdi_rank = 1 + sum(1 for value, key in sdi_values if sdi is not None and value < sdi)
+    pci_order = sorted(pci_values, key=lambda item: (item[0], item[1]))
+    sdi_order = sorted(sdi_values, key=lambda item: (item[0], next((float(x.get("pci")) for x in all_runs if str(x.get("key") or "") == item[1] and x.get("pci") is not None), 101), item[1]))
+    pci_rank = next((index for index, item in enumerate(pci_order, 1) if item[1] == current_key), None)
+    sdi_rank = next((index for index, item in enumerate(sdi_order, 1) if item[1] == current_key), None)
     opposite_run = None
     direction_swap = {"N": "S", "S": "N", "E": "W", "W": "E"}
     name_parts = road_name.rsplit(" ", 1)
@@ -303,8 +332,9 @@ def build_road_report_pdf(run, all_runs, app_root):
         if coords:
             end_coord = coords[-1]
 
-    dataset_index, frames = _find_road_dataset(road_name, app_root)
-    lane_widths = [float(frame["lane_width_ft"]) for frame in frames if frame.get("lane_width_ft") is not None]
+    dataset_index, all_frames = _find_road_dataset(road_name, app_root)
+    frames = _select_report_frames(all_frames, 15)
+    lane_widths = [float(frame["lane_width_ft"]) for frame in all_frames if frame.get("lane_width_ft") is not None]
     mean_lane_width = sum(lane_widths) / len(lane_widths) if lane_widths else None
     rated_area_sqft = length * mean_lane_width if mean_lane_width is not None else None
     annotation_counts = {key: 0 for key in DISTRESS_COLORS}
@@ -389,26 +419,39 @@ def build_road_report_pdf(run, all_runs, app_root):
     story.append(para("DRAFT", "ReportEyebrow"))
     start_text = f"{float(start_coord[0]):.5f}, {float(start_coord[1]):.5f}" if start_coord else "Not available"
     end_text = f"{float(end_coord[0]):.5f}, {float(end_coord[1]):.5f}" if end_coord else "Not available"
+    direction = str(run.get("direction") or run.get("dir") or "").strip().upper()
+    if not direction:
+        suffix = road_name.rsplit(" ", 1)[-1].upper() if " " in road_name else ""
+        direction = {"N": "Northbound", "S": "Southbound", "E": "Eastbound", "W": "Westbound"}.get(suffix, "Not recorded")
+    else:
+        direction = {"N": "Northbound", "S": "Southbound", "E": "Eastbound", "W": "Westbound",
+                     "NB": "Northbound", "SB": "Southbound", "EB": "Eastbound", "WB": "Westbound"}.get(direction, direction)
+    collected = run.get("collected") or run.get("survey_date") or "Not recorded"
+    batch = str(run.get("batch") or "Not recorded")
+    labels_reviewed = run.get("labels_reviewed")
+    labels_text = "Yes" if labels_reviewed is True or str(labels_reviewed).casefold() == "yes" else "No" if labels_reviewed is False or str(labels_reviewed).casefold() == "no" else "Not recorded"
     story.append(para(
-        f"{'Northbound' if road_name.casefold().endswith(' n') else 'Southbound' if road_name.casefold().endswith(' s') else 'Directional'} run  ·  survey start {start_text}  ·  scored limit {end_text}"
-        f"  ·  Survey date: not recorded in source  ·  Report generated {__import__('datetime').datetime.now().strftime('%d %b %Y')}",
+        f"Batch {escape(batch)}  ·  {escape(direction)}  ·  survey start {start_text}  ·  scored limit {end_text}"
+        f"  ·  Collected: {escape(str(collected))}  ·  Labels reviewed: {labels_text}"
+        f"  ·  Score source: {escape(str(run.get('score_source') or 'current roadway score data'))} ({escape(str(run.get('score_date') or 'date not recorded'))})"
+        f"  ·  Report generated {__import__('datetime').datetime.now().strftime('%d %b %Y')}",
         "ReportMeta"
     ))
 
     pci_condition = _pci_condition(pci)
     sdi_condition = _sdi_condition(sdi)
-    unit_pci_values = sorted({
+    unit_pci_values = [
         round(float(unit.get("pci")), 1)
         for section in sections
         for unit in section.get("units", [])
         if isinstance(unit, dict) and unit.get("pci") is not None
-    })
+    ]
     sdi_values_for_run = [float(section["sdi"]) for section in sections if section.get("sdi") is not None]
-    ndi = _weighted_average(sections, "ndi")
-    ldi = _weighted_average(sections, "ldi")
+    ndi = run.get("ndi") if run.get("ndi") is not None else _weighted_average(sections, "ndi")
+    ldi = run.get("ldi") if run.get("ldi") is not None else _weighted_average(sections, "ldi")
     sdi_range = f"{min(sdi_values_for_run):.2f} to {max(sdi_values_for_run):.2f}" if sdi_values_for_run else "—"
     pci_range = f"{min(unit_pci_values):.1f} to {max(unit_pci_values):.1f}" if unit_pci_values else "—"
-    section_count = sample_count
+    section_count = int(run.get("section_count") or len(sections))
     metric_cells = [
         [para("PCI (ASTM D6433)", "MetricLabelSL"), para("SDI", "MetricLabelSL"),
          para("LENGTH RATED", "MetricLabelSL"), para("RATED AREA", "MetricLabelSL")],
@@ -418,9 +461,9 @@ def build_road_report_pdf(run, all_runs, app_root):
          para(f"NDI {_number(ndi, 2)}  ·  LDI {_number(ldi, 2)}", "MetricSubSL"),
          para(f"{_number(length / 5280, 3)} mi  ·  station 0+00 to {_station(length)}", "MetricSubSL"),
          para(f"Mean lane width {_number(mean_lane_width, 1)} ft" if mean_lane_width is not None else "Rated area and lane width not supplied", "MetricSubSL")],
-        [para(f"{len(unit_pci_values)} sample units  ·  PCI {pci_range}", "MetricSubSL"),
-         para(f"{len(sections)} bins  ·  SDI {sdi_range}", "MetricSubSL"),
-         para(f"{section_count} sections  ·  {_number(length / max(section_count, 1), 2)} ft each (average)", "MetricSubSL"),
+        [para(f"{len(unit_pci_values)} sample units  ·  PCI {pci_range}" if unit_pci_values else "Sample-unit breakdown not supplied", "MetricSubSL"),
+         para(f"{len(sections)} map bins · SDI {sdi_range}" if sdi_range != "—" else "Section SDI breakdown not reconciled", "MetricSubSL"),
+         para(f"{section_count} workbook sections  ·  {_number(length / max(section_count, 1), 2)} ft avg. section", "MetricSubSL"),
          para("One lane, one direction" if mean_lane_width is not None else "One directional run", "MetricSubSL")]
     ]
     metric_table = Table(metric_cells, colWidths=[usable_width / 4] * 4)
@@ -437,10 +480,13 @@ def build_road_report_pdf(run, all_runs, app_root):
     story.append(metric_table)
 
     rank_parts = []
-    if pci is not None and pci_values:
-        rank_parts.append(f"PCI: {pci_rank} of {len(pci_values)} scored runs (lowest first)")
-    if sdi is not None and sdi_values:
-        rank_parts.append(f"SDI: {sdi_rank} of {len(sdi_values)} scored runs (lowest first)")
+    score_total = int(run.get("score_total_roadways") or 0) or len(pci_values)
+    pci_rank = run.get("pci_rank") or pci_rank
+    sdi_rank = run.get("sdi_rank") or sdi_rank
+    if pci is not None and pci_rank:
+        rank_parts.append(f"PCI: {pci_rank} of {score_total} workbook roadways (ranked lowest first)")
+    if sdi is not None and sdi_rank:
+        rank_parts.append(f"SDI: {sdi_rank} of {score_total} workbook roadways (ranked lowest first)")
     if rank_parts:
         story.append(Spacer(1, 5))
         rank_table = Table([[para("  ·  ".join(rank_parts), "BodySL")]], colWidths=[usable_width])
@@ -467,28 +513,25 @@ def build_road_report_pdf(run, all_runs, app_root):
     story.append(para("What the survey shows", "SectionHeadingSL"))
     lowest_unit = min(unit_pci_values) if unit_pci_values else None
     highest_unit = max(unit_pci_values) if unit_pci_values else None
+    section_pci_values = [float(section["pci"]) for section in sections if section.get("pci") is not None]
+    section_sdi_values = [float(section["sdi"]) for section in sections if section.get("sdi") is not None]
+    lowest_section_pci = run.get("lowest_section_pci") if run.get("lowest_section_pci") is not None else (min(section_pci_values) if section_pci_values else None)
+    lowest_section_sdi = run.get("lowest_section_sdi") if run.get("lowest_section_sdi") is not None else (min(section_sdi_values) if section_sdi_values else None)
     findings = (
-        f"Recorded cracking totals <b>{crack_instances:,} instances</b> and "
-        f"<b>{_number(crack_length, 1)} ft</b> across the rated run.<br/>"
-        f"Weighted distressed area is <b>{_number(distressed_area, 1)}%</b> of the rated sections; "
-        f"the dataset does not provide the corresponding square-foot area or wheel-path split.<br/>"
-        f"The weakest recorded PCI sample-unit score is <b>{_number(lowest_unit, 1)}</b> "
-        f"({_pci_condition(lowest_unit)}). The highest is {_number(highest_unit, 1)} "
-        f"({_pci_condition(highest_unit)}); no recorded sample unit is above Poor.<br/>"
-        f"<b>{potholes:,}</b> potholes and <b>{patches:,}</b> maintenance cuts / patches are recorded. "
-        f"Unit station limits and largest deducts are not supplied."
+        f"<b>{potholes:,}</b> potholes and <b>{patches:,}</b> maintenance cuts / patches are recorded in the final roadway score workbook.<br/>"
+        f"Lowest section PCI: <b>{_number(lowest_section_pci, 1)}</b>; lowest section SDI: "
+        f"<b>{_number(lowest_section_sdi, 2)}</b>.<br/>"
+        f"Roadway PCI is the workbook roadway score; roadway SDI is the workbook roadway score. "
+        f"Section geometry in the map is retained separately from the final workbook section breakdown."
     )
-    if pci is not None and pci < 40:
-        action = "Immediate attention. Repair failed areas and assess mill-and-overlay or deeper rehabilitation within the year. This is an indicative action from the PCI condition band; a field check must confirm treatment type and limits."
-    elif pci is not None and pci < 55:
-        action = "Priority review — inspect the distressed locations and evaluate suitable repair or rehabilitation options. Confirm treatment limits in the field."
-    elif pci is not None and pci < 70:
-        action = "Plan maintenance review — prioritize localized defects and consider preventive maintenance where field conditions support it."
-    else:
-        action = "Continue routine monitoring and evaluate preventive maintenance based on field conditions."
+    treatment = str(run.get("recommended_treatment") or run.get("treatment") or "").strip()
+    treatment_notes = str(run.get("treatment_notes") or run.get("notes") or "").strip()
+    treatment_text = escape(treatment) if treatment else "Not present in the current roadway score data"
+    if treatment_notes:
+        treatment_text += "<br/><b>Notes:</b> " + escape(treatment_notes)
     two_col = Table([[
         para(findings, "BodySL"),
-        para(f"<b>Indicative follow-up (PCI screening band)</b><br/>{action}", "BodySL")
+        para(f"<b>Recommended treatment (recorded assignment)</b><br/>{treatment_text}", "BodySL")
     ]], colWidths=[usable_width * 0.57, usable_width * 0.43])
     two_col.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -510,7 +553,7 @@ def build_road_report_pdf(run, all_runs, app_root):
         para("DENSITY %", "TableHeadSL"), para("IN WHEEL PATHS", "TableHeadSL")
     ], [
         para("Cracking (combined)", "TableCellBoldSL"), para("Not recorded", "TableCellSL"),
-        para(f"{crack_instances:,}", "TableCellSL"), para(f"{_number(crack_length, 1)} ft", "TableCellSL"),
+        para(_number(crack_instances, 0), "TableCellSL"), para(f"{_number(crack_length, 1)} ft" if crack_length is not None else "—", "TableCellSL"),
         para("—", "TableCellSL"), para("—", "TableCellSL")
     ], [
         para("Pattern / block cracking", "TableCellBoldSL"), para("Not separately classified", "TableCellSL"),
@@ -538,13 +581,13 @@ def build_road_report_pdf(run, all_runs, app_root):
     ]))
     story.append(distress_table)
     story.append(para(
-        "* StreetLens currently stores aggregate crack count and length. It does not separately store longitudinal, "
-        "transverse or pattern-crack quantities, severity, density or wheel-path percentages. Dashes indicate unavailable "
+        "* The final PCI/SDI workbook supplies roadway-level pothole and maintenance-cut counts, but not aggregate crack "
+        "count/length, separate crack types, severity, density or wheel-path percentages. Dashes indicate unavailable "
         "source measurements, not zero distress.", "SmallSL"
     ))
 
     if sections:
-        story.append(para("PCI by sample unit                                      SDI by 0.1 mile bin", "SectionHeadingSL"))
+        story.append(para("Mapped section geometry · workbook section scores are reported at roadway level", "SectionHeadingSL"))
         unit_scores = []
         seen_unit_scores = set()
         for section in sections:
@@ -568,20 +611,21 @@ def build_road_report_pdf(run, all_runs, app_root):
             pci_rows.append([para("—", "TableCellSL")] * 4)
         sdi_rows = [[
             para("BIN", "TableHeadSL"), para("STATION", "TableHeadSL"),
-            para("NDI", "TableHeadSL"), para("LDI", "TableHeadSL"),
+            para("PCI", "TableHeadSL"), para("NDI", "TableHeadSL"), para("LDI", "TableHeadSL"),
             para("SDI", "TableHeadSL"), para("DISTRESSED AREA", "TableHeadSL")
         ]]
         for section in sections:
             sdi_rows.append([
                 para(str(section.get("bin", "—")), "TableCellSL"),
                 para(f"{_station(section.get('f0'))} to {_station(section.get('f1'))}", "TableCellSL"),
+                para(_number(section.get("pci"), 1), "TableCellSL"),
                 para(_number(section.get("ndi"), 2), "TableCellSL"),
                 para(_number(section.get("ldi"), 2), "TableCellSL"),
                 para(_number(section.get("sdi"), 2), "TableCellSL"),
                 para(f"{_number(section.get('dpct'), 1)}%", "TableCellSL")
             ])
         pci_table = Table(pci_rows, colWidths=[usable_width * .035, usable_width * .045, usable_width * .075, usable_width * .14], repeatRows=1)
-        sdi_table = Table(sdi_rows, colWidths=[usable_width * .045, usable_width * .10, usable_width * .055, usable_width * .055, usable_width * .055, usable_width * .10], repeatRows=1)
+        sdi_table = Table(sdi_rows, colWidths=[usable_width * .04, usable_width * .10, usable_width * .05, usable_width * .05, usable_width * .05, usable_width * .05, usable_width * .10], repeatRows=1)
         common_table_style = [
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#303840")),
             ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f5f5")]),
@@ -622,10 +666,10 @@ def build_road_report_pdf(run, all_runs, app_root):
 
     story.append(PageBreak())
     story.append(para(escape(road_name) + "   DRAFT", "ReportEyebrow"))
-    story.append(para("Annotated survey imagery", "SectionHeadingSL"))
+    story.append(para("Annotated survey imagery (up to 15 selected frames)", "SectionHeadingSL"))
     story.append(para(
-        f"Survey imagery for {escape(road_name)}. Frames are arranged in capture order, "
-        "left to right and continues on the next row. Station labels are feet from the run start. Annotation polygons are drawn over their corresponding source frame.",
+        f"Survey imagery for {escape(road_name)}. Up to 15 frames are selected at intervals across the run, "
+        "prioritizing annotated frames within each interval. Station labels are feet from the run start. Annotation polygons are drawn over their corresponding source frame.",
         "BodySL"
     ))
     legend_items = []
