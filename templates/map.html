@@ -923,8 +923,10 @@ function updateDashboardDetails(sec){
  const totalLength=Number(sec.run.length_ft)||roadSections.reduce((sum,x)=>sum+(Number(x.len)||0),0);
  const weighted=(field)=>totalLength?roadSections.reduce((sum,x)=>sum+(Number(x[field])||0)*(Number(x.len)||0),0)/totalLength:null;
  const sum=(field)=>roadSections.reduce((total,x)=>total+(Number(x[field])||0),0);
- const pci=Number.isFinite(Number(sec.run.pci))?Number(sec.run.pci):weighted('pci');
- const sdi=Number.isFinite(Number(sec.run.sdi))?Number(sec.run.sdi):weighted('sdi');
+ const hasPci=sec.run.pci!==null&&sec.run.pci!==undefined&&sec.run.pci!=='';
+ const hasSdi=sec.run.sdi!==null&&sec.run.sdi!==undefined&&sec.run.sdi!=='';
+ const pci=hasPci?Number(sec.run.pci):null;
+ const sdi=hasSdi?Number(sec.run.sdi):null;
  const distressed=weighted('dpct');
  animateOverallScore(pci,conditionText('pci',pci));
  set('streetLensSelectedRoad',sec.run.name);
