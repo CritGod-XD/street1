@@ -1,7 +1,10 @@
 from functools import wraps
+import base64
 import csv
+import gzip
 import io
 import json
+import re
 import os
 import time
 import urllib.parse
@@ -295,6 +298,10 @@ def _score_name_key(name):
     return "".join(part for part in parts if part not in {"n", "s", "e", "w"})
 
 
+def _folder_score_key(value):
+    return "_".join(re.findall(r"[a-z0-9]+", str(value or "").casefold()))
+
+
 def _read_score_json(filename, fallback):
     path = os.path.join(app.root_path, "public", "static", "data", filename)
     try:
@@ -304,7 +311,52 @@ def _read_score_json(filename, fallback):
         return fallback
 
 
+def _final_workbook_roads():
+    path = os.path.join(app.root_path, "public", "static", "data", "pci_sdi_final_roadways.csv.gz.b64")
+    try:
+        with open(path, "r", encoding="ascii") as fh:
+            decoded = gzip.decompress(base64.b64decode(fh.read())).decode("utf-8-sig")
+        roads = []
+        for row in csv.DictReader(io.StringIO(decoded)):
+            if not row.get("folder"):
+                continue
+            def number(key):
+                try:
+                    return float(row[key]) if row.get(key) not in ("", None) else None
+                except (TypeError, ValueError):
+                    return None
+            roads.append({
+                "folder": row["folder"],
+                "name": str(row.get("name") or row["folder"]).replace("_", " ").title(),
+                "direction": row.get("direction") or None,
+                "length_ft": number("length_ft"),
+                "section_count": int(number("section_count") or 0),
+                "pci": number("pci"),
+                "condition": row.get("pci_condition") or None,
+                "sdi": number("sdi"),
+                "sdi_rating": row.get("sdi_rating") or None,
+                "pci_rank": int(number("pci_rank") or 0),
+                "sdi_rank": int(number("sdi_rank") or 0),
+                "ndi": number("ndi"),
+                "ldi": number("ldi"),
+                "lowest_section_pci": number("lowest_section_pci"),
+                "lowest_section_sdi": number("lowest_section_sdi"),
+                "potholes": int(number("potholes") or 0),
+                "cuts_patches": int(number("cuts_patches") or 0),
+                "labels_reviewed": row.get("labels_reviewed") or None,
+                "collected": row.get("collected") or None,
+                "treatment": row.get("recommended_treatment") or None,
+                "treatment_notes": row.get("treatment_notes") or None,
+            })
+        return roads
+    except (OSError, ValueError, TypeError, EOFError):
+        return []
+
+
 def _base_pci_roads():
+    roads = _final_workbook_roads()
+    if roads:
+        return roads
     dataset = _read_score_json("pci_evaluated_roads.json", {})
     candidates = dataset.get("roads", []) if isinstance(dataset, dict) else []
     if not isinstance(candidates, list) or not candidates:
@@ -329,24 +381,43 @@ def _current_score_overrides():
 
 
 def _apply_score_overrides(pci_roads, section_data, overrides):
+    workbook_by_folder = {_folder_score_key(road.get("folder")): road for road in pci_roads if road.get("folder")}
+    for run in section_data.get("runs", []):
+        candidates = [
+            _folder_score_key(str(run.get("key") or "").split("/")[-1]),
+            _folder_score_key(run.get("name")),
+        ]
+        source = next((workbook_by_folder[key] for key in candidates if key in workbook_by_folder), None)
+        run["workbook_matched"] = bool(source)
+        if source:
+            for field in ("pci", "sdi", "condition", "sdi_rating", "pci_rank", "sdi_rank",
+                          "length_ft", "section_count", "direction", "treatment",
+                          "treatment_notes", "labels_reviewed", "collected",
+                          "lowest_section_pci", "lowest_section_sdi", "potholes", "cuts_patches"):
+                run[field] = source.get(field)
+            # The current map geometry is not always section-for-section identical
+            # to the final workbook. Do not transfer section scores by ordinal alone.
+            for section in run.get("secs", []):
+                section["pci"] = None
+                section["sdi"] = None
+                section["ndi"] = None
+                section["ldi"] = None
+        override = overrides.get(_score_name_key(run.get("name")))
+        if isinstance(override, dict):
+            for metric in ("pci", "sdi"):
+                if override.get(metric) is not None:
+                    value = float(override[metric])
+                    run[metric] = value
+                    for section in run.get("secs", []):
+                        section[metric] = value
     for road in pci_roads:
         override = overrides.get(_score_name_key(road.get("name")))
-        if not isinstance(override, dict):
-            continue
-        if override.get("pci") is not None:
-            road["pci"] = float(override["pci"])
-            road["condition"] = pci_condition(road["pci"])
-    for run in section_data.get("runs", []):
-        override = overrides.get(_score_name_key(run.get("name")))
-        if not isinstance(override, dict):
-            continue
-        for metric in ("pci", "sdi"):
-            if override.get(metric) is None:
-                continue
-            value = float(override[metric])
-            run[metric] = value
-            for section in run.get("secs", []):
-                section[metric] = value
+        if isinstance(override, dict):
+            if override.get("pci") is not None:
+                road["pci"] = float(override["pci"])
+                road["condition"] = pci_condition(road["pci"])
+            if override.get("sdi") is not None:
+                road["sdi"] = float(override["sdi"])
     return pci_roads, section_data
 
 
@@ -354,17 +425,6 @@ def _score_roads_for_page():
     pci_roads, section_data = _apply_score_overrides(
         _base_pci_roads(), _base_section_data(), _current_score_overrides()
     )
-    sdi_by_road = {}
-    for run in section_data.get("runs", []):
-        try:
-            value = float(run.get("sdi"))
-        except (TypeError, ValueError):
-            continue
-        if 0 <= value <= 5:
-            key = _score_name_key(run.get("name"))
-            if key:
-                sdi_by_road.setdefault(key, []).append(value)
-    overrides = _current_score_overrides()
     roads = []
     for item in pci_roads:
         try:
@@ -374,18 +434,19 @@ def _score_roads_for_page():
             continue
         if not name or not 0 <= pci <= 100:
             continue
-        values = sdi_by_road.get(_score_name_key(name), [])
-        score_override = overrides.get(_score_name_key(name), {})
-        sdi_value = score_override.get("sdi") if isinstance(score_override, dict) else None
-        if sdi_value is None:
-            sdi_value = sum(values) / len(values) if values else None
+        sdi = item.get("sdi")
         roads.append({
             "name": name,
+            "folder": item.get("folder"),
             "pci": pci,
             "condition": pci_condition(pci),
-            "sdi": sdi_value,
-            "treatment": item.get("treatment", "Not specified"),
-            "source_rows": item.get("source_rows", []),
+            "sdi": sdi,
+            "sdi_condition": item.get("sdi_rating"),
+            "treatment": item.get("treatment") or "Not specified",
+            "pci_rank": item.get("pci_rank"),
+            "sdi_rank": item.get("sdi_rank"),
+            "direction": item.get("direction"),
+            "length_ft": item.get("length_ft"),
         })
     roads.sort(key=lambda road: (road["pci"], road["name"].casefold()))
     return roads
