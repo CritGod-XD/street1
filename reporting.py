@@ -331,9 +331,9 @@ def build_road_report_pdf(run, all_runs, app_root):
         if coords:
             end_coord = coords[-1]
 
-    dataset_index, frames = _find_road_dataset(road_name, app_root)
-    frames = _select_report_frames(frames, 15)
-    lane_widths = [float(frame["lane_width_ft"]) for frame in frames if frame.get("lane_width_ft") is not None]
+    dataset_index, all_frames = _find_road_dataset(road_name, app_root)
+    frames = _select_report_frames(all_frames, 15)
+    lane_widths = [float(frame["lane_width_ft"]) for frame in all_frames if frame.get("lane_width_ft") is not None]
     mean_lane_width = sum(lane_widths) / len(lane_widths) if lane_widths else None
     rated_area_sqft = length * mean_lane_width if mean_lane_width is not None else None
     annotation_counts = {key: 0 for key in DISTRESS_COLORS}
@@ -612,20 +612,21 @@ def build_road_report_pdf(run, all_runs, app_root):
             pci_rows.append([para("—", "TableCellSL")] * 4)
         sdi_rows = [[
             para("BIN", "TableHeadSL"), para("STATION", "TableHeadSL"),
-            para("NDI", "TableHeadSL"), para("LDI", "TableHeadSL"),
+            para("PCI", "TableHeadSL"), para("NDI", "TableHeadSL"), para("LDI", "TableHeadSL"),
             para("SDI", "TableHeadSL"), para("DISTRESSED AREA", "TableHeadSL")
         ]]
         for section in sections:
             sdi_rows.append([
                 para(str(section.get("bin", "—")), "TableCellSL"),
                 para(f"{_station(section.get('f0'))} to {_station(section.get('f1'))}", "TableCellSL"),
+                para(_number(section.get("pci"), 1), "TableCellSL"),
                 para(_number(section.get("ndi"), 2), "TableCellSL"),
                 para(_number(section.get("ldi"), 2), "TableCellSL"),
                 para(_number(section.get("sdi"), 2), "TableCellSL"),
                 para(f"{_number(section.get('dpct'), 1)}%", "TableCellSL")
             ])
         pci_table = Table(pci_rows, colWidths=[usable_width * .035, usable_width * .045, usable_width * .075, usable_width * .14], repeatRows=1)
-        sdi_table = Table(sdi_rows, colWidths=[usable_width * .045, usable_width * .10, usable_width * .055, usable_width * .055, usable_width * .055, usable_width * .10], repeatRows=1)
+        sdi_table = Table(sdi_rows, colWidths=[usable_width * .04, usable_width * .10, usable_width * .05, usable_width * .05, usable_width * .05, usable_width * .05, usable_width * .10], repeatRows=1)
         common_table_style = [
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#303840")),
             ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f5f5")]),
