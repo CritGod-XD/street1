@@ -311,8 +311,10 @@ def build_road_report_pdf(run, all_runs, app_root):
         except (TypeError, ValueError):
             pass
     current_key = str(run.get("key") or "")
-    pci_rank = 1 + sum(1 for value, key in pci_values if pci is not None and value < pci)
-    sdi_rank = 1 + sum(1 for value, key in sdi_values if sdi is not None and value < sdi)
+    pci_order = sorted(pci_values, key=lambda item: (item[0], item[1]))
+    sdi_order = sorted(sdi_values, key=lambda item: (item[0], next((float(x.get("pci")) for x in all_runs if str(x.get("key") or "") == item[1] and x.get("pci") is not None), 101), item[1]))
+    pci_rank = next((index for index, item in enumerate(pci_order, 1) if item[1] == current_key), None)
+    sdi_rank = next((index for index, item in enumerate(sdi_order, 1) if item[1] == current_key), None)
     opposite_run = None
     direction_swap = {"N": "S", "S": "N", "E": "W", "W": "E"}
     name_parts = road_name.rsplit(" ", 1)
