@@ -1214,6 +1214,14 @@
     }
 }
 </style>
+<style id="streetlens-score-methodology-style">
+.streetlens-score-methodology{margin:10px 0;padding:9px 11px;border:1px solid #303030;border-radius:6px;background:#121212;color:#ddd}
+.streetlens-score-methodology summary{cursor:pointer;font-size:10px;font-weight:700;color:#b9d0c5}
+.streetlens-score-methodology>div{border-top:1px solid #292929;margin-top:8px;padding-top:7px}
+.streetlens-score-methodology b{font-size:10px;color:#eee}
+.streetlens-score-methodology p{margin:4px 0;color:#aaa;font-size:9px;line-height:1.5}
+.streetlens-horizontal-layout .streetlens-score-methodology{flex:0 0 auto}
+</style>
 </head>
 <body>
 
@@ -1316,7 +1324,12 @@
   <input class="streetlens-annotation-state" type="checkbox" data-annotation-label="S" checked aria-label="Sealant">
 </div>
 </section></section>
-<section class="right-column streetlens-right-column"><div class="analytics-card score streetlens-score-card"><h2>Overall distress score</h2><div class="gauge"><svg viewBox="0 0 220 130"><path d="M35 105 A75 75 0 0 1 185 105" fill="none" stroke="#2a2a2a" stroke-width="14" stroke-linecap="round"/><path d="M35 105 A75 75 0 0 1 185 105" fill="none" id="streetLensGaugeProgress" stroke="#c1543d" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 236"/><text id="streetLensScoreValue" x="110" y="95" text-anchor="middle" fill="#f1f1f1" font-size="36" font-weight="700" font-family="Outfit">—</text><text x="110" y="113" text-anchor="middle" fill="#777" font-size="9" font-family="Inter">PCI: 100 = best condition</text></svg></div><div id="streetLensCondition" class="condition">CONDITION: —</div><div id="streetLensRoadSummary" class="pills road-summary">
+<section class="right-column streetlens-right-column"><div class="analytics-card score streetlens-score-card"><h2>Overall distress score</h2><div class="gauge"><svg viewBox="0 0 220 130"><path d="M35 105 A75 75 0 0 1 185 105" fill="none" stroke="#2a2a2a" stroke-width="14" stroke-linecap="round"/><path d="M35 105 A75 75 0 0 1 185 105" fill="none" id="streetLensGaugeProgress" stroke="#c1543d" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 236"/><text id="streetLensScoreValue" x="110" y="95" text-anchor="middle" fill="#f1f1f1" font-size="36" font-weight="700" font-family="Outfit">—</text><text x="110" y="113" text-anchor="middle" fill="#777" font-size="9" font-family="Inter">PCI: 100 = best condition</text></svg></div><div id="streetLensCondition" class="condition">CONDITION: —</div><details class="streetlens-score-methodology"><summary>PCI / SDI methodology &amp; condition bands</summary>
+<div><b>PCI · 0–100 · ASTM D6433</b><p>100 means no distress. Sample units are about 2,500 sq ft. Distress density produces deduct values; unit PCI is 100 minus the corrected deduct value. Roadway PCI is weighted by sample-unit area.</p><p>Good 85–100 · Satisfactory 70–85 · Fair 55–70 · Poor 40–55 · Very Poor 25–40 · Serious 10–25 · Failed 0–10.</p></div>
+<div><b>SDI · 0–5 · NJDOT</b><p>5 means no distress. SDI = NDI × LDI ÷ 5. NDI covers non-load-associated cracking; LDI covers wheel-path cracking and rutting. Roadway SDI is weighted by section length.</p><p>Good 3.5 and up · Fair above 2.4 and under 3.5 · Poor 2.4 and under.</p></div>
+<div><b>Scoring distinctions</b><p>For SDI only, maintenance cuts are low-severity cracks and potholes are high-severity pattern cracking. PCI is not affected. Fatigue tiles are block cracking for PCI and pattern cracking for SDI. No rutting data was collected, so the rut factor is zero.</p></div>
+</details>
+<div id="streetLensRoadSummary" class="pills road-summary">
 <div class="road-summary-wide"><span>Street name</span><b id="streetLensSelectedRoad">—</b></div>
 <div><span>PCI</span><b id="streetLensSelectedPci">—</b></div>
 <div><span>SDI</span><b id="streetLensSelectedSdi">—</b></div>
@@ -1403,7 +1416,7 @@ let STREETLENS_SECTION_DATA=null; let STREETLENS_METRIC='sdi'; let STREETLENS_CU
 let STREETLENS_MAPS={};
 const STREETLENS_COLORS={failed:'#5b1136',serious:'#a31631',vpoor:'#dc4a2c',poor:'#f39a32',fair:'#f1d451',sat:'#62b8a5',good:'#1f6f9c'};
 const STREETLENS_PCI_CLASSES=[[85,'Good','good','85–100'],[70,'Satisfactory','sat','70–85'],[55,'Fair','fair','55–70'],[40,'Poor','poor','40–55'],[25,'Very Poor','vpoor','25–40'],[10,'Serious','serious','10–25'],[-1,'Failed','failed','0–10']];
-const STREETLENS_SDI_CLASSES=[[3.5,'Good','good','3.5 and above'],[2.4,'Fair','fair','Above 2.4 and below 3.5'],[-1,'Poor','poor','2.4 and below']];
+const STREETLENS_SDI_CLASSES=[[3.5,'Good','good','3.5 and up'],[2.4000000000000004,'Fair','fair','Above 2.4 and under 3.5'],[-1,'Poor','poor','2.4 and under']];
 function classify(metric,value){const v=Number(value);if(!Number.isFinite(v))return null;return(metric==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES).find(c=>v>=c[0])||null;}
 function conditionText(metric,value){const c=classify(metric,value);return c?c[1]:'No data';}
 function fmt1(v){return Number.isFinite(Number(v))?Number(v).toFixed(1):'–'}
@@ -1607,8 +1620,10 @@ function updateDashboardDetails(sec){
  if(!sec)return;
  updateHoveredSection(sec);
  const roadSections=STREETLENS_SECTION_DATA.sections.filter(s=>s.run.key===sec.run.key).sort((a,b)=>Number(a.bin)-Number(b.bin));
- const roadPci=weightedAverage(roadSections,'pci'),roadSdi=weightedAverage(roadSections,'sdi');
+ const roadPci=Number.isFinite(Number(sec.run.pci))?Number(sec.run.pci):weightedAverage(roadSections,'pci');
+ const roadSdi=Number.isFinite(Number(sec.run.sdi))?Number(sec.run.sdi):weightedAverage(roadSections,'sdi');
  const roadLength=roadSections.reduce((sum,s)=>sum+(Number(s.len)||0),0);
+ // Use supplied roadway scores: PCI is sample-unit area-weighted; SDI is section length-weighted.
  const pci=roadPci??Number(sec.pci),sdi=roadSdi??Number(sec.sdi);
  animateOverallScore(pci,conditionText('pci',pci));
  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val};
