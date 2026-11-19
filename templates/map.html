@@ -920,7 +920,7 @@ function updateDashboardDetails(sec){
  updateHoveredSection(sec);
  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val};
  const roadSections=STREETLENS_SECTION_DATA.sections.filter(x=>x.run.key===sec.run.key);
- const totalLength=roadSections.reduce((sum,x)=>sum+(Number(x.len)||0),0);
+ const totalLength=Number(sec.run.length_ft)||roadSections.reduce((sum,x)=>sum+(Number(x.len)||0),0);
  const weighted=(field)=>totalLength?roadSections.reduce((sum,x)=>sum+(Number(x[field])||0)*(Number(x.len)||0),0)/totalLength:null;
  const sum=(field)=>roadSections.reduce((total,x)=>total+(Number(x[field])||0),0);
  const pci=Number.isFinite(Number(sec.run.pci))?Number(sec.run.pci):weighted('pci');
@@ -939,11 +939,11 @@ function updateDashboardDetails(sec){
    ['Selected section','Section '+sec.bin],
    ['Selected section length',n0(sec.len)+' ft'],
    ['Whole road length',n0(totalLength)+' ft'],
-   ['Crack instances',n0(sum('cr'))],
-   ['Crack length',fmt1(sum('crft'))+' ft'],
+   ['Crack instances',sec.run.workbook_matched?'—':n0(sum('cr'))],
+   ['Crack length',sec.run.workbook_matched?'—':fmt1(sum('crft'))+' ft'],
    ['Distressed area',distressed===null?'—':fmt1(distressed)+'%'],
-   ['Potholes',n0(sum('pot'))],
-   ['Patches / maintenance cuts',n0(sum('pat'))]
+   ['Potholes',sec.run.workbook_matched?n0(sec.run.potholes):n0(sum('pot'))],
+   ['Patches / maintenance cuts',sec.run.workbook_matched?n0(sec.run.cuts_patches):n0(sum('pat'))]
   ];
   breakdown.innerHTML=metrics.map(([label,value])=>'<div class="distress-row"><span class="distress-label">'+escapeHtml(label)+'</span><strong>'+escapeHtml(value)+'</strong></div>').join('');
  }
