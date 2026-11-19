@@ -609,6 +609,49 @@ def build_road_report_pdf(run, all_runs, app_root):
             "SmallSL"
         ))
 
+    story.append(para("PCI and SDI methodology", "SectionHeadingSL"))
+    story.append(para(
+        "<b>PCI – Pavement Condition Index (ASTM D6433).</b> PCI ranges from 0 to 100, with 100 representing "
+        "no distress. The roadway is divided into sample units of about 2,500 sq ft. Distress density produces "
+        "deduct values; the deducts are combined into a corrected deduct value, and each sample-unit PCI is 100 "
+        "minus that value. Roadway PCI is the area-weighted mean of its sample units. Condition bands: Good "
+        "85–100; Satisfactory 70–85; Fair 55–70; Poor 40–55; Very Poor 25–40; Serious 10–25; Failed 0–10.",
+        "BodySL"
+    ))
+    story.append(para(
+        "<b>SDI – Surface Distress Index (NJDOT).</b> SDI ranges from 0 to 5, where 5 means no distress. "
+        "It combines the non-load-associated distress index (NDI) and load-associated distress index (LDI): "
+        "<b>SDI = NDI × LDI ÷ 5</b>. For each distress type and severity, the term is "
+        "(percent ÷ 100) × severity coefficient × weight. Severity coefficients are 3.2 (slight), "
+        "3.6 (moderate) and 4.0 (severe). NDI includes longitudinal and pattern cracking outside wheel paths "
+        "and transverse cracking across the lane; LDI includes pattern and longitudinal cracking in wheel paths "
+        "and rutting. The roadway SDI is the length-weighted mean of its approximately 0.1-mile sections.",
+        "BodySL"
+    ))
+    sdi_band_rows = [
+        [para("SDI RATING", "TableHeadSL"), para("RANGE", "TableHeadSL")],
+        [para("Good", "TableCellSL"), para("3.5 and up", "TableCellSL")],
+        [para("Fair", "TableCellSL"), para("Above 2.4 and under 3.5", "TableCellSL")],
+        [para("Poor", "TableCellSL"), para("2.4 and under", "TableCellSL")],
+    ]
+    sdi_band_table = Table(sdi_band_rows, colWidths=[usable_width * .22, usable_width * .38])
+    sdi_band_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#303840")),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f5f5")]),
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#777777")),
+        ("LEFTPADDING", (0, 0), (-1, -1), 5), ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+        ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+    ]))
+    story.append(sdi_band_table)
+    story.append(para(
+        "<b>Scoring distinctions and survey notes.</b> For SDI only, maintenance cuts are scored as low-severity "
+        "cracks and potholes as high-severity pattern cracking; PCI is not affected by these SDI-specific rules. "
+        "Fatigue tiles are classified as block cracking for PCI and pattern cracking for SDI. No rutting data was "
+        "collected for this survey, so the rut factor is zero. Excluded frame stretches are omitted from PCI sample "
+        "units and SDI sections. Treatments are assigned separately and do not change either score.",
+        "SmallSL"
+    ))
+
     story.append(para("Basis and limits", "SectionHeadingSL"))
     limitations = (
         "This report follows the pavement rehabilitation candidate summary format and uses the active StreetLens Collingswood section dataset and current saved PCI / SDI score revisions. "
