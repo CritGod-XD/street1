@@ -159,8 +159,7 @@ def _select_report_frames(frames, limit=15):
     ordered = sorted(
         frames,
         key=lambda frame: (
-            float(frame.get("station_start"))
-            if frame.get("station_start") is not None else float(frame.get("frame_id") or 0)
+            float(frame.get("station_start") or 0)
         ),
     )
     if len(ordered) <= limit:
@@ -509,6 +508,10 @@ def build_road_report_pdf(run, all_runs, app_root):
     story.append(para("What the survey shows", "SectionHeadingSL"))
     lowest_unit = min(unit_pci_values) if unit_pci_values else None
     highest_unit = max(unit_pci_values) if unit_pci_values else None
+    section_pci_values = [float(section["pci"]) for section in sections if section.get("pci") is not None]
+    section_sdi_values = [float(section["sdi"]) for section in sections if section.get("sdi") is not None]
+    lowest_section_pci = min(section_pci_values) if section_pci_values else None
+    lowest_section_sdi = min(section_sdi_values) if section_sdi_values else None
     findings = (
         f"Recorded cracking totals <b>{crack_instances:,} instances</b> and "
         f"<b>{_number(crack_length, 1)} ft</b> across the rated run.<br/>"
@@ -517,7 +520,9 @@ def build_road_report_pdf(run, all_runs, app_root):
         f"The weakest recorded PCI sample-unit score is <b>{_number(lowest_unit, 1)}</b> "
         f"({_pci_condition(lowest_unit)}). The highest is {_number(highest_unit, 1)} "
         f"({_pci_condition(highest_unit)}); no recorded sample unit is above Poor.<br/>"
-        f"<b>{potholes:,}</b> potholes and <b>{patches:,}</b> maintenance cuts / patches are recorded. "
+        f"<b>{potholes:,}</b> potholes and <b>{patches:,}</b> maintenance cuts / patches are recorded.<br/>"
+        f"Lowest section PCI: <b>{_number(lowest_section_pci, 1)}</b>; lowest section SDI: "
+        f"<b>{_number(lowest_section_sdi, 2)}</b>. "
         f"Unit station limits and largest deducts are not supplied."
     )
     treatment = str(run.get("recommended_treatment") or run.get("treatment") or "").strip()
