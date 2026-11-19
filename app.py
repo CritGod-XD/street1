@@ -399,16 +399,23 @@ def _apply_score_overrides(pci_roads, section_data, overrides):
                           "treatment_notes", "labels_reviewed", "collected",
                           "lowest_section_pci", "lowest_section_sdi", "potholes", "cuts_patches"):
                 run[field] = source.get(field)
-            # The current map geometry is not always section-for-section identical
-            # to the final workbook. Do not transfer section scores by ordinal alone.
-            for section in run.get("secs", []):
-                section["pci"] = None
-                section["sdi"] = None
-                section["ndi"] = None
-                section["ldi"] = None
-                for stale_field in ("pot", "pat", "cr", "crft", "dpct", "n"):
-                    section[stale_field] = None
-                section["units"] = []
+        else:
+            # The workbook is authoritative: unmatched runs must not retain stale scores.
+            for field in ("pci", "sdi", "condition", "sdi_rating", "pci_rank", "sdi_rank",
+                          "length_ft", "section_count", "direction", "treatment",
+                          "treatment_notes", "labels_reviewed", "collected",
+                          "lowest_section_pci", "lowest_section_sdi", "potholes", "cuts_patches"):
+                run[field] = None
+        # Map geometry is not guaranteed to align section-for-section with the final workbook.
+        # Keep geometry, but suppress old section scores and defect totals rather than mislabel them.
+        for section in run.get("secs", []):
+            section["pci"] = None
+            section["sdi"] = None
+            section["ndi"] = None
+            section["ldi"] = None
+            for stale_field in ("pot", "pat", "cr", "crft", "dpct", "n"):
+                section[stale_field] = None
+            section["units"] = []
         override = overrides.get(_score_name_key(run.get("name")))
         if isinstance(override, dict):
             for metric in ("pci", "sdi"):
