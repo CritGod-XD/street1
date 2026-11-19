@@ -802,7 +802,7 @@ let STREETLENS_SECTION_DATA=null; let STREETLENS_METRIC='sdi'; let STREETLENS_CU
 let STREETLENS_MAPS={};
 const STREETLENS_COLORS={failed:'#5b1136',serious:'#a31631',vpoor:'#dc4a2c',poor:'#f39a32',fair:'#f1d451',sat:'#62b8a5',good:'#1f6f9c',sdiGood:'#3b9b50',sdiFair:'#f0d92d',sdiPoor:'#d9363e'};
 const STREETLENS_PCI_CLASSES=[[85,'Good','good','85–100'],[70,'Satisfactory','sat','70–85'],[55,'Fair','fair','55–70'],[40,'Poor','poor','40–55'],[25,'Very Poor','vpoor','25–40'],[10,'Serious','serious','10–25'],[-1,'Failed','failed','0–10']];
-const STREETLENS_SDI_CLASSES=[[3.5,'Good','sdiGood','3.5 and up'],[2.4000001,'Fair','sdiFair','above 2.4, under 3.5'],[-1,'Poor','sdiPoor','2.4 and under']];
+const STREETLENS_SDI_CLASSES=[[3.5,'Good','sdiGood','3.5 and up'],[2.4000000000000004,'Fair','sdiFair','above 2.4, under 3.5'],[-1,'Poor','sdiPoor','2.4 and under']];
 function classify(metric,value){if(value===null||value===undefined||value===''||!Number.isFinite(Number(value)))return null;const v=Number(value);return(metric==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES).find(c=>v>=c[0])||null;}
 function conditionText(metric,value){const c=classify(metric,value);return c?c[1]:'No data';}
 function fmt1(v){return Number.isFinite(Number(v))?Number(v).toFixed(1):'–'}
@@ -859,7 +859,7 @@ function setPotholeMarkersVisible(map,visible){
 
 function buildBoundaryGeoJSON(){const features=[];for(const s of STREETLENS_SECTION_DATA.sections){if(!sectionVisible(s)||!s.coords?.length)continue;for(const c of [s.coords[0],s.coords[s.coords.length-1]])features.push({type:'Feature',properties:{sectionKey:`${s.run.key}::${s.bin}`},geometry:{type:'Point',coordinates:c}});}return{type:'FeatureCollection',features};}
 function buildLabelsGeoJSON(){const seen=new Set(),features=[];for(const s of STREETLENS_SECTION_DATA.sections){if(seen.has(s.run.key))continue;seen.add(s.run.key);const secs=STREETLENS_SECTION_DATA.sections.filter(x=>x.run.key===s.run.key);const mid=secs[Math.floor(secs.length/2)],coords=mid.coords[Math.floor(mid.coords.length/2)];if(coords)features.push({type:'Feature',properties:{name:mid.run.name,batch:mid.run.batch||''},geometry:{type:'Point',coordinates:coords}})}return{type:'FeatureCollection',features};}
-function lineColorExpression(){if(STREETLENS_METRIC==='sdi')return['case',['==',['get','sdi'],null],'#6b7280',['step',['get','sdi'],STREETLENS_COLORS.sdiPoor,2.4000001,STREETLENS_COLORS.sdiFair,3.5,STREETLENS_COLORS.sdiGood]];return['step',['get','pci'],STREETLENS_COLORS.failed,10,STREETLENS_COLORS.serious,25,STREETLENS_COLORS.vpoor,40,STREETLENS_COLORS.poor,55,STREETLENS_COLORS.fair,70,STREETLENS_COLORS.sat,85,STREETLENS_COLORS.good];}
+function lineColorExpression(){if(STREETLENS_METRIC==='sdi')return['case',['==',['get','sdi'],null],'#6b7280',['step',['get','sdi'],STREETLENS_COLORS.sdiPoor,2.4000000000000004,STREETLENS_COLORS.sdiFair,3.5,STREETLENS_COLORS.sdiGood]];return['step',['get','pci'],STREETLENS_COLORS.failed,10,STREETLENS_COLORS.serious,25,STREETLENS_COLORS.vpoor,40,STREETLENS_COLORS.poor,55,STREETLENS_COLORS.fair,70,STREETLENS_COLORS.sat,85,STREETLENS_COLORS.good];}
 function visibilityExpression(){return['case',['get','visible'],1,0];}
 function addMapLayers(map){
   const mini=!!map._streetlensDashboard;
