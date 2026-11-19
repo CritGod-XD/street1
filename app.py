@@ -392,6 +392,8 @@ def _apply_score_overrides(pci_roads, section_data, overrides):
         source = next((workbook_by_folder[key] for key in candidates if key in workbook_by_folder), None)
         run["workbook_matched"] = bool(source)
         if source:
+            run["score_source"] = "PCI and SDI report.xlsx"
+            run["score_date"] = "2026-11-07"
             for field in ("pci", "sdi", "condition", "sdi_rating", "pci_rank", "sdi_rank",
                           "length_ft", "section_count", "direction", "treatment",
                           "treatment_notes", "labels_reviewed", "collected",
