@@ -389,9 +389,21 @@ def build_road_report_pdf(run, all_runs, app_root):
     story.append(para("DRAFT", "ReportEyebrow"))
     start_text = f"{float(start_coord[0]):.5f}, {float(start_coord[1]):.5f}" if start_coord else "Not available"
     end_text = f"{float(end_coord[0]):.5f}, {float(end_coord[1]):.5f}" if end_coord else "Not available"
+    direction = str(run.get("direction") or run.get("dir") or "").strip().upper()
+    if not direction:
+        suffix = road_name.rsplit(" ", 1)[-1].upper() if " " in road_name else ""
+        direction = {"N": "Northbound", "S": "Southbound", "E": "Eastbound", "W": "Westbound"}.get(suffix, "Not recorded")
+    else:
+        direction = {"N": "Northbound", "S": "Southbound", "E": "Eastbound", "W": "Westbound",
+                     "NB": "Northbound", "SB": "Southbound", "EB": "Eastbound", "WB": "Westbound"}.get(direction, direction)
+    collected = run.get("collected") or run.get("survey_date") or "Not recorded"
+    batch = str(run.get("batch") or "Not recorded")
+    labels_reviewed = run.get("labels_reviewed")
+    labels_text = "Yes" if labels_reviewed is True or str(labels_reviewed).casefold() == "yes" else "No" if labels_reviewed is False or str(labels_reviewed).casefold() == "no" else "Not recorded"
     story.append(para(
-        f"{'Northbound' if road_name.casefold().endswith(' n') else 'Southbound' if road_name.casefold().endswith(' s') else 'Directional'} run  ·  survey start {start_text}  ·  scored limit {end_text}"
-        f"  ·  Survey date: not recorded in source  ·  Report generated {__import__('datetime').datetime.now().strftime('%d %b %Y')}",
+        f"Batch {escape(batch)}  ·  {escape(direction)}  ·  survey start {start_text}  ·  scored limit {end_text}"
+        f"  ·  Collected: {escape(str(collected))}  ·  Labels reviewed: {labels_text}"
+        f"  ·  Report generated {__import__('datetime').datetime.now().strftime('%d %b %Y')}",
         "ReportMeta"
     ))
 
@@ -478,17 +490,14 @@ def build_road_report_pdf(run, all_runs, app_root):
         f"<b>{potholes:,}</b> potholes and <b>{patches:,}</b> maintenance cuts / patches are recorded. "
         f"Unit station limits and largest deducts are not supplied."
     )
-    if pci is not None and pci < 40:
-        action = "Immediate attention. Repair failed areas and assess mill-and-overlay or deeper rehabilitation within the year. This is an indicative action from the PCI condition band; a field check must confirm treatment type and limits."
-    elif pci is not None and pci < 55:
-        action = "Priority review — inspect the distressed locations and evaluate suitable repair or rehabilitation options. Confirm treatment limits in the field."
-    elif pci is not None and pci < 70:
-        action = "Plan maintenance review — prioritize localized defects and consider preventive maintenance where field conditions support it."
-    else:
-        action = "Continue routine monitoring and evaluate preventive maintenance based on field conditions."
+    treatment = str(run.get("recommended_treatment") or run.get("treatment") or "").strip()
+    treatment_notes = str(run.get("treatment_notes") or run.get("notes") or "").strip()
+    treatment_text = escape(treatment) if treatment else "Not present in the current roadway score data"
+    if treatment_notes:
+        treatment_text += "<br/><b>Notes:</b> " + escape(treatment_notes)
     two_col = Table([[
         para(findings, "BodySL"),
-        para(f"<b>Indicative follow-up (PCI screening band)</b><br/>{action}", "BodySL")
+        para(f"<b>Recommended treatment (recorded assignment)</b><br/>{treatment_text}", "BodySL")
     ]], colWidths=[usable_width * 0.57, usable_width * 0.43])
     two_col.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -609,49 +618,6 @@ def build_road_report_pdf(run, all_runs, app_root):
             "SmallSL"
         ))
 
-    story.append(para("PCI and SDI methodology", "SectionHeadingSL"))
-    story.append(para(
-        "<b>PCI – Pavement Condition Index (ASTM D6433).</b> PCI ranges from 0 to 100, with 100 representing "
-        "no distress. The roadway is divided into sample units of about 2,500 sq ft. Distress density produces "
-        "deduct values; the deducts are combined into a corrected deduct value, and each sample-unit PCI is 100 "
-        "minus that value. Roadway PCI is the area-weighted mean of its sample units. Condition bands: Good "
-        "85–100; Satisfactory 70–85; Fair 55–70; Poor 40–55; Very Poor 25–40; Serious 10–25; Failed 0–10.",
-        "BodySL"
-    ))
-    story.append(para(
-        "<b>SDI – Surface Distress Index (NJDOT).</b> SDI ranges from 0 to 5, where 5 means no distress. "
-        "It combines the non-load-associated distress index (NDI) and load-associated distress index (LDI): "
-        "<b>SDI = NDI × LDI ÷ 5</b>. For each distress type and severity, the term is "
-        "(percent ÷ 100) × severity coefficient × weight. Severity coefficients are 3.2 (slight), "
-        "3.6 (moderate) and 4.0 (severe). NDI includes longitudinal and pattern cracking outside wheel paths "
-        "and transverse cracking across the lane; LDI includes pattern and longitudinal cracking in wheel paths "
-        "and rutting. The roadway SDI is the length-weighted mean of its approximately 0.1-mile sections.",
-        "BodySL"
-    ))
-    sdi_band_rows = [
-        [para("SDI RATING", "TableHeadSL"), para("RANGE", "TableHeadSL")],
-        [para("Good", "TableCellSL"), para("3.5 and up", "TableCellSL")],
-        [para("Fair", "TableCellSL"), para("Above 2.4 and under 3.5", "TableCellSL")],
-        [para("Poor", "TableCellSL"), para("2.4 and under", "TableCellSL")],
-    ]
-    sdi_band_table = Table(sdi_band_rows, colWidths=[usable_width * .22, usable_width * .38])
-    sdi_band_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#303840")),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f5f5")]),
-        ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#777777")),
-        ("LEFTPADDING", (0, 0), (-1, -1), 5), ("RIGHTPADDING", (0, 0), (-1, -1), 5),
-        ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-    ]))
-    story.append(sdi_band_table)
-    story.append(para(
-        "<b>Scoring distinctions and survey notes.</b> For SDI only, maintenance cuts are scored as low-severity "
-        "cracks and potholes as high-severity pattern cracking; PCI is not affected by these SDI-specific rules. "
-        "Fatigue tiles are classified as block cracking for PCI and pattern cracking for SDI. No rutting data was "
-        "collected for this survey, so the rut factor is zero. Excluded frame stretches are omitted from PCI sample "
-        "units and SDI sections. Treatments are assigned separately and do not change either score.",
-        "SmallSL"
-    ))
-
     story.append(para("Basis and limits", "SectionHeadingSL"))
     limitations = (
         "This report follows the pavement rehabilitation candidate summary format and uses the active StreetLens Collingswood section dataset and current saved PCI / SDI score revisions. "
@@ -665,10 +631,10 @@ def build_road_report_pdf(run, all_runs, app_root):
 
     story.append(PageBreak())
     story.append(para(escape(road_name) + "   DRAFT", "ReportEyebrow"))
-    story.append(para("Annotated survey imagery", "SectionHeadingSL"))
+    story.append(para("Annotated survey imagery (up to 15 selected frames)", "SectionHeadingSL"))
     story.append(para(
-        f"Survey imagery for {escape(road_name)}. Frames are arranged in capture order, "
-        "left to right and continues on the next row. Station labels are feet from the run start. Annotation polygons are drawn over their corresponding source frame.",
+        f"Survey imagery for {escape(road_name)}. Up to 15 frames are selected at intervals across the run, "
+        "prioritizing annotated frames within each interval. Station labels are feet from the run start. Annotation polygons are drawn over their corresponding source frame.",
         "BodySL"
     ))
     legend_items = []
