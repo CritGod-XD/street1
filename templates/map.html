@@ -758,13 +758,6 @@ html.streetlens-map-first #mapModal .maplibregl-ctrl-attrib a{color:#c0d8d0!impo
         <p class="streetlens-map-sheet-label" id="streetLensModalLegendLabel">SDI of the section</p>
         <div id="streetLensModalLegend" class="streetlens-sheet-legend"></div>
       </div>
-      <details class="streetlens-methodology">
-        <summary>PCI / SDI methodology &amp; definitions</summary>
-        <section><b>PCI · 0–100 (ASTM D6433)</b><p>100 means no distress. Each approximately 2,500 sq ft sample unit is rated using distress density and deduct values. Roadway PCI is the area-weighted mean of its sample units.</p><ul><li>Good: 85–100</li><li>Satisfactory: 70–85</li><li>Fair: 55–70</li><li>Poor: 40–55</li><li>Very Poor: 25–40</li><li>Serious: 10–25</li><li>Failed: 0–10</li></ul></section>
-        <section><b>SDI · 0–5 (NJDOT)</b><p>5 means no distress. <code>SDI = NDI × LDI ÷ 5</code>. NDI represents non-load-associated cracking; LDI represents wheel-path cracking and rutting. Section SDI is scored by approximately 0.1-mile section; roadway SDI is length-weighted.</p><ul><li>Good: 3.5 and up</li><li>Fair: above 2.4 and under 3.5</li><li>Poor: 2.4 and under</li></ul></section>
-        <section><b>Distress interpretation</b><p>NDI includes longitudinal and pattern cracking outside wheel paths and transverse cracking across the lane. LDI includes longitudinal and pattern cracking in wheel paths, plus rutting. No rutting data was collected in this survey, so the rut factor is zero.</p><p>For SDI only, maintenance cuts are scored as low-severity cracks and potholes as high-severity pattern cracking. PCI is not affected. Fatigue tiles are block cracking for PCI and pattern cracking for SDI.</p></section>
-        <section><b>Survey boundaries &amp; limitations</b><p>A roadway is one collected run in one direction; separate runs are not combined. Excluded frame stretches are not part of any PCI sample unit or SDI section. Crack severity is estimated from image width × 0.53; sealed cracks are low severity. Ratings describe the survey-date surface only. Rutting, IRI, drainage and structural capacity were not measured; field verification is required before design.</p></section>
-      </details>
       <div class="streetlens-map-options">
         <label><input type="checkbox" id="streetLensShowBatch1" checked><span class="dash-sample"></span><span>Batch 1 runs · dashed</span></label>
         <label><input type="checkbox" id="streetLensShowEndPieces" checked><span class="thin-sample"></span><span>End pieces under 200 ft · thin</span></label>
@@ -802,7 +795,7 @@ let STREETLENS_SECTION_DATA=null; let STREETLENS_METRIC='sdi'; let STREETLENS_CU
 let STREETLENS_MAPS={};
 const STREETLENS_COLORS={failed:'#5b1136',serious:'#a31631',vpoor:'#dc4a2c',poor:'#f39a32',fair:'#f1d451',sat:'#62b8a5',good:'#1f6f9c',sdiGood:'#3b9b50',sdiFair:'#f0d92d',sdiPoor:'#d9363e'};
 const STREETLENS_PCI_CLASSES=[[85,'Good','good','85–100'],[70,'Satisfactory','sat','70–85'],[55,'Fair','fair','55–70'],[40,'Poor','poor','40–55'],[25,'Very Poor','vpoor','25–40'],[10,'Serious','serious','10–25'],[-1,'Failed','failed','0–10']];
-const STREETLENS_SDI_CLASSES=[[3.5,'Good','sdiGood','3.5 and up'],[2.4000000000000004,'Fair','sdiFair','above 2.4, under 3.5'],[-1,'Poor','sdiPoor','2.4 and under']];
+const STREETLENS_SDI_CLASSES=[[3.5,'Good','sdiGood','3.5 and up'],[2.4000001,'Fair','sdiFair','above 2.4, under 3.5'],[-1,'Poor','sdiPoor','2.4 and under']];
 function classify(metric,value){if(value===null||value===undefined||value===''||!Number.isFinite(Number(value)))return null;const v=Number(value);return(metric==='sdi'?STREETLENS_SDI_CLASSES:STREETLENS_PCI_CLASSES).find(c=>v>=c[0])||null;}
 function conditionText(metric,value){const c=classify(metric,value);return c?c[1]:'No data';}
 function fmt1(v){return Number.isFinite(Number(v))?Number(v).toFixed(1):'–'}
@@ -859,7 +852,7 @@ function setPotholeMarkersVisible(map,visible){
 
 function buildBoundaryGeoJSON(){const features=[];for(const s of STREETLENS_SECTION_DATA.sections){if(!sectionVisible(s)||!s.coords?.length)continue;for(const c of [s.coords[0],s.coords[s.coords.length-1]])features.push({type:'Feature',properties:{sectionKey:`${s.run.key}::${s.bin}`},geometry:{type:'Point',coordinates:c}});}return{type:'FeatureCollection',features};}
 function buildLabelsGeoJSON(){const seen=new Set(),features=[];for(const s of STREETLENS_SECTION_DATA.sections){if(seen.has(s.run.key))continue;seen.add(s.run.key);const secs=STREETLENS_SECTION_DATA.sections.filter(x=>x.run.key===s.run.key);const mid=secs[Math.floor(secs.length/2)],coords=mid.coords[Math.floor(mid.coords.length/2)];if(coords)features.push({type:'Feature',properties:{name:mid.run.name,batch:mid.run.batch||''},geometry:{type:'Point',coordinates:coords}})}return{type:'FeatureCollection',features};}
-function lineColorExpression(){if(STREETLENS_METRIC==='sdi')return['case',['==',['get','sdi'],null],'#6b7280',['step',['get','sdi'],STREETLENS_COLORS.sdiPoor,2.4000000000000004,STREETLENS_COLORS.sdiFair,3.5,STREETLENS_COLORS.sdiGood]];return['step',['get','pci'],STREETLENS_COLORS.failed,10,STREETLENS_COLORS.serious,25,STREETLENS_COLORS.vpoor,40,STREETLENS_COLORS.poor,55,STREETLENS_COLORS.fair,70,STREETLENS_COLORS.sat,85,STREETLENS_COLORS.good];}
+function lineColorExpression(){if(STREETLENS_METRIC==='sdi')return['case',['==',['get','sdi'],null],'#6b7280',['step',['get','sdi'],STREETLENS_COLORS.sdiPoor,2.4000001,STREETLENS_COLORS.sdiFair,3.5,STREETLENS_COLORS.sdiGood]];return['step',['get','pci'],STREETLENS_COLORS.failed,10,STREETLENS_COLORS.serious,25,STREETLENS_COLORS.vpoor,40,STREETLENS_COLORS.poor,55,STREETLENS_COLORS.fair,70,STREETLENS_COLORS.sat,85,STREETLENS_COLORS.good];}
 function visibilityExpression(){return['case',['get','visible'],1,0];}
 function addMapLayers(map){
   const mini=!!map._streetlensDashboard;
@@ -930,8 +923,6 @@ function updateDashboardDetails(sec){
  const totalLength=roadSections.reduce((sum,x)=>sum+(Number(x.len)||0),0);
  const weighted=(field)=>totalLength?roadSections.reduce((sum,x)=>sum+(Number(x[field])||0)*(Number(x.len)||0),0)/totalLength:null;
  const sum=(field)=>roadSections.reduce((total,x)=>total+(Number(x[field])||0),0);
- // Use roadway-level workbook scores: PCI is area-weighted from sample units,
- // while SDI is length-weighted from sections. Do not average section values.
  const pci=Number.isFinite(Number(sec.run.pci))?Number(sec.run.pci):weighted('pci');
  const sdi=Number.isFinite(Number(sec.run.sdi))?Number(sec.run.sdi):weighted('sdi');
  const distressed=weighted('dpct');
@@ -972,12 +963,11 @@ function updateLegendAndRanking(){
  const groups=new Map();
  visible.forEach(section=>{const run=section.run||{},name=String(run.name||'Unnamed roadway').trim(),key=String(run.key||name);if(!groups.has(key))groups.set(key,{name,run,sections:[],sdiTotal:0,pciTotal:0,lengthTotal:0});const g=groups.get(key),len=Number(section.len)||0;g.sections.push(section);g.lengthTotal+=len;g.sdiTotal+=(Number(section.sdi)||0)*len;g.pciTotal+=(Number(section.pci)||0)*len;});
  const streets=[...groups.values()].map(g=>({...g,sdi:Number.isFinite(Number(g.run.sdi))?Number(g.run.sdi):(g.lengthTotal?g.sdiTotal/g.lengthTotal:null),pci:Number.isFinite(Number(g.run.pci))?Number(g.run.pci):(g.lengthTotal?g.pciTotal/g.lengthTotal:null)}));
- // Low PCI and low SDI both mean worse condition; keep each collected run separate.
  streets.sort((a,b)=>(STREETLENS_METRIC==='sdi'?a.sdi-b.sdi:a.pci-b.pci));
  const limit=document.getElementById('streetLensRankingLimit')?.value||'10';const shown=limit==='all'?streets:streets.slice(0,Math.max(1,Number(limit)||10));
  const rankLabel=document.getElementById('streetLensRankingLabel');if(rankLabel)rankLabel.textContent=`TOP ${limit==='all'?'ALL':shown.length} STREETS BY ${STREETLENS_METRIC.toUpperCase()}`;
  const description=document.getElementById('streetLensRankingDescription');if(description)description.textContent=`Lowest ${STREETLENS_METRIC.toUpperCase()} first · individual roadway runs`;
- box.innerHTML=shown.map((street,i)=>`<button type="button" class="streetlens-ranking-row" data-street-key="${escapeHtml(street.run.key||street.name)}"><span class="streetlens-ranking-rank">${i+1}</span><span class="streetlens-ranking-name">${escapeHtml(street.name)}<small>${street.sections.length} section${street.sections.length===1?'':'s'} · roadway ${STREETLENS_METRIC.toUpperCase()}</small></span><b>${STREETLENS_METRIC==='sdi'?fmt2(street.sdi):fmt1(street.pci)}</b></button>`).join('');
+ box.innerHTML=shown.map((street,i)=>`<button type="button" class="streetlens-ranking-row" data-street-key="${escapeHtml(street.run.key||street.name)}"><span class="streetlens-ranking-rank">${i+1}</span><span class="streetlens-ranking-name">${escapeHtml(street.name)}<small>${street.sections.length} section${street.sections.length===1?'':'s'} · average ${STREETLENS_METRIC.toUpperCase()}</small></span><b>${STREETLENS_METRIC==='sdi'?fmt2(street.sdi):fmt1(street.pci)}</b></button>`).join('');
  box.querySelectorAll('[data-street-key]').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.streetKey;const sections=STREETLENS_SECTION_DATA.sections.filter(x=>String(x.run.key||x.run.name)===key);if(!sections.length)return;const bounds=new maplibregl.LngLatBounds();sections.forEach(sec=>sec.coords.forEach(coord=>bounds.extend(coord)));Object.values(STREETLENS_MAPS).forEach(map=>map?.fitBounds(bounds,{padding:70,maxZoom:17,duration:650}));if(sections.length===1)updateHoveredSection(sections[0]);}));
  const count=document.getElementById('streetLensRoadCount');if(count)count.textContent=`${STREETLENS_SECTION_DATA.runs.length} street runs · ${STREETLENS_SECTION_DATA.sections.length} mapped sections`;
 }
@@ -1461,13 +1451,4 @@ html.streetlens-map-first #mapModal .streetlens-view-road:disabled{opacity:.42;c
 html.streetlens-map-first #mapModal .streetlens-sidebar-search{width:100%!important;min-width:0!important;box-sizing:border-box!important}
 html.streetlens-map-first #mapModal .streetlens-sidebar-search .streetlens-find-input,
 html.streetlens-map-first #mapModal .streetlens-sidebar-search #streetLensFindStreet{margin:0!important;max-width:100%!important;box-sizing:border-box!important}
-<style>
-.streetlens-methodology{border:1px solid #d5cec1;border-radius:5px;background:#f8f5ed;color:#27322d;padding:8px 9px;font:11px 'DM Sans',sans-serif}
-.streetlens-methodology summary{cursor:pointer;font-weight:700;color:#24483f}
-.streetlens-methodology section{border-top:1px solid #ded8cd;margin-top:8px;padding-top:7px}
-.streetlens-methodology b{display:block;font-size:10px;color:#1f4038}
-.streetlens-methodology p,.streetlens-methodology li{font-size:10px;line-height:1.45;color:#53605a;margin:5px 0}
-.streetlens-methodology ul{margin:4px 0;padding-left:17px;display:grid;grid-template-columns:1fr 1fr;gap:2px}
-.streetlens-methodology code{font-size:10px}
-@media(max-width:600px){.streetlens-methodology ul{grid-template-columns:1fr}}
-</style></style>
+</style>
