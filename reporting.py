@@ -287,12 +287,9 @@ def build_road_report_pdf(run, all_runs, app_root):
         pci = _weighted_average(sections, "pci")
     if sdi is None:
         sdi = _weighted_average(sections, "sdi")
-    length = sum(float(section.get("len") or 0) for section in sections)
-    crack_instances = sum(int(float(section.get("cr") or 0)) for section in sections)
-    crack_length = sum(float(section.get("crft") or 0) for section in sections)
-    potholes = sum(int(float(section.get("pot") or 0)) for section in sections)
-    patches = sum(int(float(section.get("pat") or 0)) for section in sections)
-    distressed_area = _weighted_average(sections, "dpct")
+    length = float(run.get("length_ft") or sum(float(section.get("len") or 0) for section in sections))
+    potholes = int(run.get("potholes") if run.get("potholes") is not None else sum(int(float(section.get("pot") or 0)) for section in sections))
+    patches = int(run.get("cuts_patches") if run.get("cuts_patches") is not None else sum(int(float(section.get("pat") or 0)) for section in sections))
     sample_count = sum(int(float(section.get("n") or 0)) for section in sections)
 
     pci_values = []
@@ -447,11 +444,11 @@ def build_road_report_pdf(run, all_runs, app_root):
         if isinstance(unit, dict) and unit.get("pci") is not None
     ]
     sdi_values_for_run = [float(section["sdi"]) for section in sections if section.get("sdi") is not None]
-    ndi = _weighted_average(sections, "ndi")
-    ldi = _weighted_average(sections, "ldi")
+    ndi = run.get("ndi") if run.get("ndi") is not None else _weighted_average(sections, "ndi")
+    ldi = run.get("ldi") if run.get("ldi") is not None else _weighted_average(sections, "ldi")
     sdi_range = f"{min(sdi_values_for_run):.2f} to {max(sdi_values_for_run):.2f}" if sdi_values_for_run else "—"
     pci_range = f"{min(unit_pci_values):.1f} to {max(unit_pci_values):.1f}" if unit_pci_values else "—"
-    section_count = len(sections)
+    section_count = int(run.get("section_count") or len(sections))
     metric_cells = [
         [para("PCI (ASTM D6433)", "MetricLabelSL"), para("SDI", "MetricLabelSL"),
          para("LENGTH RATED", "MetricLabelSL"), para("RATED AREA", "MetricLabelSL")],
@@ -512,20 +509,14 @@ def build_road_report_pdf(run, all_runs, app_root):
     highest_unit = max(unit_pci_values) if unit_pci_values else None
     section_pci_values = [float(section["pci"]) for section in sections if section.get("pci") is not None]
     section_sdi_values = [float(section["sdi"]) for section in sections if section.get("sdi") is not None]
-    lowest_section_pci = min(section_pci_values) if section_pci_values else None
-    lowest_section_sdi = min(section_sdi_values) if section_sdi_values else None
+    lowest_section_pci = run.get("lowest_section_pci") if run.get("lowest_section_pci") is not None else (min(section_pci_values) if section_pci_values else None)
+    lowest_section_sdi = run.get("lowest_section_sdi") if run.get("lowest_section_sdi") is not None else (min(section_sdi_values) if section_sdi_values else None)
     findings = (
-        f"Recorded cracking totals <b>{crack_instances:,} instances</b> and "
-        f"<b>{_number(crack_length, 1)} ft</b> across the rated run.<br/>"
-        f"Weighted distressed area is <b>{_number(distressed_area, 1)}%</b> of the rated sections; "
-        f"the dataset does not provide the corresponding square-foot area or wheel-path split.<br/>"
-        f"The weakest recorded PCI sample-unit score is <b>{_number(lowest_unit, 1)}</b> "
-        f"({_pci_condition(lowest_unit)}). The highest is {_number(highest_unit, 1)} "
-        f"({_pci_condition(highest_unit)}); no recorded sample unit is above Poor.<br/>"
-        f"<b>{potholes:,}</b> potholes and <b>{patches:,}</b> maintenance cuts / patches are recorded.<br/>"
+        f"<b>{potholes:,}</b> potholes and <b>{patches:,}</b> maintenance cuts / patches are recorded in the final roadway score workbook.<br/>"
         f"Lowest section PCI: <b>{_number(lowest_section_pci, 1)}</b>; lowest section SDI: "
-        f"<b>{_number(lowest_section_sdi, 2)}</b>. "
-        f"Unit station limits and largest deducts are not supplied."
+        f"<b>{_number(lowest_section_sdi, 2)}</b>.<br/>"
+        f"Roadway PCI is the workbook roadway score; roadway SDI is the workbook roadway score. "
+        f"Section geometry in the map is retained separately from the final workbook section breakdown."
     )
     treatment = str(run.get("recommended_treatment") or run.get("treatment") or "").strip()
     treatment_notes = str(run.get("treatment_notes") or run.get("notes") or "").strip()
