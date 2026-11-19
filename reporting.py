@@ -433,6 +433,7 @@ def build_road_report_pdf(run, all_runs, app_root):
     story.append(para(
         f"Batch {escape(batch)}  ·  {escape(direction)}  ·  survey start {start_text}  ·  scored limit {end_text}"
         f"  ·  Collected: {escape(str(collected))}  ·  Labels reviewed: {labels_text}"
+        f"  ·  Score source: {escape(str(run.get('score_source') or 'current roadway score data'))} ({escape(str(run.get('score_date') or 'date not recorded'))})"
         f"  ·  Report generated {__import__('datetime').datetime.now().strftime('%d %b %Y')}",
         "ReportMeta"
     ))
