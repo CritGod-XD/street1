@@ -35,7 +35,7 @@ OVERPASS_ENDPOINTS = [
     "https://overpass-api.de/api/interpreter",
     "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
 ]
-OVERPASS_QUERY = "[out:json][timeout:20];way[\"highway\"][\"name\"](39.910,-75.091,39.928,-75.062);out tags geom;"
+OVERPASS_QUERY = "[out:json][timeout:25];way[\"highway\"][\"name\"](39.904,-75.096,39.927,-75.056);out tags geom;"
 _osm_cache = {"expires": 0, "data": None}
 
 # Ordered ML inspection frames extracted from the Image Log spreadsheet.
