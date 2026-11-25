@@ -502,28 +502,26 @@ html.streetlens-map-first .streetlens-section-hover-card .hover-metrics b{color:
 @media(max-width:850px){.streetlens-fullmap-shell{grid-template-columns:minmax(0,1fr) 300px;width:100vw;height:100vh;border-radius:0}.streetlens-map-sheet{padding:12px}.streetlens-fullmap-tools{right:8px;top:8px}.streetlens-fullmap-tools button{padding:7px 8px;font-size:10px}}
 </style>
 <style>
-/* StreetLens v22: clean map + Map 1 road/sidebar styling */
-.maplibregl-map{font-family:'DM Sans',sans-serif;background:#e9e7df}
-/* Keep the mini map clean: rounded pavement strokes with a restrained casing. */
-.streetlens-main-map-card .maplibregl-ctrl-group{background:rgba(18,24,22,.94)!important;border:1px solid rgba(255,255,255,.16)!important}
-.streetlens-main-map-card .maplibregl-ctrl-group button{color:#eef3ef!important}
-/* The full map uses the light editorial sidebar from the preferred reference. */
-.streetlens-fullmap-shell{background:#f3f0e7;border-color:#d5cec0}
-.streetlens-map-sheet{background:#f3f0e7!important;color:#26312c!important;border-left:1px solid #d5cec0!important;font-family:'DM Sans',sans-serif!important}
-.streetlens-map-sheet-head strong{color:#18211d!important;font-family:'DM Sans',sans-serif!important}
-.streetlens-map-sheet-head span,.streetlens-map-sheet-label{color:#68736d!important}
-.streetlens-map-sheet .streetlens-metric-block{background:#e8e2d6!important;border-color:#cfc5b4!important}
-.streetlens-map-segment-toggle{border-color:#9eb3aa!important;background:#f8f5ed!important}
-.streetlens-map-segment-toggle button{background:#f8f5ed!important;color:#43534c!important}
-.streetlens-map-segment-toggle button.active{background:#355d50!important;color:#fff!important}
-.streetlens-map-options{color:#4f5a55!important}
-.streetlens-find-input{background:#fffdf8!important;border-color:#cfc5b4!important;color:#202824!important}
-.streetlens-sheet-ranking{border-top-color:#d5cec0!important}
-.streetlens-ranking-row{color:#26312c!important;border-bottom-color:#d5cec0!important;background:transparent!important}
-.streetlens-ranking-row:hover{background:#e7e1d5!important}
-.streetlens-ranking-row b{color:#25342e!important}
-.streetlens-ranking-row small{color:#737d77!important}
-/* Map 1 style: rounded, readable, not oversized. */
+/* Restore the original dark StreetLens full-map theme. The dashboard mini-map
+   has its own template and styling; this page-level override only targets /map. */
+.maplibregl-map{font-family:'DM Sans',sans-serif!important;background:#0a1013!important}
+.streetlens-fullmap-shell{background:#161c1b!important;border-color:#313b39!important}
+.streetlens-map-sheet{background:#1a2120!important;color:#e8ecea!important;border-left:1px solid #313b39!important;font-family:'DM Sans',sans-serif!important}
+.streetlens-map-sheet-head strong{color:#f1f5f3!important;font-family:'DM Sans',sans-serif!important}
+.streetlens-map-sheet-head span,.streetlens-map-sheet-label{color:#91a19b!important}
+.streetlens-map-sheet .streetlens-metric-block{background:#202827!important;border-color:#36413e!important;color:#e8ecea!important}
+.streetlens-map-segment-toggle{border-color:#3b5149!important;background:#111817!important}
+.streetlens-map-segment-toggle button{background:#111817!important;color:#c4d0cb!important}
+.streetlens-map-segment-toggle button.active{background:#285b49!important;color:#fff!important}
+.streetlens-map-options{color:#b6c2bd!important}
+.streetlens-find-input{background:#111817!important;border-color:#3b4744!important;color:#e8ecea!important}
+.streetlens-find-input::placeholder{color:#84928d!important}
+.streetlens-sheet-ranking{border-top-color:#313b39!important}
+.streetlens-ranking-row{color:#e8ecea!important;border-bottom-color:#313b39!important;background:transparent!important}
+.streetlens-ranking-row:hover{background:#242d2b!important}
+.streetlens-ranking-row b{color:#eef4f1!important}
+.streetlens-ranking-row small{color:#9aa8a2!important}
+.streetlens-map-sheet-foot{color:#87958f!important;border-top-color:#313b39!important}
 .streetlens-section-hover-card{font-family:'DM Sans',sans-serif!important}
 </style>
 <style>
