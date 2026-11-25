@@ -241,7 +241,8 @@ class AnnotatedFrameSheet(Flowable):
             canvas.restoreState()
 
 
-def build_road_report_pdf(run, all_runs, app_root):
+def build_road_report_pdf(run, all_runs, app_root, report_type="A"):
+    report_type = "E" if str(report_type).upper() == "E" else "A"
     sections = sorted(
         [item for item in run.get("secs", []) if isinstance(item, dict)],
         key=lambda item: float(item.get("f0") or 0)
@@ -384,9 +385,10 @@ def build_road_report_pdf(run, all_runs, app_root):
         return Paragraph(str(text), styles[style])
 
     story = []
-    story.append(para("COLLINGSWOOD, NJ  ·  PAVEMENT REHABILITATION CANDIDATE", "ReportEyebrow"))
+    report_title = "Comprehensive Road Engineering Report" if report_type == "E" else "Detailed Road Condition Assessment"
+    story.append(para("COLLINGSWOOD, NJ  ·  STREETLENS PAVEMENT INSPECTION", "ReportEyebrow"))
     story.append(para(escape(road_name), "ReportTitle"))
-    story.append(para("DRAFT", "ReportEyebrow"))
+    story.append(para(escape(report_title.upper()), "ReportEyebrow"))
     start_text = f"{float(start_coord[0]):.5f}, {float(start_coord[1]):.5f}" if start_coord else "Not available"
     end_text = f"{float(end_coord[0]):.5f}, {float(end_coord[1]):.5f}" if end_coord else "Not available"
     story.append(para(
@@ -609,6 +611,50 @@ def build_road_report_pdf(run, all_runs, app_root):
             "SmallSL"
         ))
 
+    if report_type == "E":
+        story.append(PageBreak())
+        story.append(para("Distress annotation analysis", "SectionHeadingSL"))
+        story.append(para("Counts below are LabelMe annotation polygons read from the road-specific JSON files. They are visual annotation objects, not independently measured physical crack lengths or the same quantity as aggregate PCI crack counts.", "BodySL"))
+        annotation_rows = [[para("LABEL", "TableHeadSL"), para("DISTRESS TYPE", "TableHeadSL"), para("ANNOTATION POLYGONS", "TableHeadSL")]]
+        for label in ("C", "P", "M", "S"):
+            annotation_rows.append([para(label, "TableCellBoldSL"), para(DISTRESS_LABELS[label], "TableCellSL"), para(f"{annotation_counts[label]:,}", "TableCellSL")])
+        annotation_table = Table(annotation_rows, colWidths=[usable_width * .14, usable_width * .56, usable_width * .30], repeatRows=1)
+        annotation_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#303840")),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f5f5")]),
+            ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#777777")),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 5),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        story.append(annotation_table)
+        story.append(Spacer(1, 5))
+        story.append(para(f"Inspection dataset: {len(frames)} image/annotation pairs loaded. Total classified annotation polygons: {sum(annotation_counts.values()):,}.", "BodySL"))
+        frame_rows = [[para("FRAME", "TableHeadSL"), para("CRACKS", "TableHeadSL"), para("POTHOLES", "TableHeadSL"), para("PATCHES", "TableHeadSL"), para("SEALANT", "TableHeadSL"), para("TOTAL", "TableHeadSL")]]
+        for frame in frames:
+            counts = {key: 0 for key in DISTRESS_COLORS}
+            for shape in frame.get("shapes", []):
+                label = str(shape.get("label") or "").strip().upper()
+                if label in counts:
+                    counts[label] += 1
+            frame_rows.append([para(escape(frame["frame_id"]), "TableCellSL"), para(str(counts["C"]), "TableCellSL"), para(str(counts["P"]), "TableCellSL"), para(str(counts["M"]), "TableCellSL"), para(str(counts["S"]), "TableCellSL"), para(str(sum(counts.values())), "TableCellBoldSL")])
+        frame_table = Table(frame_rows, colWidths=[usable_width * .24, usable_width * .14, usable_width * .14, usable_width * .14, usable_width * .14, usable_width * .20], repeatRows=1)
+        frame_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#303840")),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f5f5")]),
+            ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#9aa4af")),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 3),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+            ("TOPPADDING", (0, 0), (-1, -1), 2.5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 2.5),
+        ]))
+        story.append(para("Frame-by-frame annotation inventory", "SectionHeadingSL"))
+        story.append(frame_table)
+        story.append(para("Frame counts represent annotated polygons in each JSON file. A polygon is one annotation object; it should not be interpreted as a unique real-world defect without field validation.", "SmallSL"))
+
     story.append(para("Basis and limits", "SectionHeadingSL"))
     limitations = (
         "This report follows the pavement rehabilitation candidate summary format and uses the active StreetLens Collingswood section dataset and current saved PCI / SDI score revisions. "
@@ -622,7 +668,7 @@ def build_road_report_pdf(run, all_runs, app_root):
 
     story.append(PageBreak())
     story.append(para(escape(road_name) + "   DRAFT", "ReportEyebrow"))
-    story.append(para("Annotated survey imagery", "SectionHeadingSL"))
+    story.append(para("Annotated survey imagery" if report_type == "E" else "Inspection imagery and annotation evidence", "SectionHeadingSL"))
     story.append(para(
         f"Survey imagery for {escape(road_name)}. Frames are arranged in capture order, "
         "left to right and continues on the next row. Station labels are feet from the run start. Annotation polygons are drawn over their corresponding source frame.",
@@ -661,4 +707,5 @@ def build_road_report_pdf(run, all_runs, app_root):
 
     doc.build(story, onFirstPage=draw_footer, onLaterPages=draw_footer)
     safe_name = re.sub(r"[^a-z0-9]+", "-", road_name.casefold()).strip("-") or "road"
-    return buffer.getvalue(), f"streetlens-{safe_name}-report.pdf"
+    suffix = "comprehensive-report" if report_type == "E" else "condition-assessment"
+    return buffer.getvalue(), f"streetlens-{safe_name}-{suffix}.pdf"
