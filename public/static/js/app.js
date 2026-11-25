@@ -271,19 +271,30 @@ function initStreetLensRoadViewer(){
             const response=await fetch(indexPath,{cache:'no-store'});
             if(!response.ok)throw new Error(`Dataset index request failed (${response.status})`);
             const data=await response.json();
-            // Combined-road-folder format: index.json sits beside the image and
-            // annotation files. Resolve relative names against the index URL;
-            // legacy absolute /static paths continue to work unchanged.
+            // Each road owns its index, images and annotation JSON files.
+            // Resolve paths from that index, then verify both assets exist
+            // before rendering a frame to prevent stale/mismatched overlays.
             const resolveAsset=(value)=>{
-                if(!value)return value;
+                if(!value)return '';
                 try{return new URL(value,new URL(indexPath,window.location.href)).toString();}
                 catch(_){return value;}
             };
-            data.frames=(data.frames||[]).map(frame=>({
+            const candidates=(data.frames||[]).map(frame=>({
                 ...frame,
                 image:resolveAsset(frame.image||frame.file),
                 annotation:resolveAsset(frame.annotation||frame.json)
             }));
+            const checked=await Promise.all(candidates.map(async frame=>{
+                if(!frame.image||!frame.annotation)return null;
+                try{
+                    const [imageCheck,jsonCheck]=await Promise.all([
+                        fetch(frame.image,{method:'HEAD',cache:'no-store'}),
+                        fetch(frame.annotation,{method:'HEAD',cache:'no-store'})
+                    ]);
+                    return imageCheck.ok&&jsonCheck.ok?frame:null;
+                }catch(_){return null;}
+            }));
+            data.frames=checked.filter(Boolean);
             render(data.frames);
             if(annotationNote)annotationNote.textContent=data.frames.length
                 ? `${roadName||data.road_name||'Selected road'} · ${data.frames.length} inspection frames loaded`
