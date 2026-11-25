@@ -1613,10 +1613,15 @@ const response=await fetch("{{ url_for('score_data') }}",{cache:'no-store'});if(
   const runKey=selected?.run?.key||params.get('run');
   const roadName=selected?.run?.name||params.get('road');
   if(!runKey&&!roadName){alert('Select a road section on the map before generating a report.');return;}
+  const choice=window.prompt('Choose report format:\\nA — Detailed Road Condition Assessment\\nE — Comprehensive Road Engineering Report','E');
+  if(choice===null)return;
+  const reportType=choice.trim().toUpperCase();
+  if(!['A','E'].includes(reportType)){alert('Enter A or E to select a report format.');return;}
   const query=new URLSearchParams();
   if(runKey)query.set('run',runKey);
   if(roadName)query.set('road',roadName);
   if(selected?.bin)query.set('section',String(selected.bin));
+  query.set('type',reportType);
   window.location.href="{{ url_for('dashboard_report') }}?"+query.toString();
  });document.getElementById('streetLensModalMetricSDI')?.addEventListener('click',()=>setMetric('sdi'));document.getElementById('streetLensModalMetricPCI')?.addEventListener('click',()=>setMetric('pci'));document.getElementById('streetLensToggleLegend')?.addEventListener('change',e=>{document.getElementById('streetLensLegendWrap')?.classList.toggle('legend-hidden',!e.target.checked);});document.getElementById('streetLensShowBatch1')?.addEventListener('change',()=>{Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();});document.getElementById('streetLensShowEndPieces')?.addEventListener('change',()=>{Object.values(STREETLENS_MAPS).forEach(refreshMap);updateLegendAndRanking();});document.getElementById('streetLensDashboardSatellite')?.addEventListener('click',e=>{e.stopPropagation();toggleSatellite(STREETLENS_MAPS.dashboard)});document.getElementById('streetLensDashboardReset')?.addEventListener('click',e=>{e.stopPropagation();resetMap(STREETLENS_MAPS.dashboard)});document.getElementById('streetLensDashboardExpand')?.addEventListener('click',e=>{e.stopPropagation();openMap(false)});document.getElementById('streetLensDashboardFullscreen')?.addEventListener('click',e=>{e.stopPropagation();openMap(true)});document.getElementById('streetLensModalSatellite')?.addEventListener('click',()=>toggleSatellite(STREETLENS_MAPS.modal));document.getElementById('streetLensModalReset')?.addEventListener('click',()=>resetMap(STREETLENS_MAPS.modal));document.getElementById('streetLensModalFullscreen')?.addEventListener('click',toggleMapFullscreen);document.getElementById('streetLensModalClose')?.addEventListener('click',()=>closeMap());setMetric('sdi');}catch(e){fail(e);document.querySelectorAll('.streetlens-map-loading').forEach(x=>x.classList.add('hidden-map-loading'));}});
 </script>
