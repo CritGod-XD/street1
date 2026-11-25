@@ -248,18 +248,14 @@ def build_road_report_pdf(run, all_runs, app_root, report_type="A"):
         key=lambda item: float(item.get("f0") or 0)
     )
     road_name = str(run.get("name") or "Unnamed road")
-    pci = _weighted_average(sections, "pci")
-    sdi = _weighted_average(sections, "sdi")
-    if pci is None:
-        try:
-            pci = float(run.get("pci"))
-        except (TypeError, ValueError):
-            pci = None
-    if sdi is None:
-        try:
-            sdi = float(run.get("sdi"))
-        except (TypeError, ValueError):
-            sdi = None
+    try:
+        pci = float(run.get("pci")) if run.get("pci") is not None else _weighted_average(sections, "pci")
+    except (TypeError, ValueError):
+        pci = _weighted_average(sections, "pci")
+    try:
+        sdi = float(run.get("sdi")) if run.get("sdi") is not None else _weighted_average(sections, "sdi")
+    except (TypeError, ValueError):
+        sdi = _weighted_average(sections, "sdi")
     length = sum(float(section.get("len") or 0) for section in sections)
     crack_instances = sum(int(float(section.get("cr") or 0)) for section in sections)
     crack_length = sum(float(section.get("crft") or 0) for section in sections)
@@ -610,6 +606,43 @@ def build_road_report_pdf(run, all_runs, app_root, report_type="A"):
             "StreetLens section records. The SDI table uses the supplied scored bins.",
             "SmallSL"
         ))
+
+    story.append(para("Section-wise distress quantities", "SectionHeadingSL"))
+    section_distress_rows = [[
+        para("SECTION", "TableHeadSL"), para("LENGTH", "TableHeadSL"),
+        para("PCI", "TableHeadSL"), para("SDI", "TableHeadSL"),
+        para("CRACKS", "TableHeadSL"), para("CRACK LENGTH", "TableHeadSL"),
+        para("POTHOLES", "TableHeadSL"), para("PATCHES", "TableHeadSL"),
+        para("DISTRESSED AREA", "TableHeadSL")
+    ]]
+    for section in sections:
+        section_distress_rows.append([
+            para(str(section.get("bin", "—")), "TableCellSL"),
+            para(f"{_number(section.get('len'), 1)} ft", "TableCellSL"),
+            para(_number(section.get("pci"), 1), "TableCellSL"),
+            para(_number(section.get("sdi"), 2), "TableCellSL"),
+            para(f"{int(float(section.get('cr') or 0)):,}", "TableCellSL"),
+            para(f"{_number(section.get('crft'), 1)} ft", "TableCellSL"),
+            para(f"{int(float(section.get('pot') or 0)):,}", "TableCellSL"),
+            para(f"{int(float(section.get('pat') or 0)):,}", "TableCellSL"),
+            para(f"{_number(section.get('dpct'), 1)}%", "TableCellSL")
+        ])
+    section_distress_table = Table(section_distress_rows, colWidths=[
+        usable_width * .055, usable_width * .105, usable_width * .065,
+        usable_width * .065, usable_width * .085, usable_width * .14,
+        usable_width * .075, usable_width * .075, usable_width * .12
+    ], repeatRows=1)
+    section_distress_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#303840")),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f5f5")]),
+        ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#8a949e")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 2.5),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 2.5),
+        ("TOPPADDING", (0, 0), (-1, -1), 3),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+    ]))
+    story.append(section_distress_table)
 
     if report_type == "E":
         story.append(PageBreak())
