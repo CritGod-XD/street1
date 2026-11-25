@@ -602,7 +602,10 @@ def dashboard_report():
     if selected_run is None:
         flash("Select a scored road section on the dashboard before generating its report.", "error")
         return redirect(url_for("dashboard"))
-    pdf_bytes, filename = build_road_report_pdf(selected_run, runs, app.root_path)
+    report_type = (request.args.get("type") or "A").strip().upper()
+    if report_type not in {"A", "E"}:
+        report_type = "A"
+    pdf_bytes, filename = build_road_report_pdf(selected_run, runs, app.root_path, report_type=report_type)
     return send_file(
         io.BytesIO(pdf_bytes),
         mimetype="application/pdf",
