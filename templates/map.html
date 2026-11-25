@@ -1011,11 +1011,12 @@ function focusSection(sec){Object.values(STREETLENS_MAPS).forEach(map=>{if(!map)
 function refreshMap(map){if(!map||!map.loaded())return;syncVisibility(map);}
 function addBasemap(map){
  const sat={type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19,attribution:'Imagery © Esri'};
- // Esri's Dark Gray Canvas raster cache contains "Map data not yet available"
- // placeholder tiles at its closest zoom levels. Stop requesting at z18 and
- // let MapLibre overzoom the last real tile instead of displaying that placeholder.
- // Keep the dashboard mini-map's existing z19 behavior unchanged.
- const streetMaxZoom=map._streetlensDashboard?19:18;
+ // The Dark Gray Canvas service returns placeholder images at z18+ in
+ // parts of Collingswood. Its usable detailed coverage ends earlier, so cap
+ // requests at z16 and let MapLibre overzoom those real tiles at closer views.
+ // This keeps the same dark-grey cartography without exposing Esri placeholders.
+ // The dashboard mini-map uses its own World Street Map source and is untouched.
+ const streetMaxZoom=16;
  const street={type:'raster',tiles:['https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'],tileSize:256,minzoom:0,maxzoom:streetMaxZoom,attribution:'Tiles © Esri — Sources: Esri, HERE, Garmin, OpenStreetMap contributors, and the GIS User Community'};
  const labels={type:'raster',tiles:['https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'],tileSize:256,minzoom:0,maxzoom:streetMaxZoom,attribution:'Labels © Esri'};
  map.addSource('streetlens-street',{type:'raster',...street});
